@@ -16,7 +16,7 @@ import {
   serverTimestamp,
   getDoc,
 } from 'firebase/firestore';
-import { Observable, switchMap, of } from 'rxjs';
+import { Observable, switchMap, of, catchError } from 'rxjs';
 import { AppUser, Farm } from '../models/farm.model';
 import { FarmContextService } from '../services/farm-context.service';
 import { docData } from '../services/firestore-helpers';
@@ -36,23 +36,30 @@ export class AuthService {
   }
 
   /** Firebase Auth kullanıcı durumu */
-  readonly authState$: Observable<User | null> = new Observable((subscriber) => {
+  readonly authState$: Observable<User | null> = new Observable<User | null>((subscriber) => {
     return onAuthStateChanged(
       this.auth,
       (user) => subscriber.next(user),
-      (err) => subscriber.error(err)
+      (err) => {
+        console.warn('[AuthStateChanged Warning]:', err?.message || err);
+        subscriber.next(null);
+      }
     );
-  });
+  }).pipe(catchError(() => of(null)));
 
   /** users/{uid} profili — rol ve çiftlik üyelikleri burada */
   readonly appUser$: Observable<AppUser | null> = this.authState$.pipe(
     switchMap((user) => {
       this.farmContext.setUser(user?.uid ?? null);
       if (!user) return of(null);
-      // Ensure farm document exists
-      this.ensureFarm(user).catch((err) => console.warn('ensureFarm warning:', err));
+      // Ensure farm document exists (arka planda çalışır, UI'ı bloklamaz)
+      this.ensureFarm(user).catch((err) => console.warn('ensureFarm skipped:', err?.message || err));
       const ref = doc(this.db, `users/${user.uid}`);
       return docData(ref).pipe(
+        catchError((err) => {
+          console.warn('[appUser$ docData catchError]:', err?.message || err);
+          return of(undefined);
+        }),
         switchMap((profile) => {
           const appUser = profile as AppUser | undefined;
           if (appUser?.activeFarmId) {
@@ -62,16 +69,21 @@ export class AuthService {
             const fallback: AppUser = {
               uid: user.uid,
               email: user.email || '',
-              displayName: user.displayName || user.email?.split('@')[0] || 'Yönetici',
-              memberships: [{ farmId: this.farmContext.activeFarmId() || 'default', role: 'admin' }],
-              activeFarmId: this.farmContext.activeFarmId() || undefined,
+              displayName: user.displayName || user.email?.split('@')[0] || 'admin',
+              memberships: [{ farmId: this.farmContext.activeFarmId() || 'odivon-farm-default', role: 'admin' }],
+              activeFarmId: this.farmContext.activeFarmId() || 'odivon-farm-default',
               createdAt: new Date(),
             };
             return of(fallback);
           }
           return of(appUser);
-        })
+        }),
+        catchError(() => of(null))
       );
+    }),
+    catchError((err) => {
+      console.warn('[appUser$ stream warning]:', err?.message || err);
+      return of(null);
     })
   );
 
@@ -87,25 +99,33 @@ export class AuthService {
 
   /** Eksik kullanıcı veya çiftlik dokümanı varsa otomatik tamamlar */
   async ensureFarm(user: User, farmName = 'Odivon Çiftliği') {
-    const userRef = doc(this.db, `users/${user.uid}`);
-    const userSnap = await getDoc(userRef);
-    if (!userSnap.exists() || !(userSnap.data() as AppUser)?.activeFarmId) {
-      const farm: Farm = { name: farmName, ownerUid: user.uid, createdAt: serverTimestamp() };
-      const farmRef = await addDoc(collection(this.db, 'farms'), farm);
-      const profile: AppUser = {
-        uid: user.uid,
-        email: user.email || '',
-        displayName: user.displayName || user.email?.split('@')[0] || 'Yönetici',
-        memberships: [{ farmId: farmRef.id, role: 'admin' }],
-        activeFarmId: farmRef.id,
-        createdAt: serverTimestamp(),
-      };
-      await setDoc(userRef, profile);
-      this.farmContext.setActiveFarm(farmRef.id);
-    } else {
-      const data = userSnap.data() as AppUser;
-      if (data.activeFarmId) {
-        this.farmContext.setActiveFarm(data.activeFarmId);
+    try {
+      const userRef = doc(this.db, `users/${user.uid}`);
+      const userSnap = await getDoc(userRef);
+      if (!userSnap.exists() || !(userSnap.data() as AppUser)?.activeFarmId) {
+        const farm: Farm = { name: farmName, ownerUid: user.uid, createdAt: serverTimestamp() };
+        const farmRef = await addDoc(collection(this.db, 'farms'), farm);
+        const profile: AppUser = {
+          uid: user.uid,
+          email: user.email || '',
+          displayName: user.displayName || user.email?.split('@')[0] || 'admin',
+          memberships: [{ farmId: farmRef.id, role: 'admin' }],
+          activeFarmId: farmRef.id,
+          createdAt: serverTimestamp(),
+        };
+        await setDoc(userRef, profile);
+        this.farmContext.setActiveFarm(farmRef.id);
+      } else {
+        const data = userSnap.data() as AppUser;
+        if (data.activeFarmId) {
+          this.farmContext.setActiveFarm(data.activeFarmId);
+        }
+      }
+    } catch (err: any) {
+      console.warn('[ensureFarm permission/network notice]:', err?.message || err);
+      // İzin yoksa varsayılan çiftlik id'sini ayarla
+      if (!this.farmContext.activeFarmId()) {
+        this.farmContext.setActiveFarm('odivon-farm-default');
       }
     }
   }

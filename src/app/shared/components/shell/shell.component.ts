@@ -6,7 +6,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatButtonModule } from '@angular/material/button';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { filter } from 'rxjs';
+import { filter, of, catchError } from 'rxjs';
 import { AuthService } from '../../../core/auth/auth.service';
 import { FarmContextService } from '../../../core/services/farm-context.service';
 
@@ -75,19 +75,19 @@ export class ShellComponent {
   farmMenuOpen = signal(false);
 
   toggleUserMenu(event?: Event) {
-    console.log('>>> [SHELL] toggleUserMenu called! previous:', this.userMenuOpen());
     if (event) {
+      event.preventDefault();
       event.stopPropagation();
     }
     const next = !this.userMenuOpen();
     this.closeAllMenus();
     this.userMenuOpen.set(next);
-    console.log('>>> [SHELL] userMenuOpen is now:', this.userMenuOpen());
     this.cdr.detectChanges();
   }
 
   toggleNotifications(event?: Event) {
     if (event) {
+      event.preventDefault();
       event.stopPropagation();
     }
     const next = !this.notificationsOpen();
@@ -98,6 +98,7 @@ export class ShellComponent {
 
   toggleFarmMenu(event?: Event) {
     if (event) {
+      event.preventDefault();
       event.stopPropagation();
     }
     const next = !this.farmMenuOpen();
@@ -136,8 +137,12 @@ export class ShellComponent {
     }
   }
 
-  firebaseUser = toSignal(this.auth.authState$, { initialValue: null });
-  appUser = toSignal(this.auth.appUser$, { initialValue: null });
+  firebaseUser = toSignal(this.auth.authState$.pipe(catchError(() => of(null))), {
+    initialValue: null,
+  });
+  appUser = toSignal(this.auth.appUser$.pipe(catchError(() => of(null))), {
+    initialValue: null,
+  });
   sidebarCollapsed = signal(this.getStoredCollapsedState());
   mobileMenuOpen = signal(false);
   definitionsExpanded = signal(false);
@@ -157,43 +162,57 @@ export class ShellComponent {
   }
 
   userDisplayName = computed(() => {
-    return (
-      this.appUser()?.displayName ||
-      this.firebaseUser()?.displayName ||
-      this.firebaseUser()?.email?.split('@')[0] ||
-      'Yönetici'
-    );
+    try {
+      return (
+        this.appUser()?.displayName ||
+        this.firebaseUser()?.displayName ||
+        this.firebaseUser()?.email?.split('@')[0] ||
+        'admin'
+      );
+    } catch {
+      return 'admin';
+    }
   });
 
   userEmail = computed(() => {
-    return (
-      this.appUser()?.email ||
-      this.firebaseUser()?.email ||
-      'admin@odivonfarm.com'
-    );
+    try {
+      return (
+        this.appUser()?.email ||
+        this.firebaseUser()?.email ||
+        'admin@odivonfarm.com'
+      );
+    } catch {
+      return 'admin@odivonfarm.com';
+    }
   });
 
   userRole = computed(() => {
-    const memberships = this.appUser()?.memberships;
-    const activeFarm = this.farmContext.activeFarmId();
-    if (memberships && activeFarm) {
-      const m = memberships.find((x) => x.farmId === activeFarm);
-      if (m?.role === 'admin' || m?.role === 'yonetici') return 'Çiftlik Yöneticisi';
-      if (m?.role === 'veteriner') return 'Veteriner Hekim';
-      if (m?.role === 'saha') return 'Saha Personeli';
-      if (m?.role === 'muhasebe') return 'Muhasebe Sorumlusu';
-      if (m?.role === 'okuyucu') return 'Gözlemci';
-    }
+    try {
+      const memberships = this.appUser()?.memberships;
+      const activeFarm = this.farmContext.activeFarmId();
+      if (memberships && activeFarm) {
+        const m = memberships.find((x) => x.farmId === activeFarm);
+        if (m?.role === 'admin' || m?.role === 'yonetici') return 'Çiftlik Yöneticisi';
+        if (m?.role === 'veteriner') return 'Veteriner Hekim';
+        if (m?.role === 'saha') return 'Saha Personeli';
+        if (m?.role === 'muhasebe') return 'Muhasebe Sorumlusu';
+        if (m?.role === 'okuyucu') return 'Gözlemci';
+      }
+    } catch {}
     return 'Çiftlik Yöneticisi';
   });
 
   userInitials = computed(() => {
-    const name = this.userDisplayName();
-    const parts = name.trim().split(' ').filter(Boolean);
-    if (parts.length >= 2 && parts[0] && parts[1]) {
-      return (parts[0][0] + parts[1][0]).toUpperCase();
+    try {
+      const name = this.userDisplayName();
+      const parts = name.trim().split(' ').filter(Boolean);
+      if (parts.length >= 2 && parts[0] && parts[1]) {
+        return (parts[0][0] + parts[1][0]).toUpperCase();
+      }
+      return name.slice(0, 2).toUpperCase() || 'AD';
+    } catch {
+      return 'AD';
     }
-    return name.slice(0, 2).toUpperCase() || 'YÖ';
   });
 
   navGroups: NavGroup[] = [

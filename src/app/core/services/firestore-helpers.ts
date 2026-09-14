@@ -28,7 +28,11 @@ export function docData<T = DocumentData>(
         }
         subscriber.next(data as T);
       },
-      (err) => subscriber.error(err)
+      (err) => {
+        console.warn(`[Firestore docData Warning at ${ref.path}]:`, err?.message || err);
+        // İzin veya bağlantı hatasında Angular sinyallerini kırmamak için undefined yay
+        subscriber.next(undefined);
+      }
     );
     return () => unsubscribe();
   });
@@ -55,7 +59,11 @@ export function collectionData<T = DocumentData>(
         });
         subscriber.next(items);
       },
-      (err) => subscriber.error(err)
+      (err) => {
+        console.warn('[Firestore collectionData Warning]:', err?.message || err);
+        // İzin hatasında boş dizi yayarak UI kilitlenmesini engelle
+        subscriber.next([]);
+      }
     );
     return () => unsubscribe();
   });

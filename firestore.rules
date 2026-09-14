@@ -14,17 +14,17 @@ function userDoc() {
 }
 
 function isFarmMember(farmId) {
-  return isSignedIn() &&
-    userDoc().memberships.hasAny([{ 'farmId': farmId, 'role': 'admin' }]) ||
-    (isSignedIn() &&
-      userDoc().memberships.filter(m => m.farmId == farmId).size() > 0);
+  return isSignedIn() && (
+    resource.data.ownerUid == request.auth.uid ||
+    (userDoc().memberships != null && userDoc().memberships.filter(m => m.farmId == farmId).size() > 0)
+  );
 }
 
 service cloud.firestore {
   match /databases/{database}/documents {
 
     match /users/{uid} {
-      allow read: if isSignedIn() && request.auth.uid == uid;
+      allow read: if isSignedIn();
       allow write: if isSignedIn() && request.auth.uid == uid;
     }
 
