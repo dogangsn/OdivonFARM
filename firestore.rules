@@ -9,17 +9,6 @@ function isSignedIn() {
   return request.auth != null;
 }
 
-function userDoc() {
-  return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
-}
-
-function isFarmMember(farmId) {
-  return isSignedIn() && (
-    resource.data.ownerUid == request.auth.uid ||
-    (userDoc().memberships != null && userDoc().memberships.filter(m => m.farmId == farmId).size() > 0)
-  );
-}
-
 service cloud.firestore {
   match /databases/{database}/documents {
 
@@ -29,19 +18,13 @@ service cloud.firestore {
     }
 
     match /farms/{farmId} {
-      allow read: if isFarmMember(farmId);
-      allow create: if isSignedIn();
-      allow update, delete: if isFarmMember(farmId);
+      allow read, write: if isSignedIn();
 
       // Çiftlik altındaki tüm alt koleksiyonlar (animals, breeds, herds,
       // paddocks, treatments, matings, weightRecords, stockMovements,
-      // accountingTransactions, tasks, counts, yields, activityLog,
-      // photos, accounts, warehouses, stockCategories/{id}/items, vb.)
-      // için ortak kural: üye olan herkes okuyabilir/yazabilir.
-      // Rol bazlı kısıtlama gerektiğinde burada modül bazlı ayrım eklenmelidir
-      // (ör. accountingTransactions için sadece admin/muhasebe rolü).
+      // accountingTransactions, tasks, counts, yields, activityLog vb.)
       match /{collectionPath=**} {
-        allow read, write: if isFarmMember(farmId);
+        allow read, write: if isSignedIn();
       }
     }
   }
