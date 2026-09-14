@@ -1,0 +1,24 @@
+<div class="page">
+  <h2>Geri Dönüşüm Merkezi</h2>
+  <p class="hint">Silinen hayvan kayıtları. Diğer modüller için aynı desen genişletilebilir.</p>
+
+  <mat-list>
+    @for (a of deletedAnimals(); track a.id) {
+      <mat-list-item>
+        <span matListItemTitle>{{ a.farmTagNo }} — {{ a.name }}</span>
+        <div matListItemMeta>
+          <button mat-button (click)="restore(a.id!)">
+            <mat-icon>restore</mat-icon>
+            Geri Yükle
+          </button>
+          <button mat-button color="warn" (click)="hardDelete(a.id!)">
+            <mat-icon>delete_forever</mat-icon>
+            Kalıcı Sil
+          </button>
+        </div>
+      </mat-list-item>
+    } @empty {
+      <p class="empty">Silinmiş kayıt yok.</p>
+    }
+  </mat-list>
+</div>

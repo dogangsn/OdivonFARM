@@ -1,0 +1,60 @@
+<div class="accounts">
+  <div class="header">
+    <h2>Cariler</h2>
+    <button mat-flat-button color="primary" (click)="openForm()">
+      <mat-icon>add</mat-icon>
+      Cari Ekle
+    </button>
+  </div>
+
+  <div class="grid">
+    @for (acc of accounts(); track acc.id) {
+      <mat-card>
+        <mat-card-title>{{ acc.title }}</mat-card-title>
+        <mat-card-subtitle>{{ acc.phone || 'Telefon: Bilinmiyor' }}</mat-card-subtitle>
+        <mat-card-content>
+          <p>{{ acc.description }}</p>
+        </mat-card-content>
+        <mat-card-actions>
+          <button mat-icon-button (click)="remove(acc.id!)" aria-label="Sil">
+            <mat-icon>delete_outline</mat-icon>
+          </button>
+        </mat-card-actions>
+      </mat-card>
+    } @empty {
+      <p class="empty">Kayıt bulunamadı.</p>
+    }
+  </div>
+
+  @if (showForm()) {
+    <div class="modal-backdrop" (click)="closeForm()">
+      <mat-card class="modal" (click)="$event.stopPropagation()">
+        <h3>Cari Ekle</h3>
+
+        <mat-form-field appearance="outline" class="full">
+          <mat-label>*Cari Ünvan</mat-label>
+          <input matInput [ngModel]="form().title" (ngModelChange)="updateField('title', $event)" />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full">
+          <mat-label>Açıklama</mat-label>
+          <input matInput [ngModel]="form().description" (ngModelChange)="updateField('description', $event)" />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full">
+          <mat-label>Adres</mat-label>
+          <input matInput [ngModel]="form().address" (ngModelChange)="updateField('address', $event)" />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full">
+          <mat-label>Telefon</mat-label>
+          <input matInput [ngModel]="form().phone" (ngModelChange)="updateField('phone', $event)" />
+        </mat-form-field>
+
+        <p class="hint">*girilmesi zorunlu alanlar</p>
+
+        <button mat-flat-button color="primary" class="full" (click)="save()">Kaydet</button>
+      </mat-card>
+    </div>
+  }
+</div>

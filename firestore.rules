@@ -1,0 +1,48 @@
+rules_version = '2';
+
+// ÖNEMLİ: Bu kurallar iskelet aşaması için başlangıç noktasıdır.
+// Prodüksiyona almadan önce mutlaka test edilmeli ve rol bazlı yazma
+// izinleri (ör. sadece 'muhasebe' rolü muhasebe koleksiyonuna yazabilsin)
+// detaylandırılmalıdır.
+
+function isSignedIn() {
+  return request.auth != null;
+}
+
+function userDoc() {
+  return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+}
+
+function isFarmMember(farmId) {
+  return isSignedIn() &&
+    userDoc().memberships.hasAny([{ 'farmId': farmId, 'role': 'admin' }]) ||
+    (isSignedIn() &&
+      userDoc().memberships.filter(m => m.farmId == farmId).size() > 0);
+}
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    match /users/{uid} {
+      allow read: if isSignedIn() && request.auth.uid == uid;
+      allow write: if isSignedIn() && request.auth.uid == uid;
+    }
+
+    match /farms/{farmId} {
+      allow read: if isFarmMember(farmId);
+      allow create: if isSignedIn();
+      allow update, delete: if isFarmMember(farmId);
+
+      // Çiftlik altındaki tüm alt koleksiyonlar (animals, breeds, herds,
+      // paddocks, treatments, matings, weightRecords, stockMovements,
+      // accountingTransactions, tasks, counts, yields, activityLog,
+      // photos, accounts, warehouses, stockCategories/{id}/items, vb.)
+      // için ortak kural: üye olan herkes okuyabilir/yazabilir.
+      // Rol bazlı kısıtlama gerektiğinde burada modül bazlı ayrım eklenmelidir
+      // (ör. accountingTransactions için sadece admin/muhasebe rolü).
+      match /{collectionPath=**} {
+        allow read, write: if isFarmMember(farmId);
+      }
+    }
+  }
+}

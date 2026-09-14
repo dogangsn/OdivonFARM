@@ -1,0 +1,19 @@
+<div class="page">
+  <h2>Çiftlikte Yapılanlar</h2>
+
+  <mat-list>
+    @for (e of entries(); track e.id) {
+      <mat-list-item>
+        <mat-icon matListItemIcon>history</mat-icon>
+        <span matListItemTitle>{{ e.message }}</span>
+      </mat-list-item>
+    } @empty {
+      <p class="empty">Henüz kayıtlı aktivite yok.</p>
+    }
+  </mat-list>
+
+  <p class="hint">
+    Bu akış, ileride her serviste create/update/softDelete işlemleri sonrasında
+    otomatik kayıt eklenerek (Cloud Function veya servis katmanında) beslenecektir.
+  </p>
+</div>

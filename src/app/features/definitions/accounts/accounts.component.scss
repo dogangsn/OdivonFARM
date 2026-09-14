@@ -1,0 +1,45 @@
+.accounts {
+  padding: 1.5rem;
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.25rem;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 1rem;
+  }
+
+  .empty {
+    color: rgba(0, 0, 0, 0.54);
+  }
+
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+  }
+
+  .modal {
+    width: 360px;
+    padding: 1.5rem;
+
+    .full {
+      width: 100%;
+    }
+
+    .hint {
+      font-size: 0.75rem;
+      color: rgba(0, 0, 0, 0.54);
+      margin: 0 0 1rem;
+    }
+  }
+}

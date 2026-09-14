@@ -1,0 +1,415 @@
+<div class="flex flex-col flex-auto min-w-0">
+
+  <!-- Header -->
+  <div class="relative flex flex-col sm:flex-row flex-0 sm:items-center sm:justify-between py-6 md:py-8 px-6 md:px-8 border-b bg-card">
+    <div>
+      <div class="flex items-center gap-3">
+        <div class="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+          <mat-icon class="icon-size-6" [svgIcon]="'heroicons_outline:beaker'"></mat-icon>
+        </div>
+        <div>
+          <div class="text-3xl font-extrabold tracking-tight text-default">Verim Takibi (Süt & Yapağı)</div>
+          <div class="text-xs font-medium text-secondary mt-0.5">
+            Günlük sağım verileri, kırkım rekoltesi, bireysel ve sürü bazlı üretim performansı.
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick KPI Badges -->
+      <div class="flex items-center gap-2 mt-4 flex-wrap">
+        <span class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-400 border border-blue-200/50">
+          Toplam Süt: <strong>{{ stats().totalMilk }} lt</strong>
+        </span>
+        <span class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-400 border border-amber-200/50">
+          Toplam Yapağı: <strong>{{ stats().totalWool }} kg</strong>
+        </span>
+        <span class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 border border-emerald-200/50">
+          Ortalama Süt/Kayıt: <strong>{{ stats().avgMilkPerRecord }} lt</strong>
+        </span>
+        <span class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-default">
+          Toplam Kayıt: <strong class="text-primary">{{ stats().totalRecords }}</strong>
+        </span>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="flex shrink-0 items-center mt-6 sm:mt-0 sm:ml-4 gap-2.5">
+      <button
+        mat-flat-button
+        class="!bg-blue-600 !text-white !rounded-xl !px-3.5 !py-2.5 !font-medium flex items-center shadow-md shadow-blue-500/20"
+        (click)="openAddDrawer('sut')">
+        <mat-icon class="icon-size-5 mr-1.5" [svgIcon]="'heroicons_solid:plus'"></mat-icon>
+        <span>+ Süt Sağımı</span>
+      </button>
+
+      <button
+        mat-flat-button
+        class="!bg-amber-600 !text-white !rounded-xl !px-3.5 !py-2.5 !font-medium flex items-center shadow-md shadow-amber-500/20"
+        (click)="openAddDrawer('yapagi')">
+        <mat-icon class="icon-size-5 mr-1.5" [svgIcon]="'heroicons_solid:plus'"></mat-icon>
+        <span>+ Yapağı Kırkımı</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Main Area -->
+  <div class="flex-auto p-6 md:p-8 space-y-6 max-w-screen-xl mx-auto w-full bg-default pb-16">
+
+    <!-- Search and Filters Bar -->
+    <div class="p-4 rounded-2xl bg-card shadow-sm border border-gray-200/80 dark:border-gray-700/60 flex flex-col md:flex-row items-center gap-3">
+      <!-- Search Input -->
+      <div class="relative w-full md:w-80">
+        <mat-icon class="absolute left-3.5 top-1/2 -translate-y-1/2 icon-size-4 text-secondary pointer-events-none" [svgIcon]="'heroicons_solid:search'"></mat-icon>
+        <input
+          type="text"
+          [ngModel]="searchTerm()"
+          (ngModelChange)="searchTerm.set($event)"
+          placeholder="Küpe, hayvan adı veya sürü ara..."
+          class="w-full pl-9 pr-8 py-2 text-xs bg-slate-100 dark:bg-slate-750 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-default placeholder-secondary font-medium" />
+        @if (searchTerm()) {
+          <button
+            (click)="searchTerm.set('')"
+            class="absolute right-2.5 top-1/2 -translate-y-1/2 text-secondary hover:text-default">
+            <mat-icon class="icon-size-3.5" [svgIcon]="'heroicons_solid:x'"></mat-icon>
+          </button>
+        }
+      </div>
+
+      <!-- Filters -->
+      <div class="flex items-center gap-2.5 w-full md:w-auto flex-wrap flex-1 justify-start md:justify-end">
+        <!-- Type Filter -->
+        <select
+          [ngModel]="typeFilter()"
+          (ngModelChange)="typeFilter.set($event)"
+          class="px-3 py-2 text-xs font-medium bg-slate-100 dark:bg-slate-750 border border-slate-200 dark:border-slate-700 rounded-xl text-default focus:outline-none">
+          <option value="all">Tüm Verim Türleri</option>
+          <option value="sut">Süt Sağımı</option>
+          <option value="yapagi">Yapağı Kırkımı</option>
+        </select>
+
+        <!-- Target Filter -->
+        <select
+          [ngModel]="targetFilter()"
+          (ngModelChange)="targetFilter.set($event)"
+          class="px-3 py-2 text-xs font-medium bg-slate-100 dark:bg-slate-750 border border-slate-200 dark:border-slate-700 rounded-xl text-default focus:outline-none">
+          <option value="all">Tüm Kapsamlar</option>
+          <option value="animal">Sadece Bireysel Hayvan</option>
+          <option value="herd">Sadece Sürü Geneli</option>
+        </select>
+
+        @if (searchTerm() || typeFilter() !== 'all' || targetFilter() !== 'all') {
+          <button
+            (click)="searchTerm.set(''); typeFilter.set('all'); targetFilter.set('all')"
+            class="text-xs font-semibold text-rose-600 hover:text-rose-700 px-2 py-1">
+            Filtreleri Temizle
+          </button>
+        }
+      </div>
+    </div>
+
+    <!-- Results summary -->
+    <div class="text-xs font-medium text-secondary">
+      Toplam <strong class="text-default">{{ filteredYields().length }}</strong> verim kaydı listeleniyor
+    </div>
+
+    <!-- Table -->
+    @if (filteredYields().length === 0) {
+      <div class="p-12 text-center rounded-2xl bg-card border border-dashed border-gray-300 dark:border-gray-700">
+        <div class="w-14 h-14 mx-auto rounded-2xl bg-blue-50 dark:bg-blue-950/40 text-blue-500 flex items-center justify-center mb-3">
+          <mat-icon class="icon-size-7" [svgIcon]="'heroicons_outline:beaker'"></mat-icon>
+        </div>
+        <div class="text-base font-bold text-default">Henüz Verim Kaydı Bulunmuyor</div>
+        <p class="text-xs text-secondary mt-1 max-w-sm mx-auto">
+          Sağım tankı veya bireysel hayvan süt miktarlarını ve kırkım kilolarını işleyerek üretim performansınızı izleyebilirsiniz.
+        </p>
+        <div class="mt-5 flex justify-center gap-3">
+          <button
+            mat-flat-button
+            class="!bg-blue-600 !text-white !rounded-xl !px-4"
+            (click)="openAddDrawer('sut')">
+            İlk Süt Kaydını Ekle
+          </button>
+        </div>
+      </div>
+    } @else {
+      <div class="bg-card rounded-2xl border border-gray-200/80 dark:border-gray-700/60 overflow-hidden shadow-sm">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-slate-50 dark:bg-slate-800/60 border-b border-gray-200 dark:border-gray-700 text-secondary uppercase font-semibold tracking-wider">
+              <tr>
+                <th class="py-3 px-4">Tarih</th>
+                <th class="py-3 px-4">Verim Türü</th>
+                <th class="py-3 px-4">Kapsam</th>
+                <th class="py-3 px-4">Hayvan / Sürü</th>
+                <th class="py-3 px-4 text-right">Miktar</th>
+                <th class="py-3 px-4 text-center">İşlem</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100 dark:divide-gray-800 text-default">
+              @for (y of filteredYields(); track y.id) {
+                <tr class="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors">
+                  <!-- Date -->
+                  <td class="py-3.5 px-4 font-medium whitespace-nowrap">
+                    {{ y.date ? (y.date | date:'dd.MM.yyyy') : '—' }}
+                  </td>
+
+                  <!-- Type Badge -->
+                  <td class="py-3.5 px-4 whitespace-nowrap">
+                    @if (y.type === 'sut') {
+                      <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-2xs font-bold bg-blue-100 dark:bg-blue-950/60 text-blue-800 dark:text-blue-300">
+                        <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+                        SÜT SAĞIMI
+                      </span>
+                    } @else if (y.type === 'yapagi') {
+                      <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-2xs font-bold bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300">
+                        <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                        YAPAĞI KIRKIMI
+                      </span>
+                    } @else {
+                      <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-2xs font-bold bg-slate-100 dark:bg-slate-750 text-default">
+                        DİĞER
+                      </span>
+                    }
+                  </td>
+
+                  <!-- Scope -->
+                  <td class="py-3.5 px-4 whitespace-nowrap text-secondary font-medium">
+                    {{ y.animalId ? 'Bireysel Hayvan' : (y.herdId ? 'Sürü Geneli' : 'Genel') }}
+                  </td>
+
+                  <!-- Target Animal or Herd -->
+                  <td class="py-3.5 px-4 whitespace-nowrap font-semibold">
+                    @if (y.animalId) {
+                      <div class="flex items-center gap-2">
+                        <span class="px-2 py-0.5 rounded-md font-mono bg-slate-100 dark:bg-slate-750 text-default text-xs font-bold">
+                          {{ getAnimal(y.animalId)?.farmTagNo || 'Küpesiz' }}
+                        </span>
+                        @if (getAnimal(y.animalId)?.name) {
+                          <span class="text-secondary font-normal">({{ getAnimal(y.animalId)?.name }})</span>
+                        }
+                      </div>
+                    } @else if (y.herdId) {
+                      <span class="px-2.5 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 font-bold text-xs">
+                        Sürü: {{ getHerd(y.herdId)?.name || 'Bilinmeyen Sürü' }}
+                      </span>
+                    } @else {
+                      <span class="text-secondary">—</span>
+                    }
+                  </td>
+
+                  <!-- Amount -->
+                  <td class="py-3.5 px-4 text-right whitespace-nowrap font-bold text-sm"
+                      [class]="y.type === 'sut' ? 'text-blue-600 dark:text-blue-400' : 'text-amber-600 dark:text-amber-400'">
+                    {{ y.amount }} {{ y.unit }}
+                  </td>
+
+                  <!-- Actions -->
+                  <td class="py-3.5 px-4 text-center whitespace-nowrap">
+                    <div class="flex items-center justify-center gap-1">
+                      <button
+                        mat-icon-button
+                        class="!w-8 !h-8 text-secondary hover:text-primary"
+                        matTooltip="Düzenle"
+                        (click)="openEditDrawer(y)">
+                        <mat-icon class="icon-size-4" [svgIcon]="'heroicons_outline:pencil'"></mat-icon>
+                      </button>
+                      <button
+                        mat-icon-button
+                        class="!w-8 !h-8 text-secondary hover:text-rose-600"
+                        matTooltip="Sil"
+                        (click)="deleteYield(y.id)">
+                        <mat-icon class="icon-size-4" [svgIcon]="'heroicons_outline:trash'"></mat-icon>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    }
+
+  </div>
+
+  <!-- Slide-Over Drawer -->
+  @if (showDrawer()) {
+    <div class="fixed inset-0 z-50 overflow-hidden">
+      <!-- Backdrop -->
+      <div
+        class="absolute inset-0 bg-black/40 backdrop-blur-xs transition-opacity"
+        (click)="closeDrawer()"></div>
+
+      <div class="absolute inset-y-0 right-0 max-w-full flex pl-10">
+        <div class="w-screen max-w-md bg-card shadow-2xl border-l border-gray-200 dark:border-gray-700 flex flex-col">
+
+          <!-- Drawer Header -->
+          <div class="p-6 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 flex items-center justify-center">
+                <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:beaker'"></mat-icon>
+              </div>
+              <div>
+                <h3 class="text-base font-bold text-default">
+                  {{ isEditing() ? 'Verim Kaydını Düzenle' : 'Yeni Verim Kaydı' }}
+                </h3>
+                <p class="text-2xs text-secondary">
+                  Süt sağım veya yapağı kırkım ölçümlerini girin.
+                </p>
+              </div>
+            </div>
+            <button
+              mat-icon-button
+              (click)="closeDrawer()"
+              class="text-secondary hover:text-default">
+              <mat-icon class="icon-size-5" [svgIcon]="'heroicons_solid:x'"></mat-icon>
+            </button>
+          </div>
+
+          <!-- Drawer Body -->
+          <div class="flex-1 overflow-y-auto p-6 space-y-4 text-xs">
+
+            @if (errorMessage()) {
+              <div class="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-300 font-medium">
+                {{ errorMessage() }}
+              </div>
+            }
+
+            <!-- Type Selector -->
+            <div>
+              <label class="block font-semibold text-secondary mb-1.5">Verim Türü *</label>
+              <div class="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  (click)="onTypeChange('sut')"
+                  [class]="form().type === 'sut' 
+                    ? 'py-2.5 px-3 rounded-xl font-bold bg-blue-600 text-white shadow-sm ring-2 ring-blue-500/20' 
+                    : 'py-2.5 px-3 rounded-xl font-medium bg-slate-100 dark:bg-slate-750 text-secondary hover:text-default'">
+                  Süt Sağımı (Lt)
+                </button>
+                <button
+                  type="button"
+                  (click)="onTypeChange('yapagi')"
+                  [class]="form().type === 'yapagi' 
+                    ? 'py-2.5 px-3 rounded-xl font-bold bg-amber-600 text-white shadow-sm ring-2 ring-amber-500/20' 
+                    : 'py-2.5 px-3 rounded-xl font-medium bg-slate-100 dark:bg-slate-750 text-secondary hover:text-default'">
+                  Yapağı Kırkımı (Kg)
+                </button>
+              </div>
+            </div>
+
+            <!-- Target Scope Toggle (Animal vs Herd) -->
+            <div>
+              <label class="block font-semibold text-secondary mb-1.5">Ölçüm Kapsamı *</label>
+              <div class="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  (click)="form().targetKind = 'animal'"
+                  [class]="form().targetKind === 'animal' 
+                    ? 'py-2 px-3 rounded-xl font-bold bg-slate-800 text-white dark:bg-white dark:text-slate-900' 
+                    : 'py-2 px-3 rounded-xl font-medium bg-slate-100 dark:bg-slate-750 text-secondary hover:text-default'">
+                  Bireysel Hayvan
+                </button>
+                <button
+                  type="button"
+                  (click)="form().targetKind = 'herd'"
+                  [class]="form().targetKind === 'herd' 
+                    ? 'py-2 px-3 rounded-xl font-bold bg-slate-800 text-white dark:bg-white dark:text-slate-900' 
+                    : 'py-2 px-3 rounded-xl font-medium bg-slate-100 dark:bg-slate-750 text-secondary hover:text-default'">
+                  Sürü Geneli
+                </button>
+              </div>
+            </div>
+
+            <!-- Animal / Herd Selection -->
+            @if (form().targetKind === 'animal') {
+              <div>
+                <label class="block font-semibold text-secondary mb-1.5">Hayvan Seçin (Küpe No) *</label>
+                <select
+                  [ngModel]="form().animalId"
+                  (ngModelChange)="form().animalId = $event"
+                  class="w-full px-3 py-2.5 bg-slate-100 dark:bg-slate-750 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-default font-medium">
+                  <option value="" disabled>Hayvan Seçin</option>
+                  @for (a of animals(); track a.id) {
+                    <option [value]="a.id">
+                      {{ a.farmTagNo || 'Küpesiz' }} {{ a.name ? '(' + a.name + ')' : '' }}
+                    </option>
+                  }
+                </select>
+              </div>
+            } @else {
+              <div>
+                <label class="block font-semibold text-secondary mb-1.5">Sürü Seçin *</label>
+                <select
+                  [ngModel]="form().herdId"
+                  (ngModelChange)="form().herdId = $event"
+                  class="w-full px-3 py-2.5 bg-slate-100 dark:bg-slate-750 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-default font-medium">
+                  <option value="" disabled>Sürü Seçin</option>
+                  @for (h of herds(); track h.id) {
+                    <option [value]="h.id">{{ h.name }}</option>
+                  }
+                </select>
+              </div>
+            }
+
+            <!-- Amount Input -->
+            <div>
+              <label class="block font-semibold text-secondary mb-1.5">Miktar ({{ form().unit }}) *</label>
+              <div class="relative">
+                <input
+                  type="number"
+                  step="0.1"
+                  min="0.01"
+                  [ngModel]="form().amount"
+                  (ngModelChange)="form().amount = $event"
+                  [placeholder]="form().type === 'sut' ? 'Örn: 2.8' : 'Örn: 3.5'"
+                  class="w-full px-3 py-2.5 bg-slate-100 dark:bg-slate-750 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 font-bold text-sm text-default" />
+                <span class="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-semibold text-secondary">
+                  {{ form().unit }}
+                </span>
+              </div>
+            </div>
+
+            <!-- Date -->
+            <div>
+              <label class="block font-semibold text-secondary mb-1.5">Tarih *</label>
+              <input
+                type="date"
+                [ngModel]="form().date"
+                (ngModelChange)="form().date = $event"
+                class="w-full px-3 py-2.5 bg-slate-100 dark:bg-slate-750 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-default font-medium" />
+            </div>
+
+          </div>
+
+          <!-- Drawer Footer -->
+          <div class="p-4 border-t border-gray-200 dark:border-gray-700 flex items-center justify-end gap-2.5 bg-slate-50/50 dark:bg-slate-800/40">
+            <button
+              type="button"
+              mat-stroked-button
+              class="!rounded-xl"
+              (click)="closeDrawer()"
+              [disabled]="isSaving()">
+              Vazgeç
+            </button>
+            <button
+              type="button"
+              mat-flat-button
+              class="!rounded-xl !px-5"
+              [class]="form().type === 'sut' ? '!bg-blue-600 !text-white' : '!bg-amber-600 !text-white'"
+              (click)="saveYield()"
+              [disabled]="isSaving()">
+              @if (isSaving()) {
+                <span>Kaydediliyor...</span>
+              } @else {
+                <span>{{ isEditing() ? 'Güncelle' : 'Kaydet' }}</span>
+              }
+            </button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  }
+
+</div>

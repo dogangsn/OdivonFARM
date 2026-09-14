@@ -1,0 +1,333 @@
+<div class="flex flex-col flex-auto min-w-0">
+
+  <!-- Header -->
+  <div class="relative flex flex-col sm:flex-row flex-0 sm:items-center sm:justify-between py-6 md:py-8 px-6 md:px-8 border-b bg-card">
+    <div>
+      <div class="flex items-center gap-3">
+        <div class="w-12 h-12 rounded-2xl bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+          <mat-icon class="icon-size-6" [svgIcon]="'heroicons_outline:cake'"></mat-icon>
+        </div>
+        <div>
+          <div class="text-3xl font-extrabold tracking-tight text-default">Rasyon & Yem Formülasyonu</div>
+          <div class="text-xs font-medium text-secondary mt-0.5">
+            Sürü dönemi ve hayvan grubuna özel yem karışımları, reçete oranları ve baş başı besleme planı.
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick KPI Badges -->
+      <div class="flex items-center gap-2 mt-4 flex-wrap">
+        <span class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-default">
+          Toplam Rasyon: <strong class="text-primary">{{ stats().totalRations }}</strong>
+        </span>
+        <span class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-400 border border-amber-200/50">
+          Hedef Grup: <strong>{{ stats().distinctGroups }}</strong>
+        </span>
+        <span class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 border border-emerald-200/50">
+          Yem Bileşeni: <strong>{{ stats().totalIngredients }}</strong>
+        </span>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="flex shrink-0 items-center mt-6 sm:mt-0 sm:ml-4 gap-2.5">
+      <button
+        mat-flat-button
+        class="!bg-amber-600 !text-white !rounded-xl !px-4 !py-2.5 !font-medium flex items-center shadow-md shadow-amber-500/20"
+        (click)="openAddDrawer()">
+        <mat-icon class="icon-size-5 mr-1.5" [svgIcon]="'heroicons_solid:plus'"></mat-icon>
+        <span>Yeni Rasyon Tanımla</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Main Area -->
+  <div class="flex-auto p-6 md:p-8 space-y-6 max-w-screen-xl mx-auto w-full bg-default pb-16">
+
+    <!-- Search Bar -->
+    <div class="p-4 rounded-2xl bg-card shadow-sm border border-gray-200/80 dark:border-gray-700/60 flex flex-col md:flex-row items-center gap-3">
+      <div class="relative w-full md:w-96">
+        <mat-icon class="absolute left-3.5 top-1/2 -translate-y-1/2 icon-size-4 text-secondary pointer-events-none" [svgIcon]="'heroicons_solid:search'"></mat-icon>
+        <input
+          type="text"
+          [ngModel]="searchTerm()"
+          (ngModelChange)="searchTerm.set($event)"
+          placeholder="Rasyon adı veya hedef grup ara..."
+          class="w-full pl-9 pr-8 py-2 text-xs bg-slate-100 dark:bg-slate-750 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 text-default placeholder-secondary font-medium" />
+        @if (searchTerm()) {
+          <button
+            (click)="searchTerm.set('')"
+            class="absolute right-2.5 top-1/2 -translate-y-1/2 text-secondary hover:text-default">
+            <mat-icon class="icon-size-3.5" [svgIcon]="'heroicons_solid:x'"></mat-icon>
+          </button>
+        }
+      </div>
+
+      <div class="text-xs font-medium text-secondary md:ml-auto">
+        Toplam <strong class="text-default">{{ filteredRations().length }}</strong> rasyon listeleniyor
+      </div>
+    </div>
+
+    <!-- Rations Grid -->
+    @if (filteredRations().length === 0) {
+      <div class="p-12 text-center rounded-2xl bg-card border border-dashed border-gray-300 dark:border-gray-700">
+        <div class="w-14 h-14 mx-auto rounded-2xl bg-amber-50 dark:bg-amber-950/40 text-amber-500 flex items-center justify-center mb-3">
+          <mat-icon class="icon-size-7" [svgIcon]="'heroicons_outline:cake'"></mat-icon>
+        </div>
+        <div class="text-base font-bold text-default">Henüz Rasyon Reçetesi Tanımlanmamış</div>
+        <p class="text-xs text-secondary mt-1 max-w-sm mx-auto">
+          Gebe koyunlar, besi kuzuları veya koçlar için dengeli yem rasyonları oluşturarak yem maliyetlerinizi ve hayvan gelişimini optimize edin.
+        </p>
+        <div class="mt-5 flex justify-center gap-3">
+          <button
+            mat-flat-button
+            class="!bg-amber-600 !text-white !rounded-xl !px-4"
+            (click)="openAddDrawer()">
+            İlk Rasyonu Oluştur
+          </button>
+        </div>
+      </div>
+    } @else {
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        @for (r of filteredRations(); track r.id) {
+          <div class="p-5 rounded-2xl bg-card border border-gray-200/80 dark:border-gray-700/60 shadow-xs hover:shadow-md transition-all flex flex-col justify-between">
+            <div>
+              <!-- Top bar -->
+              <div class="flex items-start justify-between">
+                <div>
+                  <span class="text-2xs font-bold px-2 py-0.5 rounded-md bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300">
+                    {{ r.targetGroup || 'Genel Sürü' }}
+                  </span>
+                  <h4 class="text-base font-bold text-default mt-2">{{ r.name }}</h4>
+                </div>
+                <div class="flex items-center gap-1">
+                  <button
+                    mat-icon-button
+                    class="!w-7 !h-7 text-secondary hover:text-primary"
+                    matTooltip="Düzenle"
+                    (click)="openEditDrawer(r)">
+                    <mat-icon class="icon-size-3.5" [svgIcon]="'heroicons_outline:pencil'"></mat-icon>
+                  </button>
+                  <button
+                    mat-icon-button
+                    class="!w-7 !h-7 text-secondary hover:text-rose-600"
+                    matTooltip="Sil"
+                    (click)="deleteRation(r.id)">
+                    <mat-icon class="icon-size-3.5" [svgIcon]="'heroicons_outline:trash'"></mat-icon>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Total Mix weight -->
+              <div class="mt-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 flex items-center justify-between">
+                <span class="text-xs font-medium text-secondary">Rasyon Ağırlığı (Baş Başı / Karışım)</span>
+                <span class="text-base font-extrabold text-amber-600 dark:text-amber-400">
+                  {{ calculateTotalKg(r.items) }} kg
+                </span>
+              </div>
+
+              <!-- Ingredients List -->
+              <div class="mt-4 space-y-2">
+                <div class="text-2xs font-semibold text-secondary uppercase tracking-wider">Yem Bileşenleri</div>
+                @for (item of r.items; track item.stockItemId) {
+                  <div class="text-xs flex items-center justify-between py-1 border-b border-gray-100 dark:border-gray-800/60 last:border-0">
+                    <div class="flex items-center gap-2">
+                      <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                      <span class="font-medium text-default">{{ getItemName(item.stockItemId) }}</span>
+                    </div>
+                    <div class="flex items-center gap-2 font-mono">
+                      <span class="font-bold text-default">{{ item.amountKg }} kg</span>
+                      <span class="text-2xs text-secondary font-semibold">
+                        (%{{ getItemPercentage(item.amountKg, calculateTotalKg(r.items)) }})
+                      </span>
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+
+            <!-- Footer Action -->
+            <div class="mt-5 pt-3 border-t border-gray-100 dark:border-gray-800 flex justify-end">
+              <button
+                mat-button
+                class="!text-xs !text-amber-600 !font-semibold"
+                (click)="openEditDrawer(r)">
+                Reçeteyi Düzenle
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+    }
+
+  </div>
+
+  <!-- Slide-Over Drawer -->
+  @if (showDrawer()) {
+    <div class="fixed inset-0 z-50 overflow-hidden">
+      <!-- Backdrop -->
+      <div
+        class="absolute inset-0 bg-black/40 backdrop-blur-xs transition-opacity"
+        (click)="closeDrawer()"></div>
+
+      <div class="absolute inset-y-0 right-0 max-w-full flex pl-10">
+        <div class="w-screen max-w-lg bg-card shadow-2xl border-l border-gray-200 dark:border-gray-700 flex flex-col">
+
+          <!-- Drawer Header -->
+          <div class="p-6 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 flex items-center justify-center">
+                <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:cake'"></mat-icon>
+              </div>
+              <div>
+                <h3 class="text-base font-bold text-default">
+                  {{ isEditing() ? 'Rasyon Reçetesini Düzenle' : 'Yeni Rasyon Reçetesi' }}
+                </h3>
+                <p class="text-2xs text-secondary">
+                  Yem hammaddeleri ve karışım oranlarını belirleyin.
+                </p>
+              </div>
+            </div>
+            <button
+              mat-icon-button
+              (click)="closeDrawer()"
+              class="text-secondary hover:text-default">
+              <mat-icon class="icon-size-5" [svgIcon]="'heroicons_solid:x'"></mat-icon>
+            </button>
+          </div>
+
+          <!-- Drawer Body -->
+          <div class="flex-1 overflow-y-auto p-6 space-y-4 text-xs">
+
+            @if (errorMessage()) {
+              <div class="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-300 font-medium">
+                {{ errorMessage() }}
+              </div>
+            }
+
+            <!-- Ration Name -->
+            <div>
+              <label class="block font-semibold text-secondary mb-1.5">Rasyon Adı *</label>
+              <input
+                type="text"
+                [ngModel]="form().name"
+                (ngModelChange)="form().name = $event"
+                placeholder="Örn: Gebe Koyun Son Dönem Rasyonu, Besi Başlangıç..."
+                class="w-full px-3 py-2.5 bg-slate-100 dark:bg-slate-750 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500/20 text-default font-medium" />
+            </div>
+
+            <!-- Target Group -->
+            <div>
+              <label class="block font-semibold text-secondary mb-1.5">Hedef Hayvan Grubu</label>
+              <input
+                type="text"
+                [ngModel]="form().targetGroup"
+                (ngModelChange)="form().targetGroup = $event"
+                placeholder="Örn: Gebe Koyunlar, Besi Kuzuları, Damızlık Koçlar..."
+                class="w-full px-3 py-2.5 bg-slate-100 dark:bg-slate-750 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500/20 text-default font-medium" />
+            </div>
+
+            <!-- Ingredients Section -->
+            <div class="pt-2">
+              <div class="flex items-center justify-between mb-2">
+                <label class="font-bold text-default">Yem Hammaddeleri & Miktarları (kg)</label>
+                <button
+                  type="button"
+                  (click)="addItemRow()"
+                  class="text-2xs font-bold text-amber-600 hover:text-amber-700 flex items-center gap-1">
+                  <mat-icon class="icon-size-3.5" [svgIcon]="'heroicons_solid:plus'"></mat-icon>
+                  <span>+ Yem Ekle</span>
+                </button>
+              </div>
+
+              <!-- Items Table -->
+              <div class="space-y-2.5">
+                @for (item of form().items; track $index) {
+                  <div class="flex items-center gap-2 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-gray-200 dark:border-gray-700">
+                    <!-- Feed Item Select -->
+                    <div class="flex-1">
+                      <select
+                        [ngModel]="item.stockItemId"
+                        (ngModelChange)="item.stockItemId = $event"
+                        class="w-full px-2.5 py-1.5 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg text-default text-xs font-medium">
+                        <option value="" disabled>Yem Seçin</option>
+                        @for (si of stockItems(); track si.id) {
+                          <option [value]="si.id">{{ si.name }} ({{ si.unit }})</option>
+                        }
+                      </select>
+                    </div>
+
+                    <!-- Amount Kg -->
+                    <div class="w-24 relative">
+                      <input
+                        type="number"
+                        step="0.1"
+                        min="0.01"
+                        [ngModel]="item.amountKg"
+                        (ngModelChange)="item.amountKg = $event"
+                        placeholder="Kg"
+                        class="w-full px-2.5 py-1.5 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg text-default text-xs font-bold" />
+                      <span class="absolute right-2 top-1/2 -translate-y-1/2 text-2xs text-secondary font-semibold pointer-events-none">
+                        kg
+                      </span>
+                    </div>
+
+                    <!-- Remove Button -->
+                    <button
+                      type="button"
+                      mat-icon-button
+                      class="!w-7 !h-7 text-secondary hover:text-rose-600 shrink-0"
+                      (click)="removeItemRow($index)">
+                      <mat-icon class="icon-size-4" [svgIcon]="'heroicons_outline:trash'"></mat-icon>
+                    </button>
+                  </div>
+                }
+
+                @if (form().items.length === 0) {
+                  <div class="p-4 text-center rounded-xl bg-slate-50 dark:bg-slate-800 text-secondary text-2xs">
+                    Henüz yem hammaddesi eklenmedi. Yukarıdaki "+ Yem Ekle" butonuna tıklayın.
+                  </div>
+                }
+              </div>
+
+              <!-- Total calculation summary -->
+              @if (form().items.length > 0) {
+                <div class="mt-3 p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200/50 flex items-center justify-between font-bold">
+                  <span class="text-amber-800 dark:text-amber-300">Toplam Karışım Ağırlığı:</span>
+                  <span class="text-sm text-amber-700 dark:text-amber-400">{{ formTotalKg() }} kg / baş</span>
+                </div>
+              }
+            </div>
+
+          </div>
+
+          <!-- Drawer Footer -->
+          <div class="p-4 border-t border-gray-200 dark:border-gray-700 flex items-center justify-end gap-2.5 bg-slate-50/50 dark:bg-slate-800/40">
+            <button
+              type="button"
+              mat-stroked-button
+              class="!rounded-xl"
+              (click)="closeDrawer()"
+              [disabled]="isSaving()">
+              Vazgeç
+            </button>
+            <button
+              type="button"
+              mat-flat-button
+              class="!bg-amber-600 !text-white !rounded-xl !px-5"
+              (click)="saveRation()"
+              [disabled]="isSaving()">
+              @if (isSaving()) {
+                <span>Kaydediliyor...</span>
+              } @else {
+                <span>{{ isEditing() ? 'Güncelle' : 'Kaydet' }}</span>
+              }
+            </button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  }
+
+</div>

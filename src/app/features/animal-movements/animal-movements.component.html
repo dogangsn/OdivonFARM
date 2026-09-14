@@ -1,0 +1,393 @@
+<div class="flex flex-col flex-auto min-w-0">
+
+  <!-- Header -->
+  <div class="relative flex flex-col sm:flex-row flex-0 sm:items-center sm:justify-between py-6 md:py-8 px-6 md:px-8 border-b bg-card">
+    <div>
+      <div class="flex items-center gap-3">
+        <div class="w-12 h-12 rounded-2xl bg-cyan-50 dark:bg-cyan-950/50 text-cyan-600 dark:text-cyan-400 flex items-center justify-center">
+          <mat-icon class="icon-size-6" [svgIcon]="'heroicons_outline:switch-horizontal'"></mat-icon>
+        </div>
+        <div>
+          <div class="text-3xl font-extrabold tracking-tight text-default">Hayvan Hareketleri & Transfer</div>
+          <div class="text-xs font-medium text-secondary mt-0.5">
+            Sürü içi padok değişimleri, sürü transferleri ve çiftlik giriş/çıkış operasyon geçmişi.
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick KPI Badges -->
+      <div class="flex items-center gap-2 mt-4 flex-wrap">
+        <span class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-default">
+          Toplam Hareket: <strong class="text-cyan-600">{{ totalCount() }}</strong>
+        </span>
+        <span class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-400 border border-indigo-200/50">
+          Padok Değişimi: <strong>{{ paddockMovementsCount() }}</strong>
+        </span>
+        <span class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-purple-50 dark:bg-purple-950/50 text-purple-700 dark:text-purple-400 border border-purple-200/50">
+          Sürü Transferi: <strong>{{ herdMovementsCount() }}</strong>
+        </span>
+        <span class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-400 border border-amber-200/50">
+          Giriş / Çıkış: <strong>{{ farmInOutCount() }}</strong>
+        </span>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="flex shrink-0 items-center mt-6 sm:mt-0 sm:ml-4 gap-3">
+      <button
+        mat-flat-button
+        class="!bg-cyan-600 !text-white !rounded-xl !px-4 !py-2.5 !font-medium flex items-center shadow-md shadow-cyan-500/20"
+        (click)="openAddDrawer()">
+        <mat-icon class="icon-size-5 mr-1.5" [svgIcon]="'heroicons_solid:plus'"></mat-icon>
+        <span>Yeni Transfer / Hareket</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Main Area -->
+  <div class="flex-auto p-6 md:p-8 space-y-6 max-w-screen-xl mx-auto w-full bg-default pb-16">
+
+    <!-- Search & Filter Bar -->
+    <div class="p-4 rounded-2xl bg-card shadow-sm border border-gray-200/80 dark:border-gray-700/60 flex flex-col md:flex-row items-center gap-3">
+      <!-- Search Input -->
+      <div class="relative w-full md:w-80">
+        <mat-icon class="absolute left-3.5 top-1/2 -translate-y-1/2 icon-size-4 text-secondary pointer-events-none" [svgIcon]="'heroicons_solid:search'"></mat-icon>
+        <input
+          type="text"
+          [ngModel]="searchTerm()"
+          (ngModelChange)="searchTerm.set($event)"
+          placeholder="Küpe no, isim veya açıklama ara..."
+          class="w-full pl-9 pr-8 py-2 text-xs bg-slate-100 dark:bg-slate-750 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 text-default placeholder-secondary font-medium" />
+        @if (searchTerm()) {
+          <button
+            (click)="searchTerm.set('')"
+            class="absolute right-2.5 top-1/2 -translate-y-1/2 text-secondary hover:text-default">
+            <mat-icon class="icon-size-3.5" [svgIcon]="'heroicons_solid:x'"></mat-icon>
+          </button>
+        }
+      </div>
+
+      <!-- Type Filter Select -->
+      <div class="flex items-center gap-2.5 w-full md:w-auto flex-wrap flex-1 justify-start md:justify-end">
+        <select
+          [ngModel]="typeFilter()"
+          (ngModelChange)="typeFilter.set($event || null)"
+          class="px-3 py-2 text-xs font-medium bg-slate-100 dark:bg-slate-750 border border-slate-200 dark:border-slate-700 rounded-xl text-default focus:outline-none">
+          <option [value]="''">Tüm Hareket Türleri</option>
+          <option value="padok">Padok Değişimi</option>
+          <option value="suru">Sürü Transferi</option>
+          <option value="ciftlik-giris">Çiftlik Girişi</option>
+          <option value="ciftlik-cikis">Çiftlik Çıkışı</option>
+        </select>
+
+        @if (searchTerm() || typeFilter()) {
+          <button
+            (click)="searchTerm.set(''); typeFilter.set(null)"
+            class="text-xs font-semibold text-rose-600 hover:text-rose-700 px-2 py-1">
+            Temizle
+          </button>
+        }
+      </div>
+    </div>
+
+    <!-- Results summary -->
+    <div class="text-xs font-medium text-secondary">
+      Toplam <strong class="text-default">{{ filteredMovements().length }}</strong> hareket listeleniyor
+    </div>
+
+    <!-- Data Table -->
+    @if (filteredMovements().length > 0) {
+      <div class="bg-card rounded-2xl shadow-sm border border-gray-200/80 dark:border-gray-700/60 overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-gray-50 dark:bg-slate-800/60 text-secondary font-bold uppercase tracking-wider border-b border-gray-200/80 dark:border-gray-700/60">
+              <tr>
+                <th class="py-3 px-4">Tarih</th>
+                <th class="py-3 px-4">Hayvan Küpe No</th>
+                <th class="py-3 px-4">Hareket Türü</th>
+                <th class="py-3 px-4">Nereden</th>
+                <th class="py-3 px-4">Nereye</th>
+                <th class="py-3 px-4">Açıklama / Sebep</th>
+                <th class="py-3 px-4 text-right">İşlemler</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100 dark:divide-gray-700/50">
+              @for (item of filteredMovements(); track item.id) {
+                <tr class="hover:bg-gray-50/80 dark:hover:bg-slate-800/40 transition-colors">
+                  <!-- Date -->
+                  <td class="py-3.5 px-4 font-mono font-medium text-default whitespace-nowrap">
+                    {{ formatDate(item.date) }}
+                  </td>
+
+                  <!-- Animal -->
+                  <td class="py-3.5 px-4">
+                    <div class="flex items-center gap-2">
+                      <div class="w-7 h-7 rounded-lg bg-cyan-50 dark:bg-cyan-950/50 text-cyan-600 flex items-center justify-center font-bold text-xs">
+                        <mat-icon class="icon-size-3.5" [svgIcon]="'heroicons_solid:identification'"></mat-icon>
+                      </div>
+                      <div>
+                        <div class="font-bold text-default font-mono">
+                          {{ getAnimal(item.animalId)?.farmTagNo || item.animalId }}
+                        </div>
+                        @if (getAnimal(item.animalId)?.name) {
+                          <div class="text-[10px] text-secondary">{{ getAnimal(item.animalId)?.name }}</div>
+                        }
+                      </div>
+                    </div>
+                  </td>
+
+                  <!-- Movement Type Badge -->
+                  <td class="py-3.5 px-4">
+                    <span
+                      class="px-2.5 py-1 rounded-lg text-xs font-semibold"
+                      [ngClass]="{
+                        'bg-indigo-50 text-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-400 border border-indigo-200/50': item.type === 'padok',
+                        'bg-purple-50 text-purple-700 dark:bg-purple-950/50 dark:text-purple-400 border border-purple-200/50': item.type === 'suru',
+                        'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400 border border-emerald-200/50': item.type === 'ciftlik-giris',
+                        'bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-400 border border-rose-200/50': item.type === 'ciftlik-cikis'
+                      }">
+                      {{ item.type === 'padok' ? 'Padok Değişimi' : item.type === 'suru' ? 'Sürü Transferi' : item.type === 'ciftlik-giris' ? 'Çiftlik Girişi' : 'Çiftlik Çıkışı' }}
+                    </span>
+                  </td>
+
+                  <!-- From -->
+                  <td class="py-3.5 px-4 text-secondary font-medium">
+                    {{ getLocationName(item.type, item.fromId) }}
+                  </td>
+
+                  <!-- To -->
+                  <td class="py-3.5 px-4 font-semibold text-default">
+                    <div class="flex items-center gap-1">
+                      <mat-icon class="icon-size-3.5 text-cyan-500" [svgIcon]="'heroicons_solid:arrow-narrow-right'"></mat-icon>
+                      <span>{{ getLocationName(item.type, item.toId) }}</span>
+                    </div>
+                  </td>
+
+                  <!-- Note -->
+                  <td class="py-3.5 px-4 text-secondary max-w-xs truncate">
+                    {{ item.note || '—' }}
+                  </td>
+
+                  <!-- Actions -->
+                  <td class="py-3.5 px-4 text-right space-x-1 whitespace-nowrap">
+                    <button mat-icon-button (click)="openEditDrawer(item)" matTooltip="Düzenle">
+                      <mat-icon class="icon-size-4 text-secondary hover:text-cyan-600" [svgIcon]="'heroicons_outline:pencil'"></mat-icon>
+                    </button>
+                    <button mat-icon-button (click)="deleteMovement(item.id!)" matTooltip="Sil">
+                      <mat-icon class="icon-size-4 text-secondary hover:text-rose-600" [svgIcon]="'heroicons_outline:trash'"></mat-icon>
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    } @else {
+      <!-- Empty State -->
+      <div class="bg-card rounded-2xl p-12 text-center shadow-sm border border-gray-200/80 dark:border-gray-700/60 max-w-lg mx-auto">
+        <div class="w-16 h-16 rounded-2xl bg-cyan-50 dark:bg-cyan-950/50 text-cyan-600 dark:text-cyan-400 flex items-center justify-center mx-auto mb-4 shadow-sm">
+          <mat-icon class="icon-size-8" [svgIcon]="'heroicons_outline:switch-horizontal'"></mat-icon>
+        </div>
+        <h3 class="text-lg font-bold text-default">Kayıtlı hayvan hareketi bulunamadı</h3>
+        <p class="text-xs text-secondary mt-1 mb-6">
+          Hayvanlarınızın padok değişimlerini, sürü transferlerini ve giriş/çıkışlarını kaydederek sürü yerleşimini güncel tutun.
+        </p>
+        <button
+          mat-flat-button
+          class="!bg-cyan-600 !text-white !rounded-xl !px-5 !py-2.5 !font-medium"
+          (click)="openAddDrawer()">
+          + İlk Hareketi Kaydet
+        </button>
+      </div>
+    }
+
+  </div>
+
+  <!-- SLIDE-OVER DRAWER (FORM) -->
+  @if (showDrawer()) {
+    <div class="fixed inset-0 z-50 overflow-hidden bg-slate-900/50 backdrop-blur-sm flex justify-end" (click)="closeDrawer()">
+      <div
+        class="w-full max-w-xl bg-card h-full shadow-2xl flex flex-col justify-between animate-in slide-in-from-right duration-200"
+        (click)="$event.stopPropagation()">
+
+        <!-- Drawer Header -->
+        <div class="p-6 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+          <div>
+            <h2 class="text-xl font-extrabold tracking-tight text-default">
+              {{ isEditing() ? 'Hareket Kaydını Düzenle' : 'Yeni Hayvan Hareketi / Transfer' }}
+            </h2>
+            <p class="text-xs text-secondary mt-0.5">
+              Transfer edilecek hayvanı, hedef padok/sürüyü ve işlem tarihini giriniz.
+            </p>
+          </div>
+          <button mat-icon-button (click)="closeDrawer()">
+            <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:x'"></mat-icon>
+          </button>
+        </div>
+
+        <!-- Drawer Form Body -->
+        <div class="p-6 overflow-y-auto flex-1 space-y-5 custom-scroll">
+          @if (errorMessage()) {
+            <div class="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2">
+              <mat-icon class="icon-size-4 text-rose-600" [svgIcon]="'heroicons_solid:exclamation-circle'"></mat-icon>
+              <span>{{ errorMessage() }}</span>
+            </div>
+          }
+
+          <!-- Field 1: Hayvan Seçimi -->
+          <div>
+            <label class="block text-xs font-semibold text-default mb-1">* Hayvan Seçimi</label>
+            <select
+              [ngModel]="form().animalId"
+              (ngModelChange)="onAnimalSelect($event)"
+              class="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500/20 text-default font-medium">
+              <option value="">Hayvan Seçiniz</option>
+              @for (a of animals(); track a.id) {
+                <option [value]="a.id">
+                  {{ a.farmTagNo }} {{ a.name ? '— ' + a.name : '' }} ({{ a.gender === 'disi' ? 'Dişi' : 'Erkek' }})
+                </option>
+              }
+            </select>
+          </div>
+
+          <!-- Field 2: Hareket Türü & Tarih -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-semibold text-default mb-1">* Hareket Türü</label>
+              <select
+                [ngModel]="form().type"
+                (ngModelChange)="onTypeChange($event)"
+                class="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500/20 text-default font-medium">
+                <option value="padok">Padok Değişimi</option>
+                <option value="suru">Sürü Transferi</option>
+                <option value="ciftlik-giris">Çiftlik Girişi</option>
+                <option value="ciftlik-cikis">Çiftlik Çıkışı</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-default mb-1">* İşlem Tarihi</label>
+              <input
+                type="date"
+                [ngModel]="form().date"
+                (ngModelChange)="updateFormField('date', $event)"
+                class="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500/20 text-default font-medium" />
+            </div>
+          </div>
+
+          <!-- Field 3: Kaynak (Nereden) & Hedef (Nereye) -->
+          @if (form().type === 'padok') {
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-semibold text-default mb-1">Mevcut / Çıkış Padoğu</label>
+                <select
+                  [ngModel]="form().fromId"
+                  (ngModelChange)="updateFormField('fromId', $event)"
+                  class="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none text-default">
+                  <option value="">Seçiniz</option>
+                  @for (p of paddocks(); track p.id) {
+                    <option [value]="p.id">{{ p.name }}</option>
+                  }
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold text-default mb-1">* Hedef / Giriş Padoğu</label>
+                <select
+                  [ngModel]="form().toId"
+                  (ngModelChange)="updateFormField('toId', $event)"
+                  class="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500/20 text-default font-medium">
+                  <option value="">Hedef Padok Seçiniz</option>
+                  @for (p of paddocks(); track p.id) {
+                    <option [value]="p.id">{{ p.name }} (Kapasite: {{ p.capacity || '—' }})</option>
+                  }
+                </select>
+              </div>
+            </div>
+          }
+
+          @if (form().type === 'suru') {
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-semibold text-default mb-1">Mevcut Sürü</label>
+                <select
+                  [ngModel]="form().fromId"
+                  (ngModelChange)="updateFormField('fromId', $event)"
+                  class="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none text-default">
+                  <option value="">Seçiniz</option>
+                  @for (h of herds(); track h.id) {
+                    <option [value]="h.id">{{ h.name }}</option>
+                  }
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold text-default mb-1">* Hedef Sürü</label>
+                <select
+                  [ngModel]="form().toId"
+                  (ngModelChange)="updateFormField('toId', $event)"
+                  class="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500/20 text-default font-medium">
+                  <option value="">Hedef Sürü Seçiniz</option>
+                  @for (h of herds(); track h.id) {
+                    <option [value]="h.id">{{ h.name }}</option>
+                  }
+                </select>
+              </div>
+            </div>
+          }
+
+          <!-- Update Animal Current Location Checkbox -->
+          @if (!isEditing() && (form().type === 'padok' || form().type === 'suru')) {
+            <div class="p-3 rounded-xl bg-cyan-50/50 dark:bg-cyan-950/20 border border-cyan-200/50 flex items-center gap-2.5">
+              <input
+                type="checkbox"
+                id="updateAnimalLocation"
+                [ngModel]="form().updateAnimalCurrentLocation"
+                (ngModelChange)="updateFormField('updateAnimalCurrentLocation', $event)"
+                class="rounded text-cyan-600 focus:ring-cyan-500 h-4 w-4" />
+              <label for="updateAnimalLocation" class="text-xs text-default font-medium cursor-pointer">
+                Hayvanın güncel {{ form().type === 'padok' ? 'padok' : 'sürü' }} bilgisini de otomatik olarak güncelle
+              </label>
+            </div>
+          }
+
+          <!-- Field 4: Notlar -->
+          <div>
+            <label class="block text-xs font-semibold text-default mb-1">Açıklama / Transfer Nedeni</label>
+            <textarea
+              [ngModel]="form().note"
+              (ngModelChange)="updateFormField('note', $event)"
+              rows="3"
+              placeholder="Örn: Sütten kesim ayrımı, hasta izolasyonu, padok temizliği..."
+              class="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none resize-none text-default"></textarea>
+          </div>
+
+        </div>
+
+        <!-- Drawer Footer -->
+        <div class="p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50/70 dark:bg-slate-800/60 flex items-center justify-end gap-3">
+          <button
+            mat-button
+            class="!text-xs !font-semibold !rounded-xl !px-4"
+            (click)="closeDrawer()">
+            Vazgeç
+          </button>
+          <button
+            mat-flat-button
+            class="!bg-cyan-600 !text-white !rounded-xl !px-5 !py-2.5 !font-medium hover:!bg-cyan-700 shadow-md shadow-cyan-500/20"
+            [disabled]="isSaving()"
+            (click)="saveMovement()">
+            @if (isSaving()) {
+              <span>Kaydediliyor...</span>
+            } @else {
+              <span>{{ isEditing() ? 'Güncelle' : 'Kaydet' }}</span>
+            }
+          </button>
+        </div>
+
+      </div>
+    </div>
+  }
+
+</div>

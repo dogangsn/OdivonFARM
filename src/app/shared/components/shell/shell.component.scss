@@ -1,0 +1,74 @@
+:host {
+  display: block;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+}
+
+aside.odivon-sidebar,
+aside.fuse-sidebar {
+  width: 280px !important;
+  min-width: 280px !important;
+  max-width: 280px !important;
+  transition: width 250ms cubic-bezier(0.2, 0.8, 0.2, 1),
+              min-width 250ms cubic-bezier(0.2, 0.8, 0.2, 1),
+              max-width 250ms cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  &.is-collapsed {
+    width: 76px !important;
+    min-width: 76px !important;
+    max-width: 76px !important;
+  }
+}
+
+/* Submenu Accordion Slide Transition */
+.accordion-content {
+  overflow: hidden;
+  transition: max-height 0.25s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease-in-out;
+}
+
+/* Active Nav Item Glow and Indicator (Violet / Indigo from Odivon Logo) */
+.nav-link-active {
+  background: linear-gradient(90deg, rgba(99, 102, 241, 0.18) 0%, rgba(139, 92, 246, 0.08) 60%, transparent 100%) !important;
+  color: #818cf8 !important;
+  font-weight: 600 !important;
+  border-left: 3px solid #6366f1 !important;
+  box-shadow: 0 4px 12px -2px rgba(99, 102, 241, 0.15);
+
+  mat-icon {
+    color: #818cf8 !important;
+  }
+}
+
+.sub-link-active {
+  background: rgba(99, 102, 241, 0.14) !important;
+  color: #a5b4fc !important;
+  font-weight: 600 !important;
+
+  mat-icon {
+    color: #818cf8 !important;
+  }
+}
+
+.custom-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.2) transparent;
+}
+
+.custom-scroll::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+.custom-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scroll::-webkit-scrollbar-thumb {
+  background-color: rgba(148, 163, 184, 0.2);
+  border-radius: 9999px;
+}
+
+.custom-scroll::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(148, 163, 184, 0.4);
+}

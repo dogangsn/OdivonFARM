@@ -1,0 +1,421 @@
+<div class="flex flex-col flex-auto min-w-0">
+
+  @if (viewMode() === 'list') {
+    <!-- Header -->
+    <div class="relative flex flex-col sm:flex-row flex-0 sm:items-center sm:justify-between py-6 md:py-8 px-6 md:px-8 border-b bg-card">
+      <div>
+        <div class="flex items-center gap-3">
+          <div class="w-12 h-12 rounded-2xl bg-teal-50 dark:bg-teal-950/50 text-teal-600 dark:text-teal-400 flex items-center justify-center">
+            <mat-icon class="icon-size-6" [svgIcon]="'heroicons_outline:qrcode'"></mat-icon>
+          </div>
+          <div>
+            <div class="text-3xl font-extrabold tracking-tight text-default">Sayım Operasyonları</div>
+            <div class="text-xs font-medium text-secondary mt-0.5">
+              RFID ve barkod okuyucu destekli sürü ve padok sayımları, kayıp ve eksik hayvan tespiti.
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick KPI Badges -->
+        <div class="flex items-center gap-2 mt-4 flex-wrap">
+          <span class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-default">
+            Yapılan Sayım: <strong class="text-primary">{{ stats().totalSessions }}</strong>
+          </span>
+          <span class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-teal-50 dark:bg-teal-950/50 text-teal-700 dark:text-teal-400 border border-teal-200/50">
+            Aktif Hayvan Varlığı: <strong>{{ stats().totalAnimalsInFarm }}</strong>
+          </span>
+          <span class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-400 border border-blue-200/50">
+            Toplam Okutulan: <strong>{{ stats().totalCountedAllTime }}</strong>
+          </span>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="flex shrink-0 items-center mt-6 sm:mt-0 sm:ml-4 gap-2.5">
+        <button
+          mat-stroked-button
+          class="!rounded-xl !px-3.5 !py-2.5 !font-medium"
+          (click)="startNewCount('padok')">
+          <span>Padok Sayımı</span>
+        </button>
+        <button
+          mat-stroked-button
+          class="!rounded-xl !px-3.5 !py-2.5 !font-medium"
+          (click)="startNewCount('suru')">
+          <span>Sürü Sayımı</span>
+        </button>
+        <button
+          mat-flat-button
+          class="!bg-teal-600 !text-white !rounded-xl !px-4 !py-2.5 !font-medium flex items-center shadow-md shadow-teal-500/20"
+          (click)="startNewCount('genel')">
+          <mat-icon class="icon-size-5 mr-1.5" [svgIcon]="'heroicons_solid:plus'"></mat-icon>
+          <span>Genel Sayım Başlat</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Main Content List -->
+    <div class="flex-auto p-6 md:p-8 space-y-6 max-w-screen-xl mx-auto w-full bg-default pb-16">
+
+      <!-- Search & Filters -->
+      <div class="p-4 rounded-2xl bg-card shadow-sm border border-gray-200/80 dark:border-gray-700/60 flex flex-col md:flex-row items-center gap-3">
+        <div class="relative w-full md:w-80">
+          <mat-icon class="absolute left-3.5 top-1/2 -translate-y-1/2 icon-size-4 text-secondary pointer-events-none" [svgIcon]="'heroicons_solid:search'"></mat-icon>
+          <input
+            type="text"
+            [ngModel]="searchTerm()"
+            (ngModelChange)="searchTerm.set($event)"
+            placeholder="Kapsam, padok, sürü veya cihaz ara..."
+            class="w-full pl-9 pr-8 py-2 text-xs bg-slate-100 dark:bg-slate-750 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 text-default placeholder-secondary font-medium" />
+          @if (searchTerm()) {
+            <button
+              (click)="searchTerm.set('')"
+              class="absolute right-2.5 top-1/2 -translate-y-1/2 text-secondary hover:text-default">
+              <mat-icon class="icon-size-3.5" [svgIcon]="'heroicons_solid:x'"></mat-icon>
+            </button>
+          }
+        </div>
+
+        <select
+          [ngModel]="typeFilter()"
+          (ngModelChange)="typeFilter.set($event)"
+          class="px-3 py-2 text-xs font-medium bg-slate-100 dark:bg-slate-750 border border-slate-200 dark:border-slate-700 rounded-xl text-default focus:outline-none">
+          <option value="all">Tüm Sayım Türleri</option>
+          <option value="genel">Genel Çiftlik Sayımı</option>
+          <option value="padok">Padok Bazlı Sayım</option>
+          <option value="suru">Sürü Bazlı Sayım</option>
+        </select>
+      </div>
+
+      <!-- Past Counts Table -->
+      @if (filteredCounts().length === 0) {
+        <div class="p-12 text-center rounded-2xl bg-card border border-dashed border-gray-300 dark:border-gray-700">
+          <div class="w-14 h-14 mx-auto rounded-2xl bg-teal-50 dark:bg-teal-950/40 text-teal-500 flex items-center justify-center mb-3">
+            <mat-icon class="icon-size-7" [svgIcon]="'heroicons_outline:qrcode'"></mat-icon>
+          </div>
+          <div class="text-base font-bold text-default">Henüz Gerçekleştirilmiş Sayım Yok</div>
+          <p class="text-xs text-secondary mt-1 max-w-sm mx-auto">
+            Bluetooth RFID okuyucu veya manuel küpe girişiyle sayım başlatarak eksik veya kayıp hayvanlarınızı anında belirleyin.
+          </p>
+          <div class="mt-5 flex justify-center gap-3">
+            <button
+              mat-flat-button
+              class="!bg-teal-600 !text-white !rounded-xl !px-4"
+              (click)="startNewCount('genel')">
+              İlk Sayımı Başlat
+            </button>
+          </div>
+        </div>
+      } @else {
+        <div class="bg-card rounded-2xl border border-gray-200/80 dark:border-gray-700/60 overflow-hidden shadow-sm">
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-slate-50 dark:bg-slate-800/60 border-b border-gray-200 dark:border-gray-700 text-secondary uppercase font-semibold tracking-wider">
+                <tr>
+                  <th class="py-3 px-4">Tarih / Saat</th>
+                  <th class="py-3 px-4">Sayım Türü</th>
+                  <th class="py-3 px-4">Kapsam</th>
+                  <th class="py-3 px-4 text-center">Beklenen</th>
+                  <th class="py-3 px-4 text-center">Sayılan</th>
+                  <th class="py-3 px-4 text-center">Fark (Eksik / Fazla)</th>
+                  <th class="py-3 px-4">Cihaz</th>
+                  <th class="py-3 px-4 text-center">İşlem</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-100 dark:divide-gray-800 text-default">
+                @for (c of filteredCounts(); track c.id) {
+                  <tr class="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors">
+                    <td class="py-3.5 px-4 font-medium whitespace-nowrap">
+                      {{ c.startedAt | date:'dd.MM.yyyy HH:mm' }}
+                    </td>
+                    <td class="py-3.5 px-4 whitespace-nowrap">
+                      <span class="px-2.5 py-0.5 rounded-full text-2xs font-bold uppercase bg-slate-100 dark:bg-slate-750 text-default">
+                        {{ c.type }}
+                      </span>
+                    </td>
+                    <td class="py-3.5 px-4 font-semibold whitespace-nowrap">
+                      {{ getScopeName(c.type, c.scopeId) }}
+                    </td>
+                    <td class="py-3.5 px-4 text-center whitespace-nowrap font-bold">
+                      {{ c.expectedCount }}
+                    </td>
+                    <td class="py-3.5 px-4 text-center whitespace-nowrap font-bold text-teal-600 dark:text-teal-400">
+                      {{ c.countedAnimalIds.length }}
+                    </td>
+                    <td class="py-3.5 px-4 text-center whitespace-nowrap">
+                      @if (c.countedAnimalIds.length === c.expectedCount) {
+                        <span class="px-2 py-0.5 rounded-md font-bold text-2xs bg-emerald-100 text-emerald-800">
+                          TAM (0)
+                        </span>
+                      } @else if (c.countedAnimalIds.length < c.expectedCount) {
+                        <span class="px-2 py-0.5 rounded-md font-bold text-2xs bg-rose-100 text-rose-800">
+                          {{ c.countedAnimalIds.length - c.expectedCount }} EKSİK
+                        </span>
+                      } @else {
+                        <span class="px-2 py-0.5 rounded-md font-bold text-2xs bg-blue-100 text-blue-800">
+                          +{{ c.countedAnimalIds.length - c.expectedCount }} FAZLA
+                        </span>
+                      }
+                    </td>
+                    <td class="py-3.5 px-4 text-secondary whitespace-nowrap">
+                      {{ c.deviceName || 'Manuel' }}
+                    </td>
+                    <td class="py-3.5 px-4 text-center whitespace-nowrap">
+                      <div class="flex items-center justify-center gap-1">
+                        <button
+                          mat-button
+                          class="!text-xs !text-teal-600"
+                          (click)="selectedCount.set(c)">
+                          Detay
+                        </button>
+                        <button
+                          mat-icon-button
+                          class="!w-7 !h-7 text-secondary hover:text-rose-600"
+                          matTooltip="Sil"
+                          (click)="deleteCount(c.id)">
+                          <mat-icon class="icon-size-3.5" [svgIcon]="'heroicons_outline:trash'"></mat-icon>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      }
+
+    </div>
+  } @else {
+    <!-- Active Counting Session Screen -->
+    <div class="flex flex-col flex-auto bg-default min-h-screen">
+      
+      <!-- Session Top Bar -->
+      <div class="bg-card border-b border-gray-200 dark:border-gray-700 py-4 px-6 md:px-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-teal-500 animate-ping"></span>
+            <h2 class="text-xl font-extrabold text-default">Canlı Sayım Oturumu</h2>
+            <span class="px-2.5 py-0.5 rounded-md text-xs font-bold bg-teal-100 text-teal-800 uppercase">
+              {{ activeCountType() }}
+            </span>
+          </div>
+          <div class="text-xs text-secondary mt-1">
+            Kapsam: <strong>{{ getScopeName(activeCountType(), activeScopeId()) }}</strong> • Başlangıç: {{ activeStartedAt() | date:'HH:mm:ss' }}
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2.5">
+          <button
+            mat-stroked-button
+            class="!rounded-xl"
+            (click)="requestBluetoothDevice()">
+            <mat-icon class="icon-size-4 mr-1" [svgIcon]="'heroicons_outline:device-mobile'"></mat-icon>
+            <span>{{ activeDeviceName() }}</span>
+          </button>
+
+          <button
+            mat-stroked-button
+            class="!rounded-xl !text-rose-600 hover:!bg-rose-50"
+            (click)="cancelActiveCount()">
+            İptal Et
+          </button>
+
+          <button
+            mat-flat-button
+            class="!bg-teal-600 !text-white !rounded-xl !px-5 font-bold shadow-md"
+            [disabled]="isSaving()"
+            (click)="finishAndSaveCount()">
+            @if (isSaving()) {
+              <span>Kaydediliyor...</span>
+            } @else {
+              <span>Sayımı Bitir ve Kaydet</span>
+            }
+          </button>
+        </div>
+      </div>
+
+      <div class="p-6 md:p-8 max-w-screen-xl mx-auto w-full space-y-6">
+
+        <!-- Big 3 Metric Counters -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <!-- Expected -->
+          <div class="p-6 rounded-2xl bg-card border border-gray-200 dark:border-gray-700 text-center">
+            <div class="text-xs font-semibold text-secondary uppercase tracking-wider">Beklenen Hayvan Sayısı</div>
+            <div class="text-4xl font-extrabold text-default mt-2">{{ expectedAnimals().length }}</div>
+            <div class="text-2xs text-secondary mt-1">Kapsamdaki aktif hayvanlar</div>
+          </div>
+
+          <!-- Counted -->
+          <div class="p-6 rounded-2xl bg-teal-50/50 dark:bg-teal-950/30 border border-teal-200 dark:border-teal-800 text-center">
+            <div class="text-xs font-bold text-teal-800 dark:text-teal-300 uppercase tracking-wider">Sayılan Hayvanlar</div>
+            <div class="text-4xl font-extrabold text-teal-600 dark:text-teal-400 mt-2">{{ activeCountedIds().length }}</div>
+            <div class="text-2xs text-teal-700 dark:text-teal-400 mt-1">
+              İlerleme: %{{ expectedAnimals().length > 0 ? (activeCountedIds().length / expectedAnimals().length * 100 | number:'1.0-0') : 100 }}
+            </div>
+          </div>
+
+          <!-- Missing -->
+          <div class="p-6 rounded-2xl bg-rose-50/40 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-900 text-center">
+            <div class="text-xs font-bold text-rose-800 dark:text-rose-300 uppercase tracking-wider">Kalan / Eksik</div>
+            <div class="text-4xl font-extrabold text-rose-600 dark:text-rose-400 mt-2">{{ missingAnimals().length }}</div>
+            <div class="text-2xs text-rose-700 dark:text-rose-400 mt-1">Henüz okutulmayan küpeler</div>
+          </div>
+        </div>
+
+        <!-- Fast Scan Input -->
+        <div class="p-5 rounded-2xl bg-card border border-gray-200 dark:border-gray-700 shadow-sm">
+          <label class="block text-xs font-bold text-default mb-2">
+            Hızlı Okuma (RFID Terminali veya Küpe No Girin)
+          </label>
+          <div class="flex gap-2">
+            <div class="relative flex-1">
+              <mat-icon class="absolute left-3.5 top-1/2 -translate-y-1/2 icon-size-5 text-secondary pointer-events-none" [svgIcon]="'heroicons_outline:qrcode'"></mat-icon>
+              <input
+                type="text"
+                [ngModel]="scanInput()"
+                (ngModelChange)="scanInput.set($event)"
+                (keyup.enter)="handleScanSubmit()"
+                placeholder="RFID veya Küpe No okutun / yazın ve Enter'a basın..."
+                class="w-full pl-10 pr-4 py-3 bg-slate-100 dark:bg-slate-750 border border-slate-300 dark:border-slate-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 text-sm font-mono font-bold text-default" />
+            </div>
+            <button
+              mat-flat-button
+              class="!bg-teal-600 !text-white !rounded-xl !px-6 font-bold"
+              (click)="handleScanSubmit()">
+              Okut
+            </button>
+          </div>
+
+          @if (scanFeedback()) {
+            <div class="mt-3 p-3 rounded-xl text-xs font-bold flex items-center gap-2"
+                 [ngClass]="scanFeedback()?.success ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'">
+              <mat-icon class="icon-size-4" [svgIcon]="scanFeedback()?.success ? 'heroicons_solid:check-circle' : 'heroicons_solid:exclamation-circle'"></mat-icon>
+              <span>{{ scanFeedback()?.text }}</span>
+            </div>
+          }
+        </div>
+
+        <!-- Tabs for Missing vs Counted -->
+        <div class="bg-card rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+          <div class="flex items-center border-b border-gray-200 dark:border-gray-700 px-4 pt-3 gap-2">
+            <button
+              type="button"
+              (click)="activeTab.set('missing')"
+              [class]="activeTab() === 'missing'
+                ? 'px-4 py-2 text-xs font-bold border-b-2 border-rose-600 text-rose-600'
+                : 'px-4 py-2 text-xs font-medium text-secondary hover:text-default'">
+              Kalan / Eksik Küpeler ({{ missingAnimals().length }})
+            </button>
+            <button
+              type="button"
+              (click)="activeTab.set('counted')"
+              [class]="activeTab() === 'counted'
+                ? 'px-4 py-2 text-xs font-bold border-b-2 border-teal-600 text-teal-600'
+                : 'px-4 py-2 text-xs font-medium text-secondary hover:text-default'">
+              Sayılan Hayvanlar ({{ activeCountedIds().length }})
+            </button>
+          </div>
+
+          <div class="p-4 overflow-y-auto max-h-96">
+            @if (activeTab() === 'missing') {
+              @if (missingAnimals().length === 0) {
+                <div class="p-8 text-center text-emerald-600 font-bold text-sm">
+                  🎉 Tebrikler! Kapsamdaki tüm hayvanlar eksiksiz sayıldı.
+                </div>
+              } @else {
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
+                  @for (a of missingAnimals(); track a.id) {
+                    <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-gray-200 dark:border-gray-700 flex items-center justify-between">
+                      <div>
+                        <div class="font-mono font-bold text-xs text-default">{{ a.farmTagNo || 'Küpesiz' }}</div>
+                        <div class="text-2xs text-secondary">{{ a.name || 'İsimsiz' }}</div>
+                      </div>
+                      <button
+                        mat-stroked-button
+                        class="!text-2xs !py-1 !px-2.5 !rounded-lg !text-teal-600"
+                        (click)="quickCountAnimal(a)">
+                        + Sayıldı
+                      </button>
+                    </div>
+                  }
+                </div>
+              }
+            } @else {
+              @if (countedAnimals().length === 0) {
+                <div class="p-8 text-center text-secondary text-xs">
+                  Henüz sayılan hayvan bulunmuyor.
+                </div>
+              } @else {
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
+                  @for (a of countedAnimals(); track a.id) {
+                    <div class="p-3 rounded-xl bg-teal-50/40 dark:bg-teal-950/20 border border-teal-200 dark:border-teal-800 flex items-center justify-between">
+                      <div>
+                        <div class="font-mono font-bold text-xs text-teal-900 dark:text-teal-200">{{ a.farmTagNo || 'Küpesiz' }}</div>
+                        <div class="text-2xs text-secondary">{{ a.name || 'İsimsiz' }}</div>
+                      </div>
+                      <button
+                        mat-button
+                        class="!text-2xs !text-rose-600"
+                        (click)="uncountAnimal(a.id!)">
+                        Geri Al
+                      </button>
+                    </div>
+                  }
+                </div>
+              }
+            }
+          </div>
+        </div>
+
+      </div>
+    </div>
+  }
+
+  <!-- Detail Modal for Past Count -->
+  @if (selectedCount()) {
+    <div class="fixed inset-0 z-50 overflow-hidden flex items-center justify-center p-4">
+      <div class="fixed inset-0 bg-black/50 backdrop-blur-xs" (click)="selectedCount.set(null)"></div>
+      <div class="relative w-full max-w-lg bg-card rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 p-6 z-10 space-y-4">
+        <div class="flex items-center justify-between pb-3 border-b border-gray-100 dark:border-gray-800">
+          <div>
+            <h3 class="text-base font-bold text-default">Sayım Oturumu Detayı</h3>
+            <div class="text-2xs text-secondary">
+              {{ selectedCount()?.startedAt | date:'dd.MM.yyyy HH:mm' }} • {{ getScopeName(selectedCount()!.type, selectedCount()!.scopeId) }}
+            </div>
+          </div>
+          <button mat-icon-button (click)="selectedCount.set(null)">
+            <mat-icon class="icon-size-5" [svgIcon]="'heroicons_solid:x'"></mat-icon>
+          </button>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3 text-center">
+          <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800">
+            <div class="text-2xs text-secondary">Beklenen</div>
+            <div class="text-xl font-bold text-default">{{ selectedCount()?.expectedCount }}</div>
+          </div>
+          <div class="p-3 rounded-xl bg-teal-50 dark:bg-teal-950/40 text-teal-700">
+            <div class="text-2xs">Sayılan</div>
+            <div class="text-xl font-bold">{{ selectedCount()?.countedAnimalIds?.length || 0 }}</div>
+          </div>
+        </div>
+
+        <div>
+          <div class="text-xs font-bold text-default mb-2">Sayılan Hayvanlar ({{ selectedCount()?.countedAnimalIds?.length || 0 }})</div>
+          <div class="flex flex-wrap gap-1.5 max-h-48 overflow-y-auto p-2 bg-slate-50 dark:bg-slate-800 rounded-xl">
+            @for (id of selectedCount()?.countedAnimalIds || []; track id) {
+              <span class="px-2 py-0.5 rounded font-mono text-2xs font-bold bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-default">
+                {{ getAnimal(id)?.farmTagNo || id }}
+              </span>
+            }
+          </div>
+        </div>
+
+        <div class="flex justify-end pt-2">
+          <button mat-flat-button class="!rounded-xl" (click)="selectedCount.set(null)">Kapat</button>
+        </div>
+      </div>
+    </div>
+  }
+
+</div>

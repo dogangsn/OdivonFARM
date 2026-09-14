@@ -1,0 +1,27 @@
+<div class="simple-crud">
+  <h2>{{ title }}</h2>
+
+  <form class="add-row" (ngSubmit)="add()">
+    <mat-form-field appearance="outline" class="grow">
+      <mat-label>{{ addLabel }}</mat-label>
+      <input matInput [ngModel]="newName()" (ngModelChange)="newName.set($event)" name="newName" />
+    </mat-form-field>
+    <button mat-flat-button color="primary" type="submit">
+      <mat-icon>add</mat-icon>
+      {{ addLabel }}
+    </button>
+  </form>
+
+  <mat-list>
+    @for (item of (items$ | async); track item.id) {
+      <mat-list-item>
+        <span class="grow">{{ item.name }}</span>
+        <button mat-icon-button (click)="remove(item.id!)" aria-label="Sil">
+          <mat-icon>delete_outline</mat-icon>
+        </button>
+      </mat-list-item>
+    } @empty {
+      <p class="empty">Kayıt bulunamadı.</p>
+    }
+  </mat-list>
+</div>

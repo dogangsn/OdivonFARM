@@ -1,0 +1,431 @@
+<div class="flex flex-col flex-auto min-w-0">
+
+  <!-- Header -->
+  <div class="relative flex flex-col sm:flex-row flex-0 sm:items-center sm:justify-between py-6 md:py-8 px-6 md:px-8 border-b bg-card">
+    <div>
+      <div class="flex items-center gap-3">
+        <div class="w-12 h-12 rounded-2xl bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 flex items-center justify-center">
+          <mat-icon class="icon-size-6" [svgIcon]="'heroicons_outline:heart'"></mat-icon>
+        </div>
+        <div>
+          <div class="text-3xl font-extrabold tracking-tight text-default">Çiftleşme & Gebelik Takibi</div>
+          <div class="text-xs font-medium text-secondary mt-0.5">
+            Koç katımı, tohumlama, gebelik muayeneleri, tahmini doğum tarihleri ve doğum takibi.
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick KPI Badges -->
+      <div class="flex items-center gap-2 mt-4 flex-wrap">
+        <span class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-default">
+          Toplam Çiftleşme: <strong class="text-rose-600">{{ totalCount() }}</strong>
+        </span>
+        <span class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 border border-emerald-200/50">
+          Onaylı Gebe: <strong>{{ pregnantCount() }}</strong>
+        </span>
+        <span class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-400 border border-amber-200/50">
+          Gözlemde / Koçuldu: <strong>{{ observationCount() }}</strong>
+        </span>
+        @if (upcomingBirthsCount() > 0) {
+          <span class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-400 border border-rose-200/50 animate-pulse">
+            Yaklaşan Doğum (15 Gün): <strong>{{ upcomingBirthsCount() }} Baş</strong>
+          </span>
+        }
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="flex shrink-0 items-center mt-6 sm:mt-0 sm:ml-4 gap-3">
+      <button
+        mat-flat-button
+        class="!bg-rose-600 !text-white !rounded-xl !px-4 !py-2.5 !font-medium flex items-center shadow-md shadow-rose-500/20"
+        (click)="openAddDrawer()">
+        <mat-icon class="icon-size-5 mr-1.5" [svgIcon]="'heroicons_solid:plus'"></mat-icon>
+        <span>Yeni Çiftleşme Ekle</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Main Area -->
+  <div class="flex-auto p-6 md:p-8 space-y-6 max-w-screen-xl mx-auto w-full bg-default pb-16">
+
+    <!-- Search & Status Filter Pills -->
+    <div class="p-4 rounded-2xl bg-card shadow-sm border border-gray-200/80 dark:border-gray-700/60 flex flex-col md:flex-row items-center justify-between gap-4">
+      <!-- Search Input -->
+      <div class="relative w-full md:w-80">
+        <mat-icon class="absolute left-3.5 top-1/2 -translate-y-1/2 icon-size-4 text-secondary pointer-events-none" [svgIcon]="'heroicons_solid:search'"></mat-icon>
+        <input
+          type="text"
+          [ngModel]="searchTerm()"
+          (ngModelChange)="searchTerm.set($event)"
+          placeholder="Dişi veya erkek küpe no ara..."
+          class="w-full pl-9 pr-8 py-2 text-xs bg-slate-100 dark:bg-slate-750 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 text-default placeholder-secondary font-medium" />
+        @if (searchTerm()) {
+          <button
+            (click)="searchTerm.set('')"
+            class="absolute right-2.5 top-1/2 -translate-y-1/2 text-secondary hover:text-default">
+            <mat-icon class="icon-size-3.5" [svgIcon]="'heroicons_solid:x'"></mat-icon>
+          </button>
+        }
+      </div>
+
+      <!-- Status Pills -->
+      <div class="flex items-center gap-1.5 overflow-x-auto w-full md:w-auto pb-1 md:pb-0">
+        <button
+          (click)="statusFilter.set('all')"
+          class="px-3 py-1.5 rounded-xl text-xs font-semibold transition-all"
+          [ngClass]="statusFilter() === 'all' ? 'bg-rose-600 text-white shadow-sm' : 'bg-slate-100 dark:bg-slate-800 text-secondary hover:text-default'">
+          Tümü ({{ totalCount() }})
+        </button>
+        <button
+          (click)="statusFilter.set('gebe')"
+          class="px-3 py-1.5 rounded-xl text-xs font-semibold transition-all"
+          [ngClass]="statusFilter() === 'gebe' ? 'bg-emerald-600 text-white shadow-sm' : 'bg-slate-100 dark:bg-slate-800 text-secondary hover:text-default'">
+          Gebe ({{ pregnantCount() }})
+        </button>
+        <button
+          (click)="statusFilter.set('gozlem')"
+          class="px-3 py-1.5 rounded-xl text-xs font-semibold transition-all"
+          [ngClass]="statusFilter() === 'gozlem' ? 'bg-amber-600 text-white shadow-sm' : 'bg-slate-100 dark:bg-slate-800 text-secondary hover:text-default'">
+          Gözlemde
+        </button>
+        <button
+          (click)="statusFilter.set('koculdu')"
+          class="px-3 py-1.5 rounded-xl text-xs font-semibold transition-all"
+          [ngClass]="statusFilter() === 'koculdu' ? 'bg-sky-600 text-white shadow-sm' : 'bg-slate-100 dark:bg-slate-800 text-secondary hover:text-default'">
+          Koçuldu
+        </button>
+        <button
+          (click)="statusFilter.set('dogurdu')"
+          class="px-3 py-1.5 rounded-xl text-xs font-semibold transition-all"
+          [ngClass]="statusFilter() === 'dogurdu' ? 'bg-purple-600 text-white shadow-sm' : 'bg-slate-100 dark:bg-slate-800 text-secondary hover:text-default'">
+          Doğurdu
+        </button>
+        <button
+          (click)="statusFilter.set('bos-cikti')"
+          class="px-3 py-1.5 rounded-xl text-xs font-semibold transition-all"
+          [ngClass]="statusFilter() === 'bos-cikti' ? 'bg-slate-600 text-white shadow-sm' : 'bg-slate-100 dark:bg-slate-800 text-secondary hover:text-default'">
+          Boş Çıktı
+        </button>
+      </div>
+    </div>
+
+    <!-- Results summary -->
+    <div class="text-xs font-medium text-secondary">
+      Toplam <strong class="text-default">{{ filteredMatings().length }}</strong> kayıt listeleniyor
+    </div>
+
+    <!-- Data Table -->
+    @if (filteredMatings().length > 0) {
+      <div class="bg-card rounded-2xl shadow-sm border border-gray-200/80 dark:border-gray-700/60 overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-gray-50 dark:bg-slate-800/60 text-secondary font-bold uppercase tracking-wider border-b border-gray-200/80 dark:border-gray-700/60">
+              <tr>
+                <th class="py-3 px-4">Çiftleşme Tarihi</th>
+                <th class="py-3 px-4">Dişi Hayvan (Ana)</th>
+                <th class="py-3 px-4">Erkek Hayvan (Koç/Boğa)</th>
+                <th class="py-3 px-4">Durum</th>
+                <th class="py-3 px-4">Gebelik İlerlemesi</th>
+                <th class="py-3 px-4">Tahmini Doğum</th>
+                <th class="py-3 px-4">Notlar</th>
+                <th class="py-3 px-4 text-right">İşlemler</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100 dark:divide-gray-700/50">
+              @for (item of filteredMatings(); track item.id) {
+                <tr class="hover:bg-gray-50/80 dark:hover:bg-slate-800/40 transition-colors">
+                  <!-- Date -->
+                  <td class="py-3.5 px-4 font-mono font-medium text-default whitespace-nowrap">
+                    {{ formatDate(item.matingDate) }}
+                  </td>
+
+                  <!-- Female -->
+                  <td class="py-3.5 px-4">
+                    <div class="flex items-center gap-2">
+                      <div class="w-7 h-7 rounded-lg bg-rose-50 dark:bg-rose-950/50 text-rose-600 flex items-center justify-center font-bold text-xs">
+                        <mat-icon class="icon-size-3.5" [svgIcon]="'heroicons_solid:heart'"></mat-icon>
+                      </div>
+                      <div>
+                        <div class="font-bold text-default font-mono">
+                          {{ getAnimal(item.femaleId)?.farmTagNo || item.femaleId }}
+                        </div>
+                        @if (getAnimal(item.femaleId)?.name) {
+                          <div class="text-[10px] text-secondary">{{ getAnimal(item.femaleId)?.name }}</div>
+                        }
+                      </div>
+                    </div>
+                  </td>
+
+                  <!-- Male -->
+                  <td class="py-3.5 px-4">
+                    @if (item.maleId) {
+                      <div class="flex items-center gap-2">
+                        <div class="w-7 h-7 rounded-lg bg-sky-50 dark:bg-sky-950/50 text-sky-600 flex items-center justify-center font-bold text-xs">
+                          <mat-icon class="icon-size-3.5" [svgIcon]="'heroicons_solid:badge-check'"></mat-icon>
+                        </div>
+                        <div>
+                          <div class="font-bold text-default font-mono">
+                            {{ getAnimal(item.maleId)?.farmTagNo || item.maleId }}
+                          </div>
+                          @if (getAnimal(item.maleId)?.name) {
+                            <div class="text-[10px] text-secondary">{{ getAnimal(item.maleId)?.name }}</div>
+                          }
+                        </div>
+                      </div>
+                    } @else {
+                      <span class="text-secondary font-medium italic">Suni Tohumlama / Belirtilmemiş</span>
+                    }
+                  </td>
+
+                  <!-- Status Badge -->
+                  <td class="py-3.5 px-4">
+                    <span
+                      class="px-2.5 py-1 rounded-lg text-xs font-bold uppercase tracking-wider"
+                      [ngClass]="{
+                        'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400 border border-emerald-200/50': item.status === 'gebe',
+                        'bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-400 border border-amber-200/50': item.status === 'gozlem',
+                        'bg-sky-50 text-sky-700 dark:bg-sky-950/50 dark:text-sky-400 border border-sky-200/50': item.status === 'koculdu',
+                        'bg-purple-50 text-purple-700 dark:bg-purple-950/50 dark:text-purple-400 border border-purple-200/50': item.status === 'dogurdu',
+                        'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400': item.status === 'bos-cikti'
+                      }">
+                      {{ item.status }}
+                    </span>
+                  </td>
+
+                  <!-- Gestation Progress -->
+                  <td class="py-3.5 px-4 min-w-[140px]">
+                    @if (item.status === 'gebe') {
+                      <div class="space-y-1">
+                        <div class="flex justify-between text-[11px] font-bold">
+                          <span class="text-emerald-600 dark:text-emerald-400">%{{ item.progressPercent }}</span>
+                          <span class="text-secondary">{{ item.daysRemaining !== undefined && item.daysRemaining >= 0 ? item.daysRemaining + ' gün kaldı' : 'Vadesi Geldi' }}</span>
+                        </div>
+                        <div class="w-full bg-slate-100 dark:bg-slate-700 h-2 rounded-full overflow-hidden">
+                          <div
+                            class="bg-emerald-500 h-2 rounded-full transition-all duration-300"
+                            [style.width.%]="item.progressPercent"></div>
+                        </div>
+                      </div>
+                    } @else if (item.status === 'dogurdu') {
+                      <span class="text-purple-600 dark:text-purple-400 font-bold text-xs flex items-center gap-1">
+                        <mat-icon class="icon-size-3.5" [svgIcon]="'heroicons_solid:check-circle'"></mat-icon>
+                        <span>Tamamlandı</span>
+                      </span>
+                    } @else {
+                      <span class="text-secondary text-[11px]">—</span>
+                    }
+                  </td>
+
+                  <!-- Expected Birth Date -->
+                  <td class="py-3.5 px-4 font-mono font-semibold text-default whitespace-nowrap">
+                    {{ formatDate(item.expectedBirthDate) }}
+                  </td>
+
+                  <!-- Notes -->
+                  <td class="py-3.5 px-4 text-secondary max-w-xs truncate">
+                    {{ item.note || '—' }}
+                  </td>
+
+                  <!-- Actions -->
+                  <td class="py-3.5 px-4 text-right space-x-1 whitespace-nowrap">
+                    <!-- Quick Toggle Gebe -->
+                    @if (item.status !== 'gebe' && item.status !== 'dogurdu') {
+                      <button
+                        mat-stroked-button
+                        class="!text-[11px] !px-2 !py-0.5 !h-7 !rounded-lg !text-emerald-600 !border-emerald-200"
+                        (click)="quickStatusChange(item, 'gebe')"
+                        matTooltip="Gebelik Onayla">
+                        Gebe
+                      </button>
+                    }
+                    @if (item.status === 'gebe') {
+                      <button
+                        mat-stroked-button
+                        class="!text-[11px] !px-2 !py-0.5 !h-7 !rounded-lg !text-purple-600 !border-purple-200"
+                        (click)="quickStatusChange(item, 'dogurdu')"
+                        matTooltip="Doğum Kaydet">
+                        Doğurdu
+                      </button>
+                    }
+
+                    <button mat-icon-button (click)="openEditDrawer(item)" matTooltip="Düzenle">
+                      <mat-icon class="icon-size-4 text-secondary hover:text-rose-600" [svgIcon]="'heroicons_outline:pencil'"></mat-icon>
+                    </button>
+                    <button mat-icon-button (click)="deleteMating(item.id!)" matTooltip="Sil">
+                      <mat-icon class="icon-size-4 text-secondary hover:text-rose-600" [svgIcon]="'heroicons_outline:trash'"></mat-icon>
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    } @else {
+      <!-- Empty State -->
+      <div class="bg-card rounded-2xl p-12 text-center shadow-sm border border-gray-200/80 dark:border-gray-700/60 max-w-lg mx-auto">
+        <div class="w-16 h-16 rounded-2xl bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 flex items-center justify-center mx-auto mb-4 shadow-sm">
+          <mat-icon class="icon-size-8" [svgIcon]="'heroicons_outline:heart'"></mat-icon>
+        </div>
+        <h3 class="text-lg font-bold text-default">Kayıtlı çiftleşme bulunamadı</h3>
+        <p class="text-xs text-secondary mt-1 mb-6">
+          Koç katımı, tohumlama ve gebelik takiplerinizi sisteme ekleyerek doğum takvimini otomatik yönetin.
+        </p>
+        <button
+          mat-flat-button
+          class="!bg-rose-600 !text-white !rounded-xl !px-5 !py-2.5 !font-medium"
+          (click)="openAddDrawer()">
+          + İlk Çiftleşmeyi Kaydet
+        </button>
+      </div>
+    }
+
+  </div>
+
+  <!-- SLIDE-OVER DRAWER (FORM) -->
+  @if (showDrawer()) {
+    <div class="fixed inset-0 z-50 overflow-hidden bg-slate-900/50 backdrop-blur-sm flex justify-end" (click)="closeDrawer()">
+      <div
+        class="w-full max-w-xl bg-card h-full shadow-2xl flex flex-col justify-between animate-in slide-in-from-right duration-200"
+        (click)="$event.stopPropagation()">
+
+        <!-- Drawer Header -->
+        <div class="p-6 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+          <div>
+            <h2 class="text-xl font-extrabold tracking-tight text-default">
+              {{ isEditing() ? 'Çiftleşme Kaydını Düzenle' : 'Yeni Çiftleşme / Koç Katımı' }}
+            </h2>
+            <p class="text-xs text-secondary mt-0.5">
+              Dişi hayvan, erkek damızlık ve çiftleşme tarihini giriniz.
+            </p>
+          </div>
+          <button mat-icon-button (click)="closeDrawer()">
+            <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:x'"></mat-icon>
+          </button>
+        </div>
+
+        <!-- Drawer Form Body -->
+        <div class="p-6 overflow-y-auto flex-1 space-y-5 custom-scroll">
+          @if (errorMessage()) {
+            <div class="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2">
+              <mat-icon class="icon-size-4 text-rose-600" [svgIcon]="'heroicons_solid:exclamation-circle'"></mat-icon>
+              <span>{{ errorMessage() }}</span>
+            </div>
+          }
+
+          <!-- Field 1: Dişi & Erkek Hayvan -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-semibold text-default mb-1">* Dişi Hayvan (Ana)</label>
+              <select
+                [ngModel]="form().femaleId"
+                (ngModelChange)="updateFormField('femaleId', $event)"
+                class="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500/20 text-default font-medium">
+                <option value="">Dişi Seçiniz</option>
+                @for (f of femaleAnimals(); track f.id) {
+                  <option [value]="f.id">{{ f.farmTagNo }} {{ f.name ? '— ' + f.name : '' }}</option>
+                }
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-default mb-1">Erkek Hayvan (Koç / Boğa)</label>
+              <select
+                [ngModel]="form().maleId"
+                (ngModelChange)="updateFormField('maleId', $event)"
+                class="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500/20 text-default font-medium">
+                <option value="">Erkek Seçiniz (Opsiyonel)</option>
+                @for (m of maleAnimals(); track m.id) {
+                  <option [value]="m.id">{{ m.farmTagNo }} {{ m.name ? '— ' + m.name : '' }}</option>
+                }
+              </select>
+            </div>
+          </div>
+
+          <!-- Field 2: Çiftleşme Tarihi & Durum -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-semibold text-default mb-1">* Çiftleşme / Katım Tarihi</label>
+              <input
+                type="date"
+                [ngModel]="form().matingDate"
+                (ngModelChange)="onMatingDateChange($event)"
+                class="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500/20 text-default font-medium" />
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-default mb-1">Durum</label>
+              <select
+                [ngModel]="form().status"
+                (ngModelChange)="updateFormField('status', $event)"
+                class="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500/20 text-default font-medium">
+                <option value="koculdu">Koçuldu</option>
+                <option value="gozlem">Gözlemde</option>
+                <option value="gebe">Gebe</option>
+                <option value="dogurdu">Doğurdu</option>
+                <option value="bos-cikti">Boş Çıktı</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Field 3: Tahmini Doğum & Gerçekleşen Doğum -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-semibold text-default mb-1">Tahmini Doğum Tarihi (+150 Gün)</label>
+              <input
+                type="date"
+                [ngModel]="form().expectedBirthDate"
+                (ngModelChange)="updateFormField('expectedBirthDate', $event)"
+                class="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500/20 text-default font-medium" />
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-default mb-1">Gerçekleşen Doğum Tarihi</label>
+              <input
+                type="date"
+                [ngModel]="form().actualBirthDate"
+                (ngModelChange)="updateFormField('actualBirthDate', $event)"
+                class="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500/20 text-default font-medium" />
+            </div>
+          </div>
+
+          <!-- Field 4: Notlar -->
+          <div>
+            <label class="block text-xs font-semibold text-default mb-1">Açıklama / Ultrason Notları</label>
+            <textarea
+              [ngModel]="form().note"
+              (ngModelChange)="updateFormField('note', $event)"
+              rows="3"
+              placeholder="Ultrason sonucu, ikiz/tekiz tahmini, tohumlama yöntemi..."
+              class="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none resize-none text-default"></textarea>
+          </div>
+
+        </div>
+
+        <!-- Drawer Footer -->
+        <div class="p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50/70 dark:bg-slate-800/60 flex items-center justify-end gap-3">
+          <button
+            mat-button
+            class="!text-xs !font-semibold !rounded-xl !px-4"
+            (click)="closeDrawer()">
+            Vazgeç
+          </button>
+          <button
+            mat-flat-button
+            class="!bg-rose-600 !text-white !rounded-xl !px-5 !py-2.5 !font-medium hover:!bg-rose-700 shadow-md shadow-rose-500/20"
+            [disabled]="isSaving()"
+            (click)="saveMating()">
+            @if (isSaving()) {
+              <span>Kaydediliyor...</span>
+            } @else {
+              <span>{{ isEditing() ? 'Güncelle' : 'Kaydet' }}</span>
+            }
+          </button>
+        </div>
+
+      </div>
+    </div>
+  }
+
+</div>

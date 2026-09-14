@@ -1,0 +1,235 @@
+<div class="flex flex-col flex-auto min-w-0">
+
+  <!-- Header -->
+  <div class="relative flex flex-col sm:flex-row flex-0 sm:items-center sm:justify-between py-6 md:py-8 px-6 md:px-8 border-b bg-card print:border-none print:py-2">
+    <div>
+      <div class="flex items-center gap-3">
+        <div class="w-12 h-12 rounded-2xl bg-violet-50 dark:bg-violet-950/50 text-violet-600 dark:text-violet-400 flex items-center justify-center print:hidden">
+          <mat-icon class="icon-size-6" [svgIcon]="'heroicons_outline:chart-pie'"></mat-icon>
+        </div>
+        <div>
+          <div class="text-3xl font-extrabold tracking-tight text-default">Çiftlik Raporları & Analitik</div>
+          <div class="text-xs font-medium text-secondary mt-0.5">
+            Sürü demografisi, döl verimi, süt/yapağı üretimi ve finansal konsolidasyon analizi.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Actions (Hidden on Print) -->
+    <div class="flex shrink-0 items-center mt-6 sm:mt-0 sm:ml-4 gap-2.5 print:hidden">
+      <button
+        mat-flat-button
+        class="!bg-slate-800 text-white dark:!bg-white dark:!text-slate-900 !rounded-xl !px-4 !py-2.5 !font-medium flex items-center shadow-md"
+        (click)="printReport()">
+        <mat-icon class="icon-size-5 mr-1.5" [svgIcon]="'heroicons_outline:printer'"></mat-icon>
+        <span>Raporu Yazdır / PDF</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Main Area -->
+  <div class="flex-auto p-6 md:p-8 space-y-6 max-w-screen-xl mx-auto w-full bg-default pb-16 print:p-0 print:space-y-4">
+
+    <!-- Navigation Tabs (Hidden on Print) -->
+    <div class="flex items-center gap-2 border-b border-gray-200 dark:border-gray-700 pb-2 overflow-x-auto print:hidden">
+      <button
+        type="button"
+        (click)="activeTab.set('overview')"
+        [class]="activeTab() === 'overview'
+          ? 'px-4 py-2 rounded-xl text-xs font-bold bg-violet-600 text-white shadow-xs'
+          : 'px-4 py-2 rounded-xl text-xs font-medium text-secondary hover:text-default hover:bg-slate-100 dark:hover:bg-slate-800'">
+        Genel Yönetici Özeti
+      </button>
+      <button
+        type="button"
+        (click)="activeTab.set('demographics')"
+        [class]="activeTab() === 'demographics'
+          ? 'px-4 py-2 rounded-xl text-xs font-bold bg-violet-600 text-white shadow-xs'
+          : 'px-4 py-2 rounded-xl text-xs font-medium text-secondary hover:text-default hover:bg-slate-100 dark:hover:bg-slate-800'">
+        Sürü Demografisi & Irklar
+      </button>
+      <button
+        type="button"
+        (click)="activeTab.set('breeding')"
+        [class]="activeTab() === 'breeding'
+          ? 'px-4 py-2 rounded-xl text-xs font-bold bg-violet-600 text-white shadow-xs'
+          : 'px-4 py-2 rounded-xl text-xs font-medium text-secondary hover:text-default hover:bg-slate-100 dark:hover:bg-slate-800'">
+        Üreme & Döl Verimi
+      </button>
+      <button
+        type="button"
+        (click)="activeTab.set('financial')"
+        [class]="activeTab() === 'financial'
+          ? 'px-4 py-2 rounded-xl text-xs font-bold bg-violet-600 text-white shadow-xs'
+          : 'px-4 py-2 rounded-xl text-xs font-medium text-secondary hover:text-default hover:bg-slate-100 dark:hover:bg-slate-800'">
+        Mali & Gider Analizi
+      </button>
+    </div>
+
+    <!-- Executive KPI 4-Card Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <!-- Animals -->
+      <div class="p-5 rounded-2xl bg-card border border-gray-200/80 dark:border-gray-700/60 shadow-xs">
+        <div class="text-xs font-semibold text-secondary uppercase tracking-wider">Aktif Sürü Varlığı</div>
+        <div class="text-3xl font-extrabold text-default mt-2">{{ demographics().total }} <span class="text-sm font-medium text-secondary">baş</span></div>
+        <div class="mt-2 text-2xs text-secondary flex items-center justify-between font-medium">
+          <span>Dişi: <strong class="text-pink-600">{{ demographics().femaleCount }} (%{{ demographics().femalePct }})</strong></span>
+          <span>Erkek: <strong class="text-blue-600">{{ demographics().maleCount }} (%{{ demographics().malePct }})</strong></span>
+        </div>
+      </div>
+
+      <!-- Financial Balance -->
+      <div class="p-5 rounded-2xl bg-card border border-gray-200/80 dark:border-gray-700/60 shadow-xs">
+        <div class="text-xs font-semibold text-secondary uppercase tracking-wider">Net Kasa Dengesi</div>
+        <div class="text-2xl font-extrabold mt-2" [class]="financials().netBalance >= 0 ? 'text-emerald-600' : 'text-rose-600'">
+          {{ financials().netBalance | currency:'TRY':'symbol-narrow':'1.0-0' }}
+        </div>
+        <div class="mt-2 text-2xs text-secondary flex items-center justify-between font-medium">
+          <span>Gelir: <strong class="text-emerald-600">+{{ financials().totalIncome | currency:'TRY':'symbol-narrow':'1.0-0' }}</strong></span>
+          <span>Gider: <strong class="text-rose-600">-{{ financials().totalExpense | currency:'TRY':'symbol-narrow':'1.0-0' }}</strong></span>
+        </div>
+      </div>
+
+      <!-- Production -->
+      <div class="p-5 rounded-2xl bg-card border border-gray-200/80 dark:border-gray-700/60 shadow-xs">
+        <div class="text-xs font-semibold text-secondary uppercase tracking-wider">Toplam Üretim Verimi</div>
+        <div class="text-3xl font-extrabold text-blue-600 dark:text-blue-400 mt-2">
+          {{ productionSummary().totalMilk }} <span class="text-sm font-medium text-secondary">lt süt</span>
+        </div>
+        <div class="mt-2 text-2xs text-secondary flex items-center justify-between font-medium">
+          <span>Yapağı: <strong class="text-amber-600">{{ productionSummary().totalWool }} kg</strong></span>
+          <span>Kayıt: <strong>{{ productionSummary().recordCount }} adet</strong></span>
+        </div>
+      </div>
+
+      <!-- Breeding Success -->
+      <div class="p-5 rounded-2xl bg-card border border-gray-200/80 dark:border-gray-700/60 shadow-xs">
+        <div class="text-xs font-semibold text-secondary uppercase tracking-wider">Gebelik Başarı Oranı</div>
+        <div class="text-3xl font-extrabold text-violet-600 dark:text-violet-400 mt-2">
+          %{{ breedingStats().pregnancyRate }}
+        </div>
+        <div class="mt-2 text-2xs text-secondary flex items-center justify-between font-medium">
+          <span>Gebe/Doğum: <strong class="text-default">{{ breedingStats().pregnant + breedingStats().birthed }}</strong></span>
+          <span>Koç Katımı: <strong>{{ breedingStats().total }}</strong></span>
+        </div>
+      </div>
+    </div>
+
+    @if (activeTab() === 'overview' || activeTab() === 'demographics') {
+      <!-- Sürü Demografisi Bölümü -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Age Groups -->
+        <div class="p-6 rounded-2xl bg-card border border-gray-200/80 dark:border-gray-700/60 shadow-xs space-y-4">
+          <h4 class="text-sm font-bold text-default">Yaş Grupları Dağılımı</h4>
+          <div class="grid grid-cols-3 gap-3 text-center">
+            <div class="p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/60">
+              <div class="text-2xs font-bold text-emerald-800 dark:text-emerald-300 uppercase">Kuzu / Oğlak (&lt; 6 Ay)</div>
+              <div class="text-2xl font-extrabold text-emerald-700 dark:text-emerald-400 mt-1">{{ demographics().lambCount }}</div>
+            </div>
+            <div class="p-3.5 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200/60">
+              <div class="text-2xs font-bold text-blue-800 dark:text-blue-300 uppercase">Toklu / Çebiç (6-12 Ay)</div>
+              <div class="text-2xl font-extrabold text-blue-700 dark:text-blue-400 mt-1">{{ demographics().yearlingCount }}</div>
+            </div>
+            <div class="p-3.5 rounded-xl bg-violet-50 dark:bg-violet-950/40 border border-violet-200/60">
+              <div class="text-2xs font-bold text-violet-800 dark:text-violet-300 uppercase">Yetişkin / Anaç (&gt; 12 Ay)</div>
+              <div class="text-2xl font-extrabold text-violet-700 dark:text-violet-400 mt-1">{{ demographics().adultCount }}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Irk Dağılımı -->
+        <div class="p-6 rounded-2xl bg-card border border-gray-200/80 dark:border-gray-700/60 shadow-xs space-y-3">
+          <h4 class="text-sm font-bold text-default">Irklara Göre Varlık Dağılımı</h4>
+          <div class="space-y-2.5">
+            @for (b of demographics().breedList; track b.name) {
+              <div>
+                <div class="flex items-center justify-between text-xs font-semibold mb-1">
+                  <span>{{ b.name }}</span>
+                  <span class="text-secondary font-mono">{{ b.count }} baş (%{{ b.pct }})</span>
+                </div>
+                <div class="w-full h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                  <div class="h-full bg-violet-600 rounded-full" [style.width.%]="b.pct"></div>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    }
+
+    @if (activeTab() === 'overview' || activeTab() === 'financial') {
+      <!-- Mali & Gider Analizi Bölümü -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Top Expenses Breakdown -->
+        <div class="p-6 rounded-2xl bg-card border border-gray-200/80 dark:border-gray-700/60 shadow-xs space-y-3">
+          <h4 class="text-sm font-bold text-default">Gider Kalemleri Dağılımı</h4>
+          @if (financials().topExpenses.length === 0) {
+            <div class="text-secondary text-xs p-4 text-center">Henüz gider hareketi bulunmuyor.</div>
+          } @else {
+            <div class="space-y-3">
+              @for (exp of financials().topExpenses; track exp.name) {
+                <div>
+                  <div class="flex items-center justify-between text-xs font-semibold mb-1">
+                    <span>{{ exp.name }}</span>
+                    <span class="text-rose-600 font-mono">{{ exp.amount | currency:'TRY':'symbol-narrow':'1.0-0' }} (%{{ exp.pct }})</span>
+                  </div>
+                  <div class="w-full h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                    <div class="h-full bg-rose-500 rounded-full" [style.width.%]="exp.pct"></div>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        </div>
+
+        <!-- Health & Medical Cost -->
+        <div class="p-6 rounded-2xl bg-card border border-gray-200/80 dark:border-gray-700/60 shadow-xs space-y-4">
+          <h4 class="text-sm font-bold text-default">Sağlık & Aşı Müdahale Özeti</h4>
+          <div class="grid grid-cols-2 gap-3 text-center">
+            <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-800">
+              <div class="text-2xs text-secondary font-bold uppercase">Toplam Tedavi & Aşı</div>
+              <div class="text-2xl font-extrabold text-default mt-1">{{ healthSummary().totalTreatments }}</div>
+            </div>
+            <div class="p-4 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200/50">
+              <div class="text-2xs text-amber-800 dark:text-amber-300 font-bold uppercase">İlaç & Sağlık Maliyeti</div>
+              <div class="text-2xl font-extrabold text-amber-600 mt-1">
+                {{ healthSummary().totalCost | currency:'TRY':'symbol-narrow':'1.0-0' }}
+              </div>
+            </div>
+          </div>
+          <p class="text-2xs text-secondary leading-relaxed">
+            Periyodik aşılama programları ve medikal müdahaleler sürünün genel sağlık skorunu ve döl verimini doğrudan etkiler.
+          </p>
+        </div>
+      </div>
+    }
+
+    @if (activeTab() === 'overview' || activeTab() === 'breeding') {
+      <!-- Döl Verimi & Doğum İstatistikleri -->
+      <div class="p-6 rounded-2xl bg-card border border-gray-200/80 dark:border-gray-700/60 shadow-xs space-y-4">
+        <h4 class="text-sm font-bold text-default">Üreme & Döl Verim Performansı</h4>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
+          <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800">
+            <div class="text-2xs text-secondary font-bold uppercase">Toplam Çiftleşme</div>
+            <div class="text-xl font-extrabold text-default mt-1">{{ breedingStats().total }}</div>
+          </div>
+          <div class="p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800">
+            <div class="text-2xs font-bold uppercase">Mevcut Gebe</div>
+            <div class="text-xl font-extrabold text-emerald-600 mt-1">{{ breedingStats().pregnant }}</div>
+          </div>
+          <div class="p-3.5 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-800">
+            <div class="text-2xs font-bold uppercase">Tamamlanan Doğum</div>
+            <div class="text-xl font-extrabold text-blue-600 mt-1">{{ breedingStats().birthed }}</div>
+          </div>
+          <div class="p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 text-rose-800">
+            <div class="text-2xs font-bold uppercase">Boş Çıkan</div>
+            <div class="text-xl font-extrabold text-rose-600 mt-1">{{ breedingStats().barren }}</div>
+          </div>
+        </div>
+      </div>
+    }
+
+  </div>
+
+</div>

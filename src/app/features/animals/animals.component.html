@@ -1,0 +1,556 @@
+<div class="flex flex-col flex-auto min-w-0">
+
+  <!-- Header -->
+  <div class="relative flex flex-col sm:flex-row flex-0 sm:items-center sm:justify-between py-6 md:py-8 px-6 md:px-8 border-b bg-card">
+    <!-- Title & Metrics -->
+    <div>
+      <div class="flex items-center gap-3">
+        <div class="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
+          <mat-icon class="icon-size-6" [svgIcon]="'heroicons_outline:identification'"></mat-icon>
+        </div>
+        <div>
+          <div class="text-3xl font-extrabold tracking-tight text-default">Hayvan Yönetimi</div>
+          <div class="text-xs font-medium text-secondary mt-0.5">Sürü varlığı, RFID küpe takibi, soykütüğü ve barınak yerleşimi.</div>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 mt-4 flex-wrap">
+        <span class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-default">
+          Toplam: <strong class="text-indigo-600">{{ totalCount() }}</strong>
+        </span>
+        <span class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 border border-emerald-200/50">
+          Aktif: <strong>{{ activeCount() }}</strong>
+        </span>
+        <span class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-400 border border-rose-200/50">
+          Dişi: <strong>{{ femaleCount() }}</strong>
+        </span>
+        <span class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-sky-50 dark:bg-sky-950/50 text-sky-700 dark:text-sky-400 border border-sky-200/50">
+          Erkek: <strong>{{ maleCount() }}</strong>
+        </span>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="flex shrink-0 items-center mt-6 sm:mt-0 sm:ml-4 gap-3">
+      <!-- View mode switch -->
+      <div class="flex items-center bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-gray-200/60 dark:border-gray-700/60">
+        <button
+          (click)="viewMode.set('grid')"
+          class="p-1.5 rounded-lg transition-colors"
+          [ngClass]="viewMode() === 'grid' ? 'bg-card text-indigo-600 shadow-sm' : 'text-secondary hover:text-default'">
+          <mat-icon class="icon-size-4" [svgIcon]="'heroicons_outline:view-grid'"></mat-icon>
+        </button>
+        <button
+          (click)="viewMode.set('table')"
+          class="p-1.5 rounded-lg transition-colors"
+          [ngClass]="viewMode() === 'table' ? 'bg-card text-indigo-600 shadow-sm' : 'text-secondary hover:text-default'">
+          <mat-icon class="icon-size-4" [svgIcon]="'heroicons_outline:view-list'"></mat-icon>
+        </button>
+      </div>
+
+      <!-- Add Animal Button -->
+      <button
+        mat-flat-button
+        class="!bg-indigo-600 !text-white !rounded-xl !px-4 !py-2.5 !font-medium flex items-center shadow-md shadow-indigo-500/20"
+        (click)="openAddForm()">
+        <mat-icon class="icon-size-5 mr-1.5" [svgIcon]="'heroicons_solid:plus'"></mat-icon>
+        <span>Hayvan Ekle</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Main Area -->
+  <div class="flex-auto p-6 md:p-8 space-y-6 max-w-screen-xl mx-auto w-full bg-default pb-16">
+
+    <!-- Search and Filters bar -->
+    <div class="p-4 rounded-2xl bg-card shadow-sm border border-gray-200/80 dark:border-gray-700/60 flex flex-col md:flex-row items-center gap-3">
+      <!-- Search Input -->
+      <div class="relative w-full md:w-80">
+        <mat-icon class="absolute left-3.5 top-1/2 -translate-y-1/2 icon-size-4 text-secondary pointer-events-none" [svgIcon]="'heroicons_solid:search'"></mat-icon>
+        <input
+          type="text"
+          [ngModel]="searchTerm()"
+          (ngModelChange)="searchTerm.set($event)"
+          placeholder="Küpe, RFID, isim ara..."
+          class="w-full pl-9 pr-8 py-2 text-xs bg-slate-100 dark:bg-slate-750 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-default placeholder-secondary font-medium" />
+        @if (searchTerm()) {
+          <button
+            (click)="searchTerm.set('')"
+            class="absolute right-2.5 top-1/2 -translate-y-1/2 text-secondary hover:text-default">
+            <mat-icon class="icon-size-3.5" [svgIcon]="'heroicons_solid:x'"></mat-icon>
+          </button>
+        }
+      </div>
+
+      <!-- Filter Selects -->
+      <div class="flex items-center gap-2.5 w-full md:w-auto flex-wrap flex-1 justify-start md:justify-end">
+        <select
+          [ngModel]="genderFilter()"
+          (ngModelChange)="genderFilter.set($event || null)"
+          class="px-3 py-2 text-xs font-medium bg-slate-100 dark:bg-slate-750 border border-slate-200 dark:border-slate-700 rounded-xl text-default focus:outline-none focus:ring-2 focus:ring-indigo-500/20">
+          <option [value]="''">Tüm Cinsiyetler</option>
+          <option value="disi">Dişi</option>
+          <option value="erkek">Erkek</option>
+        </select>
+
+        <select
+          [ngModel]="statusFilter()"
+          (ngModelChange)="statusFilter.set($event || null)"
+          class="px-3 py-2 text-xs font-medium bg-slate-100 dark:bg-slate-750 border border-slate-200 dark:border-slate-700 rounded-xl text-default focus:outline-none focus:ring-2 focus:ring-indigo-500/20">
+          <option [value]="''">Tüm Durumlar</option>
+          <option value="aktif">Aktif</option>
+          <option value="pasif">Pasif</option>
+          <option value="satildi">Satıldı</option>
+          <option value="kesildi">Kesildi</option>
+          <option value="oldu">Öldü</option>
+        </select>
+
+        @if (herds().length > 0) {
+          <select
+            [ngModel]="herdFilter()"
+            (ngModelChange)="herdFilter.set($event || null)"
+            class="px-3 py-2 text-xs font-medium bg-slate-100 dark:bg-slate-750 border border-slate-200 dark:border-slate-700 rounded-xl text-default focus:outline-none">
+            <option [value]="''">Tüm Sürüler</option>
+            @for (h of herds(); track h.id) {
+              <option [value]="h.id">{{ h.name }}</option>
+            }
+          </select>
+        }
+
+        @if (paddocks().length > 0) {
+          <select
+            [ngModel]="paddockFilter()"
+            (ngModelChange)="paddockFilter.set($event || null)"
+            class="px-3 py-2 text-xs font-medium bg-slate-100 dark:bg-slate-750 border border-slate-200 dark:border-slate-700 rounded-xl text-default focus:outline-none">
+            <option [value]="''">Tüm Padoklar</option>
+            @for (p of paddocks(); track p.id) {
+              <option [value]="p.id">{{ p.name }}</option>
+            }
+          </select>
+        }
+
+        @if (searchTerm() || genderFilter() || statusFilter() || herdFilter() || paddockFilter()) {
+          <button
+            (click)="searchTerm.set(''); genderFilter.set(null); statusFilter.set(null); herdFilter.set(null); paddockFilter.set(null)"
+            class="text-xs font-semibold text-rose-600 hover:text-rose-700 px-2 py-1">
+            Temizle
+          </button>
+        }
+      </div>
+    </div>
+
+    <!-- Results summary -->
+    <div class="text-xs font-medium text-secondary">
+      Toplam <strong class="text-default">{{ filteredAnimals().length }}</strong> hayvan listeleniyor
+    </div>
+
+    <!-- GRID VIEW -->
+    @if (viewMode() === 'grid') {
+      @if (filteredAnimals().length > 0) {
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
+          @for (animal of filteredAnimals(); track animal.id) {
+            <div class="bg-card rounded-2xl p-5 shadow-sm border border-gray-200/80 dark:border-gray-700/60 hover:shadow-md transition-shadow flex flex-col justify-between group">
+              <div>
+                <!-- Top Row: Icon Avatar & Status Pill & Actions -->
+                <div class="flex items-center justify-between mb-3">
+                  <div class="flex items-center gap-2.5">
+                    <div
+                      class="w-11 h-11 rounded-2xl flex items-center justify-center font-bold text-sm shadow-xs"
+                      [ngClass]="animal.gender === 'disi' ? 'bg-rose-50 text-rose-600 dark:bg-rose-950/50 dark:text-rose-400 border border-rose-200/50' : 'bg-sky-50 text-sky-600 dark:bg-sky-950/50 dark:text-sky-400 border border-sky-200/50'">
+                      <mat-icon class="icon-size-5" [svgIcon]="animal.gender === 'disi' ? 'heroicons_solid:heart' : 'heroicons_solid:badge-check'"></mat-icon>
+                    </div>
+                    <div>
+                      <div class="font-extrabold text-base text-default leading-tight font-mono">
+                        {{ animal.farmTagNo }}
+                      </div>
+                      <div class="text-[11px] text-secondary font-medium">
+                        {{ animal.name || 'İsimsiz' }}
+                      </div>
+                    </div>
+                  </div>
+
+                  <span
+                    class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider"
+                    [ngClass]="{
+                      'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400 border border-emerald-200/50': animal.status === 'aktif',
+                      'bg-slate-100 text-slate-600 dark:bg-slate-750 dark:text-slate-300': animal.status === 'pasif',
+                      'bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-400 border border-amber-200/50': animal.status === 'satildi',
+                      'bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-400 border border-rose-200/50': animal.status === 'oldu' || animal.status === 'kesildi'
+                    }">
+                    {{ animal.status }}
+                  </span>
+                </div>
+
+                <!-- Detail list -->
+                <div class="mt-4 pt-3 border-t border-gray-100 dark:border-gray-700/60 space-y-2 text-xs">
+                  @if (animal.nationalTagNo) {
+                    <div class="flex justify-between">
+                      <span class="text-secondary">Ulusal No (DKN):</span>
+                      <span class="font-bold text-default font-mono">{{ animal.nationalTagNo }}</span>
+                    </div>
+                  }
+                  @if (animal.rfid) {
+                    <div class="flex justify-between">
+                      <span class="text-secondary">RFID:</span>
+                      <span class="font-bold text-indigo-600 dark:text-indigo-400 font-mono">{{ animal.rfid }}</span>
+                    </div>
+                  }
+                  <div class="flex justify-between">
+                    <span class="text-secondary">Sürü / Padok:</span>
+                    <span class="font-semibold text-default">
+                      {{ getHerdName(animal.herdId) }} / {{ getPaddockName(animal.paddockId) }}
+                    </span>
+                  </div>
+                  @if (animal.breedId) {
+                    <div class="flex justify-between">
+                      <span class="text-secondary">Irk:</span>
+                      <span class="font-semibold text-default">{{ getBreedName(animal.breedId) }}</span>
+                    </div>
+                  }
+                </div>
+              </div>
+
+              <!-- Footer Actions -->
+              <div class="mt-5 pt-3 border-t border-gray-100 dark:border-gray-700/60 flex items-center justify-between">
+                <button
+                  mat-button
+                  class="!text-xs !font-bold !text-indigo-600 !px-2.5 flex items-center"
+                  (click)="openEditForm(animal)">
+                  <mat-icon class="icon-size-4 mr-1" [svgIcon]="'heroicons_outline:pencil'"></mat-icon>
+                  <span>Düzenle</span>
+                </button>
+
+                <button
+                  mat-icon-button
+                  class="!text-secondary hover:!text-rose-600"
+                  (click)="deleteAnimal(animal.id!)"
+                  matTooltip="Sil">
+                  <mat-icon class="icon-size-4" [svgIcon]="'heroicons_outline:trash'"></mat-icon>
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+      } @else {
+        <!-- Empty state -->
+        <div class="bg-card rounded-2xl p-12 text-center shadow-sm border border-gray-200/80 dark:border-gray-700/60 max-w-lg mx-auto">
+          <div class="w-16 h-16 rounded-2xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mx-auto mb-4 shadow-sm">
+            <mat-icon class="icon-size-8" [svgIcon]="'heroicons_outline:identification'"></mat-icon>
+          </div>
+          <h3 class="text-lg font-bold text-default">Kayıtlı hayvan bulunamadı</h3>
+          <p class="text-xs text-secondary mt-1 mb-6">
+            Henüz sürüye hayvan kaydı eklenmedi veya arama kriterlerinize uygun sonuç yok.
+          </p>
+          <button
+            mat-flat-button
+            class="!bg-indigo-600 !text-white !rounded-xl !px-5 !py-2.5 !font-medium"
+            (click)="openAddForm()">
+            + İlk Hayvanı Ekle
+          </button>
+        </div>
+      }
+    }
+
+    <!-- TABLE VIEW -->
+    @if (viewMode() === 'table') {
+      <div class="bg-card rounded-2xl shadow-sm border border-gray-200/80 dark:border-gray-700/60 overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-gray-50 dark:bg-slate-800/60 text-secondary font-bold uppercase tracking-wider border-b border-gray-200/80 dark:border-gray-700/60">
+              <tr>
+                <th class="py-3 px-4">Çiftlik Küpe</th>
+                <th class="py-3 px-4">İsim</th>
+                <th class="py-3 px-4">Cinsiyet</th>
+                <th class="py-3 px-4">DKN (Ulusal)</th>
+                <th class="py-3 px-4">RFID</th>
+                <th class="py-3 px-4">Sürü</th>
+                <th class="py-3 px-4">Padok</th>
+                <th class="py-3 px-4">Durum</th>
+                <th class="py-3 px-4 text-right">İşlemler</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100 dark:divide-gray-700/50">
+              @for (animal of filteredAnimals(); track animal.id) {
+                <tr class="hover:bg-gray-50/80 dark:hover:bg-slate-800/40 transition-colors">
+                  <td class="py-3.5 px-4 font-bold text-default font-mono">{{ animal.farmTagNo }}</td>
+                  <td class="py-3.5 px-4 text-secondary font-medium">{{ animal.name || '—' }}</td>
+                  <td class="py-3.5 px-4">
+                    <span
+                      class="px-2 py-0.5 rounded-md text-[11px] font-bold"
+                      [ngClass]="animal.gender === 'disi' ? 'bg-rose-50 text-rose-700' : 'bg-sky-50 text-sky-700'">
+                      {{ animal.gender === 'disi' ? 'Dişi' : 'Erkek' }}
+                    </span>
+                  </td>
+                  <td class="py-3.5 px-4 font-mono text-secondary font-medium">{{ animal.nationalTagNo || '—' }}</td>
+                  <td class="py-3.5 px-4 font-mono text-indigo-600 dark:text-indigo-400 font-bold">{{ animal.rfid || '—' }}</td>
+                  <td class="py-3.5 px-4 text-secondary">{{ getHerdName(animal.herdId) }}</td>
+                  <td class="py-3.5 px-4 text-secondary">{{ getPaddockName(animal.paddockId) }}</td>
+                  <td class="py-3.5 px-4">
+                    <span
+                      class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider"
+                      [ngClass]="animal.status === 'aktif' ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-600'">
+                      {{ animal.status }}
+                    </span>
+                  </td>
+                  <td class="py-3.5 px-4 text-right space-x-1">
+                    <button mat-icon-button (click)="openEditForm(animal)" matTooltip="Düzenle">
+                      <mat-icon class="icon-size-4 text-secondary hover:text-indigo-600" [svgIcon]="'heroicons_outline:pencil'"></mat-icon>
+                    </button>
+                    <button mat-icon-button (click)="deleteAnimal(animal.id!)" matTooltip="Sil">
+                      <mat-icon class="icon-size-4 text-secondary hover:text-rose-600" [svgIcon]="'heroicons_outline:trash'"></mat-icon>
+                    </button>
+                  </td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="9" class="py-8 text-center text-secondary">Kayıt bulunamadı.</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    }
+
+  </div>
+
+  <!-- SLIDE-OVER DRAWER (FORM) -->
+  @if (showDrawer()) {
+    <div class="fixed inset-0 z-50 overflow-hidden bg-slate-900/50 backdrop-blur-sm flex justify-end" (click)="closeDrawer()">
+      <div
+        class="w-full max-w-xl bg-card h-full shadow-2xl flex flex-col justify-between animate-in slide-in-from-right duration-200"
+        (click)="$event.stopPropagation()">
+
+        <!-- Drawer Header -->
+        <div class="p-6 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+          <div>
+            <h2 class="text-xl font-extrabold tracking-tight text-default">
+              {{ isEditing() ? 'Hayvan Bilgilerini Düzenle' : 'Yeni Hayvan Ekle' }}
+            </h2>
+            <p class="text-xs text-secondary mt-0.5">
+              Çiftlik küpe ve soykütüğü bilgilerini eksiksiz doldurunuz.
+            </p>
+          </div>
+          <button mat-icon-button (click)="closeDrawer()">
+            <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:x'"></mat-icon>
+          </button>
+        </div>
+
+        <!-- Drawer Form Body -->
+        <div class="p-6 overflow-y-auto flex-1 space-y-5 custom-scroll">
+          @if (errorMessage()) {
+            <div class="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2">
+              <mat-icon class="icon-size-4 text-rose-600" [svgIcon]="'heroicons_solid:exclamation-circle'"></mat-icon>
+              <span>{{ errorMessage() }}</span>
+            </div>
+          }
+
+          <!-- Group 1: Temel Kimlik -->
+          <div class="space-y-3">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-secondary">1. Temel Kimlik Bilgileri</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-semibold text-default mb-1">* Çiftlik Küpe No</label>
+                <input
+                  type="text"
+                  [ngModel]="form().farmTagNo"
+                  (ngModelChange)="updateFormField('farmTagNo', $event)"
+                  placeholder="Örn: TR-2024-001"
+                  class="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 font-mono text-default font-semibold" />
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold text-default mb-1">Ulusal Küpe No (DKN)</label>
+                <input
+                  type="text"
+                  [ngModel]="form().nationalTagNo"
+                  (ngModelChange)="updateFormField('nationalTagNo', $event)"
+                  placeholder="Örn: 999123456"
+                  class="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 font-mono text-default" />
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold text-default mb-1">RFID Kodu</label>
+                <input
+                  type="text"
+                  [ngModel]="form().rfid"
+                  (ngModelChange)="updateFormField('rfid', $event)"
+                  placeholder="Örn: 982000123"
+                  class="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 font-mono text-default" />
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold text-default mb-1">İsim / Lakap</label>
+                <input
+                  type="text"
+                  [ngModel]="form().name"
+                  (ngModelChange)="updateFormField('name', $event)"
+                  placeholder="Örn: Prenses"
+                  class="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-default" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Group 2: Cinsiyet & Durum -->
+          <div class="space-y-3 pt-3 border-t border-gray-100 dark:border-gray-700/60">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-secondary">2. Cinsiyet ve Durum</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-semibold text-default mb-1">Cinsiyet</label>
+                <div class="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    (click)="updateFormField('gender', 'disi')"
+                    class="py-2 px-3 rounded-xl border text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors"
+                    [ngClass]="form().gender === 'disi' ? 'bg-rose-50 border-rose-300 text-rose-700 shadow-xs' : 'bg-slate-50 border-slate-200 text-secondary'">
+                    <mat-icon class="icon-size-4" [svgIcon]="'heroicons_solid:heart'"></mat-icon>
+                    <span>Dişi</span>
+                  </button>
+                  <button
+                    type="button"
+                    (click)="updateFormField('gender', 'erkek')"
+                    class="py-2 px-3 rounded-xl border text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors"
+                    [ngClass]="form().gender === 'erkek' ? 'bg-sky-50 border-sky-300 text-sky-700 shadow-xs' : 'bg-slate-50 border-slate-200 text-secondary'">
+                    <mat-icon class="icon-size-4" [svgIcon]="'heroicons_solid:badge-check'"></mat-icon>
+                    <span>Erkek</span>
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold text-default mb-1">Durum</label>
+                <select
+                  [ngModel]="form().status"
+                  (ngModelChange)="updateFormField('status', $event)"
+                  class="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 text-default">
+                  <option value="aktif">Aktif</option>
+                  <option value="pasif">Pasif</option>
+                  <option value="satildi">Satıldı</option>
+                  <option value="kesildi">Kesildi</option>
+                  <option value="oldu">Öldü</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Group 3: Sınıflandırma -->
+          <div class="space-y-3 pt-3 border-t border-gray-100 dark:border-gray-700/60">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-secondary">3. Sınıflandırma & Barınak</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-semibold text-default mb-1">Hayvan Tipi</label>
+                <select
+                  [ngModel]="form().animalTypeId"
+                  (ngModelChange)="updateFormField('animalTypeId', $event)"
+                  class="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none text-default">
+                  <option value="">Seçiniz</option>
+                  @for (t of animalTypes(); track t.id) {
+                    <option [value]="t.id">{{ t.name }}</option>
+                  }
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold text-default mb-1">Irk</label>
+                <select
+                  [ngModel]="form().breedId"
+                  (ngModelChange)="updateFormField('breedId', $event)"
+                  class="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none text-default">
+                  <option value="">Seçiniz</option>
+                  @for (b of breeds(); track b.id) {
+                    <option [value]="b.id">{{ b.name }}</option>
+                  }
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold text-default mb-1">Sürü</label>
+                <select
+                  [ngModel]="form().herdId"
+                  (ngModelChange)="updateFormField('herdId', $event)"
+                  class="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none text-default">
+                  <option value="">Seçiniz</option>
+                  @for (h of herds(); track h.id) {
+                    <option [value]="h.id">{{ h.name }}</option>
+                  }
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold text-default mb-1">Padok</label>
+                <select
+                  [ngModel]="form().paddockId"
+                  (ngModelChange)="updateFormField('paddockId', $event)"
+                  class="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none text-default">
+                  <option value="">Seçiniz</option>
+                  @for (p of paddocks(); track p.id) {
+                    <option [value]="p.id">{{ p.name }}</option>
+                  }
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Group 4: Soykütüğü & Notlar -->
+          <div class="space-y-3 pt-3 border-t border-gray-100 dark:border-gray-700/60">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-secondary">4. Soykütüğü & Notlar</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-semibold text-default mb-1">Anne Küpe No</label>
+                <input
+                  type="text"
+                  [ngModel]="form().motherId"
+                  (ngModelChange)="updateFormField('motherId', $event)"
+                  placeholder="Örn: TR-2021-098"
+                  class="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none font-mono text-default" />
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold text-default mb-1">Baba Küpe No</label>
+                <input
+                  type="text"
+                  [ngModel]="form().fatherId"
+                  (ngModelChange)="updateFormField('fatherId', $event)"
+                  placeholder="Örn: TR-2020-015"
+                  class="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none font-mono text-default" />
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-default mb-1">Özel Notlar</label>
+              <textarea
+                [ngModel]="form().notes"
+                (ngModelChange)="updateFormField('notes', $event)"
+                rows="2"
+                placeholder="Aşı durumu, fiziksel ayırt edici özellikler..."
+                class="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none resize-none text-default"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- Drawer Footer -->
+        <div class="p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50/70 dark:bg-slate-800/60 flex items-center justify-end gap-3">
+          <button
+            mat-button
+            class="!text-xs !font-semibold !rounded-xl !px-4"
+            (click)="closeDrawer()">
+            Vazgeç
+          </button>
+          <button
+            mat-flat-button
+            class="!bg-indigo-600 !text-white !rounded-xl !px-5 !py-2.5 !font-medium hover:!bg-indigo-700 shadow-md shadow-indigo-500/20"
+            [disabled]="isSaving()"
+            (click)="saveAnimal()">
+            @if (isSaving()) {
+              <span>Kaydediliyor...</span>
+            } @else {
+              <span>{{ isEditing() ? 'Güncelle' : 'Kaydet' }}</span>
+            }
+          </button>
+        </div>
+
+      </div>
+    </div>
+  }
+
+</div>
