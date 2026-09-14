@@ -9,6 +9,7 @@ import { FarmPhotoService } from '../../core/services/farm-photo.service';
 import { AnimalService } from '../../core/services/animal.service';
 import { FarmPhoto } from '../../core/models/operations.model';
 import { Animal } from '../../core/models/animal.model';
+import { AlertService } from '../../core/services/alert.service';
 
 @Component({
   selector: 'app-gallery',
@@ -26,6 +27,7 @@ import { Animal } from '../../core/models/animal.model';
 export class GalleryComponent {
   private photoService = inject(FarmPhotoService);
   private animalService = inject(AnimalService);
+  private alertService = inject(AlertService);
 
   readonly photos = toSignal(this.photoService.list(), { initialValue: [] as FarmPhoto[] });
   readonly animals = toSignal(this.animalService.list(), { initialValue: [] as Animal[] });
@@ -165,17 +167,20 @@ export class GalleryComponent {
 
   async deletePhoto(id?: string) {
     if (!id) return;
-    if (!confirm('Bu fotoğrafı silmek istediğinize emin misiniz?')) {
-      return;
-    }
+    const confirmed = await this.alertService.confirmDelete(
+      'Fotoğrafı Sil',
+      'Bu fotoğrafı silmek istediğinize emin misiniz?'
+    );
+    if (!confirmed) return;
     try {
       await this.photoService.softDelete(id);
       if (this.previewPhoto()?.id === id) {
         this.previewPhoto.set(null);
       }
+      this.alertService.toastSuccess('Fotoğraf başarıyla silindi');
     } catch (err) {
       console.error('Silme hatası:', err);
-      alert('Fotoğraf silinirken hata oluştu.');
+      this.alertService.error('Hata Oluştu', 'Fotoğraf silinirken hata oluştu.');
     }
   }
 

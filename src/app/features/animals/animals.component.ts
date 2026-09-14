@@ -17,6 +17,10 @@ import { HerdService } from '../../core/services/definitions/herd.service';
 import { PaddockService } from '../../core/services/definitions/paddock.service';
 import { AnimalTypeService } from '../../core/services/definitions/animal-type.service';
 import { Animal, AnimalStatus, Breed, Herd, Paddock, AnimalType } from '../../core/models';
+import { AlertService } from '../../core/services/alert.service';
+
+import { Router } from '@angular/router';
+import { SubscriptionService } from '../../core/services/subscription.service';
 
 @Component({
   selector: 'app-animals',
@@ -38,10 +42,13 @@ import { Animal, AnimalStatus, Breed, Herd, Paddock, AnimalType } from '../../co
 })
 export class AnimalsComponent {
   private animalService = inject(AnimalService);
+  private alertService = inject(AlertService);
   private breedService = inject(BreedService);
   private herdService = inject(HerdService);
   private paddockService = inject(PaddockService);
   private animalTypeService = inject(AnimalTypeService);
+  private subService = inject(SubscriptionService);
+  private router = inject(Router);
 
   // Live signals
   animals = toSignal(this.animalService.list(), { initialValue: [] as Animal[] });
@@ -116,6 +123,20 @@ export class AnimalsComponent {
   });
 
   openAddForm() {
+    if (!this.subService.canAddAnimal(this.animals().length)) {
+      this.alertService.confirm(
+        'Hayvan Kapasite Kotanız Doldu',
+        `Mevcut paketiniz en fazla ${this.subService.animalLimit()} baş hayvana izin vermektedir. Çiftliğinize yeni hayvan eklemek için paketinizi yükseltebilirsiniz.`,
+        'Paketi Yükselt',
+        'Vazgeç'
+      ).then((confirmed) => {
+        if (confirmed) {
+          this.router.navigate(['/abonelik']);
+        }
+      });
+      return;
+    }
+
     this.isEditing.set(false);
     this.errorMessage.set(null);
     this.form.set({
@@ -179,8 +200,16 @@ export class AnimalsComponent {
   }
 
   async deleteAnimal(id: string) {
-    if (confirm('Bu hayvan kaydını silmek istediğinize emin misiniz? (Geri Dönüşüm Merkezi\'nden kurtarılabilir)')) {
+    const confirmed = await this.alertService.confirmDelete(
+      'Hayvan Kaydını Sil',
+      'Bu hayvan kaydını silmek istediğinize emin misiniz? (Geri Dönüşüm Merkezi\'nden kurtarılabilir)'
+    );
+    if (!confirmed) return;
+    try {
       await this.animalService.softDelete(id);
+      this.alertService.toastSuccess('Hayvan kaydı silindi');
+    } catch (err: any) {
+      this.alertService.error('Silme Başarısız', err?.message || 'Hayvan silinirken bir hata oluştu.');
     }
   }
 

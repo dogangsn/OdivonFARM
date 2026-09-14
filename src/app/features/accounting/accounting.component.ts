@@ -9,6 +9,7 @@ import { AccountingTransactionService } from '../../core/services/accounting-tra
 import { AccountingItemService } from '../../core/services/definitions/accounting-item.service';
 import { AccountService } from '../../core/services/definitions/account.service';
 import { AccountingTransaction, AccountingItem, Account } from '../../core/models/inventory.model';
+import { AlertService } from '../../core/services/alert.service';
 
 @Component({
   selector: 'app-accounting',
@@ -27,6 +28,7 @@ export class AccountingComponent {
   private transactionService = inject(AccountingTransactionService);
   private itemService = inject(AccountingItemService);
   private accountService = inject(AccountService);
+  private alertService = inject(AlertService);
 
   readonly transactions = toSignal(this.transactionService.list(), { initialValue: [] as AccountingTransaction[] });
   readonly items = toSignal(this.itemService.list(), { initialValue: [] as AccountingItem[] });
@@ -255,14 +257,17 @@ export class AccountingComponent {
 
   async deleteTransaction(id?: string) {
     if (!id) return;
-    if (!confirm('Bu muhasebe kaydını silmek istediğinize emin misiniz?')) {
-      return;
-    }
+    const confirmed = await this.alertService.confirmDelete(
+      'Muhasebe Kaydını Sil',
+      'Bu muhasebe kaydını silmek istediğinize emin misiniz?'
+    );
+    if (!confirmed) return;
     try {
       await this.transactionService.softDelete(id);
+      this.alertService.toastSuccess('Muhasebe kaydı başarıyla silindi');
     } catch (err) {
       console.error('Silme hatası:', err);
-      alert('Kayıt silinirken bir hata oluştu.');
+      this.alertService.error('Hata Oluştu', 'Kayıt silinirken bir hata oluştu.');
     }
   }
 

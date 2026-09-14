@@ -9,6 +9,7 @@ import { InsuredAnimalService } from '../../core/services/insured-animal.service
 import { AnimalService } from '../../core/services/animal.service';
 import { InsuredAnimal } from '../../core/models/health.model';
 import { Animal } from '../../core/models/animal.model';
+import { AlertService } from '../../core/services/alert.service';
 
 export type PolicyStatus = 'aktif' | 'yaklasiyor' | 'dolmus';
 
@@ -28,6 +29,7 @@ export type PolicyStatus = 'aktif' | 'yaklasiyor' | 'dolmus';
 export class InsuredAnimalsComponent {
   private insuredService = inject(InsuredAnimalService);
   private animalService = inject(AnimalService);
+  private alertService = inject(AlertService);
 
   readonly policies = toSignal(this.insuredService.list(), { initialValue: [] as InsuredAnimal[] });
   readonly animals = toSignal(this.animalService.list(), { initialValue: [] as Animal[] });
@@ -244,14 +246,17 @@ export class InsuredAnimalsComponent {
 
   async deletePolicy(id?: string) {
     if (!id) return;
-    if (!confirm('Bu sigorta poliçesini silmek istediğinize emin misiniz?')) {
-      return;
-    }
+    const confirmed = await this.alertService.confirmDelete(
+      'Sigorta Poliçesini Sil',
+      'Bu sigorta poliçesini silmek istediğinize emin misiniz?'
+    );
+    if (!confirmed) return;
     try {
       await this.insuredService.softDelete(id);
+      this.alertService.toastSuccess('Sigorta poliçesi başarıyla silindi');
     } catch (err) {
       console.error('Silme hatası:', err);
-      alert('Poliçe silinirken bir hata oluştu.');
+      this.alertService.error('Hata Oluştu', 'Poliçe silinirken bir hata oluştu.');
     }
   }
 

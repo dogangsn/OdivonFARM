@@ -10,6 +10,7 @@ import { AnimalService } from '../../core/services/animal.service';
 import { PaddockService } from '../../core/services/definitions/paddock.service';
 import { HerdService } from '../../core/services/definitions/herd.service';
 import { AnimalMovement, Animal, Paddock, Herd } from '../../core/models/animal.model';
+import { AlertService } from '../../core/services/alert.service';
 
 @Component({
   selector: 'app-animal-movements',
@@ -29,6 +30,7 @@ export class AnimalMovementsComponent {
   private animalService = inject(AnimalService);
   private paddockService = inject(PaddockService);
   private herdService = inject(HerdService);
+  private alertService = inject(AlertService);
 
   readonly movements = toSignal(this.movementService.list(), { initialValue: [] as AnimalMovement[] });
   readonly animals = toSignal(this.animalService.list(), { initialValue: [] as Animal[] });
@@ -283,11 +285,16 @@ export class AnimalMovementsComponent {
   }
 
   async deleteMovement(id: string) {
-    if (!confirm('Bu hareket kaydını silmek istediğinize emin misiniz?')) return;
+    const confirmed = await this.alertService.confirmDelete(
+      'Hareket Kaydını Sil',
+      'Bu hareket kaydını silmek istediğinize emin misiniz?'
+    );
+    if (!confirmed) return;
     try {
       await this.movementService.softDelete(id);
+      this.alertService.toastSuccess('Hareket kaydı başarıyla silindi');
     } catch (err: any) {
-      alert('Silme işlemi başarısız: ' + err.message);
+      this.alertService.error('Silme Başarısız', err.message);
     }
   }
 }

@@ -9,6 +9,7 @@ import { RationService } from '../../core/services/ration.service';
 import { StockItemService } from '../../core/services/stock-item.service';
 import { Ration, RationItem } from '../../core/models/production.model';
 import { StockItem } from '../../core/models/inventory.model';
+import { AlertService } from '../../core/services/alert.service';
 
 @Component({
   selector: 'app-ration',
@@ -26,6 +27,7 @@ import { StockItem } from '../../core/models/inventory.model';
 export class RationComponent {
   private rationService = inject(RationService);
   private stockItemService = inject(StockItemService);
+  private alertService = inject(AlertService);
 
   readonly rations = toSignal(this.rationService.list(), { initialValue: [] as Ration[] });
   readonly stockItems = toSignal(this.stockItemService.list(), { initialValue: [] as StockItem[] });
@@ -206,14 +208,17 @@ export class RationComponent {
 
   async deleteRation(id?: string) {
     if (!id) return;
-    if (!confirm('Bu rasyon reçetesini silmek istediğinize emin misiniz?')) {
-      return;
-    }
+    const confirmed = await this.alertService.confirmDelete(
+      'Rasyon Reçetesini Sil',
+      'Bu rasyon reçetesini silmek istediğinize emin misiniz?'
+    );
+    if (!confirmed) return;
     try {
       await this.rationService.softDelete(id);
+      this.alertService.toastSuccess('Rasyon reçetesi başarıyla silindi');
     } catch (err) {
       console.error('Silme hatası:', err);
-      alert('Rasyon silinirken bir hata oluştu.');
+      this.alertService.error('Hata Oluştu', 'Rasyon silinirken bir hata oluştu.');
     }
   }
 

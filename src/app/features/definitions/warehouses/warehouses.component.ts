@@ -5,7 +5,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatListModule } from '@angular/material/list';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { SimpleCrudListBase } from '../../../shared/components/simple-crud-list/simple-crud-list.base';
 import { Warehouse } from '../../../core/models';
 import { WarehouseService } from '../../../core/services/definitions/warehouse.service';
@@ -13,13 +13,15 @@ import { WarehouseService } from '../../../core/services/definitions/warehouse.s
 @Component({
   selector: 'app-warehouses',
   standalone: true,
-  imports: [CommonModule, FormsModule, MatButtonModule, MatIconModule, MatInputModule, MatFormFieldModule, MatListModule],
+  imports: [CommonModule, FormsModule, MatButtonModule, MatIconModule, MatInputModule, MatFormFieldModule, MatTooltipModule],
   templateUrl: '../../../shared/components/simple-crud-list/simple-crud-list.component.html',
   styleUrl: '../../../shared/components/simple-crud-list/simple-crud-list.component.scss',
 })
 export class WarehousesComponent extends SimpleCrudListBase<Warehouse> {
   service = inject(WarehouseService);
   title = 'Depolar';
+  override subtitle = 'Yem, ilaç, aşı, ekipman ve ambar depoları';
+  override icon = 'warehouse';
   override addLabel = 'Depo Ekle';
 
   constructor() {

@@ -51,6 +51,7 @@ export class DashboardComponent {
   // User & Farm
   appUser = toSignal(this.authService.appUser$);
   activeFarmId = this.farmContext.activeFarmId;
+  farmName = this.farmContext.activeFarmName;
 
   userInitials = computed(() => {
     const name = this.appUser()?.displayName || this.appUser()?.email || 'U';

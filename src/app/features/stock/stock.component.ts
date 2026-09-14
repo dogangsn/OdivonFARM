@@ -11,6 +11,7 @@ import { StockCategoryService } from '../../core/services/stock-category.service
 import { WarehouseService } from '../../core/services/definitions/warehouse.service';
 import { AccountService } from '../../core/services/definitions/account.service';
 import { StockMovement, StockItem, StockCategory, Warehouse, Account, StockMovementType } from '../../core/models/inventory.model';
+import { AlertService } from '../../core/services/alert.service';
 
 @Component({
   selector: 'app-stock',
@@ -31,6 +32,7 @@ export class StockComponent {
   private categoryService = inject(StockCategoryService);
   private warehouseService = inject(WarehouseService);
   private accountService = inject(AccountService);
+  private alertService = inject(AlertService);
 
   readonly movements = toSignal(this.movementService.list(), { initialValue: [] as StockMovement[] });
   readonly items = toSignal(this.itemService.list(), { initialValue: [] as StockItem[] });
@@ -363,14 +365,17 @@ export class StockComponent {
 
   async deleteMovement(id?: string) {
     if (!id) return;
-    if (!confirm('Bu stok hareketini silmek istediğinize emin misiniz?')) {
-      return;
-    }
+    const confirmed = await this.alertService.confirmDelete(
+      'Stok Hareketini Sil',
+      'Bu stok hareketini silmek istediğinize emin misiniz?'
+    );
+    if (!confirmed) return;
     try {
       await this.movementService.softDelete(id);
+      this.alertService.toastSuccess('Stok hareketi başarıyla silindi');
     } catch (err) {
       console.error('Silme hatası:', err);
-      alert('Kayıt silinirken bir hata oluştu.');
+      this.alertService.error('Hata Oluştu', 'Kayıt silinirken bir hata oluştu.');
     }
   }
 

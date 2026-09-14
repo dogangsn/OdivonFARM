@@ -1,0 +1,496 @@
+<div class="min-h-full p-4 sm:p-6 lg:p-8 space-y-8 max-w-7xl mx-auto">
+  <!-- PAGE HEADER -->
+  <div class="text-center max-w-3xl mx-auto space-y-3">
+    <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800">
+      <mat-icon class="icon-size-4 text-indigo-500">verified</mat-icon>
+      <span>Akıllı Çiftlik Yönetim Paketleri</span>
+    </div>
+    <h1 class="text-2xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
+      Çiftliğinizi Büyütecek Doğru Paketi Seçin
+    </h1>
+    <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
+      Sürünüzün ölçeğine ve personel sayınıza uygun esnek paketler. Kredi kartsız 14 gün ücretsiz deneyebilir, dilediğiniz an paketinizi yükseltebilirsiniz.
+    </p>
+  </div>
+
+  <!-- CURRENT SUBSCRIPTION & QUOTA STATUS CARD -->
+  @let plan = subService.activePlan();
+  <div class="odivon-card p-5 sm:p-6 border-2 border-indigo-500/30 bg-gradient-to-br from-indigo-50/40 via-white to-purple-50/20 dark:from-slate-900 dark:via-slate-900 dark:to-indigo-950/20 relative overflow-hidden">
+    <!-- Background subtle glow -->
+    <div class="absolute -right-16 -top-16 w-64 h-64 rounded-full bg-indigo-500/10 blur-3xl pointer-events-none"></div>
+
+    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+      <!-- Left: Active Plan Info -->
+      <div class="space-y-3 max-w-md">
+        <div class="flex items-center gap-2.5">
+          <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Mevcut Aboneliğiniz:</span>
+          <span class="px-3 py-1 rounded-full text-xs font-black border shadow-2xs" [ngClass]="plan.colorScheme.badge">
+            {{ plan.name }}
+          </span>
+          @if (subService.isTrial()) {
+            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+              Deneme Sürümü
+            </span>
+          }
+        </div>
+
+        <div class="flex items-baseline gap-2">
+          <span class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
+            {{ farmContext.activeFarmName() }}
+          </span>
+        </div>
+
+        <p class="text-xs text-slate-500 dark:text-slate-400">
+          @if (subService.isTrial()) {
+            14 günlük ücretsiz deneme süreniz devam ediyor. 
+            <strong class="text-slate-800 dark:text-slate-200">{{ subService.remainingDays() }} gün</strong> sonra sona erecektir.
+          } @else {
+            Aboneliğiniz aktif durumdadır. Yenilenme dönemi sonunda otomatik güncellenir.
+          }
+        </p>
+      </div>
+
+      <!-- Right: Live Quota Progress Bars -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 flex-1 lg:max-w-lg">
+        <!-- Quota 1: Hayvan Sayısı -->
+        <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700 shadow-xs space-y-2">
+          <div class="flex items-center justify-between text-xs">
+            <span class="font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+              <mat-icon class="icon-size-4 text-emerald-500">pets</mat-icon>
+              Hayvan Kapasitesi
+            </span>
+            <span class="font-bold text-slate-900 dark:text-white font-mono">
+              {{ animalCount() }} / {{ subService.animalLimit() >= 999999 ? 'Sınırsız' : subService.animalLimit() }} Baş
+            </span>
+          </div>
+
+          <!-- Progress Bar -->
+          <div class="w-full h-2 rounded-full bg-slate-100 dark:bg-slate-700 overflow-hidden">
+            <div
+              class="h-full rounded-full transition-all duration-500"
+              [ngClass]="animalUsagePercent() > 85 ? 'bg-rose-500' : 'bg-gradient-to-r from-emerald-500 to-teal-500'"
+              [style.width.%]="animalUsagePercent()"
+            ></div>
+          </div>
+
+          <div class="flex items-center justify-between text-[10px] text-slate-400">
+            <span>Kullanılan: %{{ animalUsagePercent() }}</span>
+            @if (subService.animalLimit() < 999999) {
+              <span>Kalan: {{ subService.animalLimit() - animalCount() }} Baş</span>
+            } @else {
+              <span>Limitsiz</span>
+            }
+          </div>
+        </div>
+
+        <!-- Quota 2: Kullanıcı / Personel -->
+        <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700 shadow-xs space-y-2">
+          <div class="flex items-center justify-between text-xs">
+            <span class="font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+              <mat-icon class="icon-size-4 text-indigo-500">group</mat-icon>
+              Kullanıcı Sayısı
+            </span>
+            <span class="font-bold text-slate-900 dark:text-white font-mono">
+              {{ memberCount() }} / {{ subService.userLimit() >= 9999 ? 'Sınırsız' : subService.userLimit() }} Kişi
+            </span>
+          </div>
+
+          <!-- Progress Bar -->
+          <div class="w-full h-2 rounded-full bg-slate-100 dark:bg-slate-700 overflow-hidden">
+            <div
+              class="h-full rounded-full transition-all duration-500"
+              [ngClass]="memberUsagePercent() > 85 ? 'bg-rose-500' : 'bg-gradient-to-r from-indigo-500 to-purple-500'"
+              [style.width.%]="memberUsagePercent()"
+            ></div>
+          </div>
+
+          <div class="flex items-center justify-between text-[10px] text-slate-400">
+            <span>Kullanılan: %{{ memberUsagePercent() }}</span>
+            @if (subService.userLimit() < 9999) {
+              <span>Kalan: {{ subService.userLimit() - memberCount() }} Kişi</span>
+            } @else {
+              <span>Limitsiz</span>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BILLING CYCLE TOGGLE (MONTHLY VS YEARLY) -->
+  <div class="flex flex-col items-center justify-center gap-3 pt-2">
+    <div class="inline-flex items-center p-1.5 rounded-2xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xs">
+      <button
+        type="button"
+        (click)="billingCycle.set('monthly')"
+        class="px-5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer"
+        [ngClass]="billingCycle() === 'monthly' ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-xs' : 'text-slate-500 hover:text-slate-800 dark:hover:text-white'"
+      >
+        Aylık Ödeme
+      </button>
+
+      <button
+        type="button"
+        (click)="billingCycle.set('yearly')"
+        class="flex items-center gap-2 px-5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer"
+        [ngClass]="billingCycle() === 'yearly' ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-md shadow-indigo-500/20' : 'text-slate-500 hover:text-slate-800 dark:hover:text-white'"
+      >
+        <span>Yıllık Ödeme</span>
+        <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-400 text-emerald-950 uppercase tracking-wider">
+          2 Ay Hediye (%17 İndirim)
+        </span>
+      </button>
+    </div>
+    <span class="text-[11px] text-slate-400 font-medium">
+      Yıllık ödemede 10 ay ücreti ödeyip 12 ay kesintisiz hizmet alırsınız.
+    </span>
+  </div>
+
+  <!-- 3 MAIN PRICING TIERS GRID -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 items-stretch pt-2">
+    @for (p of plans; track p.id) {
+      @let isCurrent = isCurrentPlan(p.id);
+      <div
+        class="odivon-card p-6 sm:p-7 flex flex-col justify-between relative transition-all duration-300 hover:shadow-2xl border-2"
+        [ngClass]="p.highlighted ? 'border-indigo-500 dark:border-indigo-500 ring-4 ring-indigo-500/10 shadow-xl' : 'border-slate-200 dark:border-slate-800 hover:border-slate-300'"
+      >
+        <!-- Popular Ribbon for Pro -->
+        @if (p.highlighted) {
+          <div class="absolute -top-3.5 left-1/2 -translate-x-1/2 px-3.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest text-white bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 shadow-md shadow-indigo-500/30">
+            {{ p.badge }}
+          </div>
+        }
+
+        <div class="space-y-5">
+          <!-- Card Header -->
+          <div>
+            <div class="flex items-center justify-between">
+              <h3 class="text-lg font-black text-slate-900 dark:text-white">
+                {{ p.name }}
+              </h3>
+              @if (!p.highlighted && p.badge) {
+                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full border" [ngClass]="p.colorScheme.badge">
+                  {{ p.badge }}
+                </span>
+              }
+            </div>
+
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 min-h-[32px] leading-relaxed">
+              {{ p.description }}
+            </p>
+          </div>
+
+          <!-- Price Display -->
+          <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
+            <div class="flex items-baseline gap-1">
+              <span class="text-xs font-bold text-slate-400">₺</span>
+              <span class="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
+                {{ getEquivalentMonthlyPrice(p) | number:'1.0-0' }}
+              </span>
+              <span class="text-xs font-medium text-slate-400">/ ay</span>
+            </div>
+
+            <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-1 font-medium">
+              @if (billingCycle() === 'yearly') {
+                Yıllık tek çekim <strong>₺{{ p.yearlyPrice | number:'1.0-0' }}</strong> faturalandırılır
+              } @else {
+                Aylık düzenli faturalandırılır
+              }
+            </div>
+          </div>
+
+          <!-- Capacity Highlights -->
+          <div class="grid grid-cols-2 gap-2 pt-1 text-xs">
+            <div class="p-2.5 rounded-xl bg-indigo-50/50 dark:bg-indigo-950/20 border border-indigo-100 dark:border-indigo-900/40">
+              <div class="text-[10px] text-slate-400 font-bold uppercase">Hayvan Kotası</div>
+              <div class="text-xs font-black text-indigo-700 dark:text-indigo-300 mt-0.5">
+                {{ p.animalLimit >= 999999 ? 'Sınırsız' : p.animalLimit + ' Baş' }}
+              </div>
+            </div>
+
+            <div class="p-2.5 rounded-xl bg-purple-50/50 dark:bg-purple-950/20 border border-purple-100 dark:border-purple-900/40">
+              <div class="text-[10px] text-slate-400 font-bold uppercase">Kullanıcı</div>
+              <div class="text-xs font-black text-purple-700 dark:text-purple-300 mt-0.5">
+                {{ p.userLimit >= 9999 ? 'Sınırsız' : p.userLimit + ' Kişi' }}
+              </div>
+            </div>
+          </div>
+
+          <!-- Feature Checklist -->
+          <div class="space-y-2.5 pt-2 border-t border-slate-100 dark:border-slate-800">
+            <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+              Dahil Olan Özellikler
+            </div>
+            @for (f of p.features; track f.name) {
+              <div class="flex items-start gap-2.5 text-xs">
+                @if (f.included) {
+                  <mat-icon class="icon-size-4 text-emerald-500 flex-shrink-0 mt-0.5">check_circle</mat-icon>
+                  <span class="text-slate-700 dark:text-slate-300 font-medium leading-tight">
+                    {{ f.name }}
+                  </span>
+                } @else {
+                  <mat-icon class="icon-size-4 text-slate-300 dark:text-slate-600 flex-shrink-0 mt-0.5">remove_circle_outline</mat-icon>
+                  <span class="text-slate-400 line-through leading-tight">
+                    {{ f.name }}
+                  </span>
+                }
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Action Button -->
+        <div class="pt-6 mt-6 border-t border-slate-100 dark:border-slate-800">
+          @if (isCurrent) {
+            <button
+              type="button"
+              disabled
+              class="w-full py-3 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-500 border border-slate-200 dark:border-slate-700 flex items-center justify-center gap-2 cursor-default"
+            >
+              <mat-icon class="icon-size-4 text-emerald-500">check</mat-icon>
+              <span>Mevcut Paketiniz</span>
+            </button>
+          } @else {
+            <button
+              type="button"
+              (click)="openUpgradeModal(p)"
+              class="w-full py-3 rounded-xl text-xs font-bold transition-all shadow-md active:scale-95 cursor-pointer flex items-center justify-center gap-2"
+              [ngClass]="p.colorScheme.button"
+            >
+              <span>Bu Pakete Geç</span>
+              <mat-icon class="icon-size-4">arrow_forward</mat-icon>
+            </button>
+          }
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- FAQ / SIKÇA SORULAN SORULAR -->
+  <div class="max-w-3xl mx-auto pt-6 space-y-4">
+    <div class="text-center space-y-1">
+      <h2 class="text-xl font-black text-slate-900 dark:text-white">
+        Sıkça Sorulan Sorular
+      </h2>
+      <p class="text-xs text-slate-500">
+        Abonelikler ve paket yükseltme süreçleri hakkında merak edilenler
+      </p>
+    </div>
+
+    <div class="space-y-2.5">
+      @for (faq of faqs; track faq.q; let i = $index) {
+        <div class="odivon-card p-4 border transition-all">
+          <button
+            type="button"
+            (click)="toggleFaq(i)"
+            class="w-full flex items-center justify-between text-left gap-3 cursor-pointer"
+          >
+            <span class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
+              {{ faq.q }}
+            </span>
+            <mat-icon class="icon-size-4 text-slate-400 transition-transform duration-200" [ngClass]="{'rotate-180': faq.open}">
+              expand_more
+            </mat-icon>
+          </button>
+          @if (faq.open) {
+            <p class="text-xs text-slate-600 dark:text-slate-400 mt-2.5 pt-2.5 border-t border-slate-100 dark:border-slate-800 leading-relaxed">
+              {{ faq.a }}
+            </p>
+          }
+        </div>
+      }
+    </div>
+  </div>
+</div>
+
+<!-- ========================================================================= -->
+<!-- MODAL: PAKETİ YÜKSELT / SATIN ALMA SİMÜLASYONU                           -->
+<!-- ========================================================================= -->
+@if (isUpgradeModalOpen() && selectedPlanForUpgrade()) {
+  @let targetPlan = selectedPlanForUpgrade()!;
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto">
+    <!-- Backdrop -->
+    <div
+      class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm transition-opacity"
+      (click)="closeUpgradeModal()"
+    ></div>
+
+    <!-- Dialog Panel -->
+    <div class="relative w-full max-w-lg bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden my-8 z-10">
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-indigo-600/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
+            <mat-icon class="icon-size-5">shopping_cart</mat-icon>
+          </div>
+          <div>
+            <h3 class="text-base font-black text-slate-900 dark:text-white">
+              Paket Yükseltme & Aktivasyon
+            </h3>
+            <p class="text-xs text-slate-500">
+              {{ targetPlan.name }} paketine geçiş yapıyorsunuz
+            </p>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          (click)="closeUpgradeModal()"
+          class="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+        >
+          <mat-icon class="icon-size-5">close</mat-icon>
+        </button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="p-6 space-y-5">
+        <!-- Order Summary Box -->
+        <div class="p-4 rounded-2xl bg-indigo-50/60 dark:bg-indigo-950/30 border border-indigo-200/50 dark:border-indigo-800/40 space-y-3">
+          <div class="flex items-center justify-between">
+            <div>
+              <div class="text-sm font-black text-indigo-900 dark:text-indigo-200">
+                {{ targetPlan.name }}
+              </div>
+              <div class="text-xs text-indigo-600 dark:text-indigo-400">
+                {{ billingCycle() === 'yearly' ? 'Yıllık Abonelik (12 Ay)' : 'Aylık Abonelik' }}
+              </div>
+            </div>
+
+            <div class="text-right">
+              <div class="text-xl font-black text-indigo-900 dark:text-white">
+                ₺{{ getPrice(targetPlan) | number:'1.0-0' }}
+              </div>
+              <div class="text-[10px] text-slate-400">KDV Dahil</div>
+            </div>
+          </div>
+
+          <div class="pt-2 border-t border-indigo-200/40 dark:border-indigo-800/30 grid grid-cols-2 gap-2 text-xs">
+            <div>
+              <span class="text-slate-400">Hayvan Limiti:</span>
+              <strong class="ml-1 text-slate-800 dark:text-slate-200">
+                {{ targetPlan.animalLimit >= 999999 ? 'Sınırsız' : targetPlan.animalLimit + ' Baş' }}
+              </strong>
+            </div>
+            <div>
+              <span class="text-slate-400">Kullanıcı Limiti:</span>
+              <strong class="ml-1 text-slate-800 dark:text-slate-200">
+                {{ targetPlan.userLimit >= 9999 ? 'Sınırsız' : targetPlan.userLimit + ' Kişi' }}
+              </strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- Payment Method Selection -->
+        <div class="space-y-2">
+          <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
+            Ödeme Yöntemi:
+          </label>
+          <div class="grid grid-cols-2 gap-2.5">
+            <button
+              type="button"
+              (click)="selectedPaymentMethod.set('credit_card')"
+              class="p-3 rounded-xl border-2 flex items-center gap-2.5 text-xs font-bold transition-all cursor-pointer"
+              [ngClass]="selectedPaymentMethod() === 'credit_card' ? 'border-indigo-600 bg-indigo-50/50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400' : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400'"
+            >
+              <mat-icon class="icon-size-4">credit_card</mat-icon>
+              <span>Kredi / Banka Kartı</span>
+            </button>
+
+            <button
+              type="button"
+              (click)="selectedPaymentMethod.set('bank_transfer')"
+              class="p-3 rounded-xl border-2 flex items-center gap-2.5 text-xs font-bold transition-all cursor-pointer"
+              [ngClass]="selectedPaymentMethod() === 'bank_transfer' ? 'border-indigo-600 bg-indigo-50/50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400' : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400'"
+            >
+              <mat-icon class="icon-size-4">account_balance</mat-icon>
+              <span>Havale / EFT</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Payment Form Mock -->
+        @if (selectedPaymentMethod() === 'credit_card') {
+          <div class="space-y-3 p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 text-xs">
+            <div class="space-y-1">
+              <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-300">Kart Üzerindeki İsim</label>
+              <input
+                type="text"
+                [(ngModel)]="cardForm.cardHolder"
+                class="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white"
+                placeholder="Ahmet Yılmaz"
+              />
+            </div>
+            <div class="space-y-1">
+              <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-300">Kart Numarası</label>
+              <input
+                type="text"
+                [(ngModel)]="cardForm.cardNumber"
+                class="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white font-mono"
+                placeholder="**** **** **** 4242"
+              />
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <div class="space-y-1">
+                <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-300">Son Kullanma</label>
+                <input
+                  type="text"
+                  [(ngModel)]="cardForm.expiry"
+                  class="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white font-mono text-center"
+                  placeholder="AA/YY"
+                />
+              </div>
+              <div class="space-y-1">
+                <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-300">CVV / CVC</label>
+                <input
+                  type="text"
+                  [(ngModel)]="cardForm.cvv"
+                  class="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white font-mono text-center"
+                  placeholder="***"
+                />
+              </div>
+            </div>
+          </div>
+        } @else {
+          <!-- Bank Transfer Info -->
+          <div class="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/50 text-xs space-y-2 text-amber-900 dark:text-amber-200">
+            <div class="font-bold flex items-center gap-1.5">
+              <mat-icon class="icon-size-4 text-amber-500">info</mat-icon>
+              <span>Banka Havale / EFT Bilgileri</span>
+            </div>
+            <div class="font-mono text-[11px] space-y-1 bg-white dark:bg-slate-800 p-2.5 rounded-xl border border-amber-200 dark:border-amber-800/40">
+              <div><strong>Banka:</strong> Garanti BBVA</div>
+              <div><strong>Alıcı:</strong> Odivon Teknoloji A.Ş.</div>
+              <div><strong>IBAN:</strong> TR12 0006 2000 0001 2345 6789 01</div>
+              <div><strong>Açıklama:</strong> Çiftlik ID: {{ farmContext.activeFarmId() }}</div>
+            </div>
+            <p class="text-[11px]">
+              Ödemeyi tamamladıktan sonra paketi aktif et butonuna basarak dekont teyidi ile anında aktivasyon sağlayabilirsiniz.
+            </p>
+          </div>
+        }
+
+        <!-- Actions -->
+        <div class="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-2.5">
+          <button
+            type="button"
+            (click)="closeUpgradeModal()"
+            class="px-4 py-2.5 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer"
+          >
+            İptal
+          </button>
+          <button
+            type="button"
+            (click)="confirmUpgrade()"
+            [disabled]="isProcessing()"
+            class="flex items-center gap-2 px-6 py-2.5 text-xs font-bold text-white bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-500 hover:to-pink-500 disabled:opacity-50 rounded-xl shadow-lg shadow-indigo-500/25 transition-all cursor-pointer"
+          >
+            @if (isProcessing()) {
+              <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            }
+            <span>Ödemeyi Tamamla & Paketi Aktif Et</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+}

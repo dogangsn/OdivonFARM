@@ -9,6 +9,7 @@ import { MatingService } from '../../core/services/mating.service';
 import { AnimalService } from '../../core/services/animal.service';
 import { Mating, MatingStatus } from '../../core/models/production.model';
 import { Animal } from '../../core/models/animal.model';
+import { AlertService } from '../../core/services/alert.service';
 
 interface EnrichedMating extends Mating {
   progressPercent?: number;
@@ -31,6 +32,7 @@ interface EnrichedMating extends Mating {
 export class BreedingComponent {
   private matingService = inject(MatingService);
   private animalService = inject(AnimalService);
+  private alertService = inject(AlertService);
 
   readonly matings = toSignal(this.matingService.list(), { initialValue: [] as Mating[] });
   readonly animals = toSignal(this.animalService.list(), { initialValue: [] as Animal[] });
@@ -241,8 +243,9 @@ export class BreedingComponent {
   async quickStatusChange(mating: Mating, newStatus: MatingStatus) {
     try {
       await this.matingService.update(mating.id!, { status: newStatus });
+      this.alertService.toastSuccess('Durum başarıyla güncellendi');
     } catch (err: any) {
-      alert('Durum güncellenemedi: ' + err.message);
+      this.alertService.error('Güncelleme Başarısız', err.message);
     }
   }
 
@@ -278,6 +281,7 @@ export class BreedingComponent {
       }
 
       this.closeDrawer();
+      this.alertService.toastSuccess('Kayıt başarıyla kaydedildi');
     } catch (err: any) {
       this.errorMessage.set(err.message || 'Kayıt sırasında bir hata oluştu.');
     } finally {
@@ -286,11 +290,16 @@ export class BreedingComponent {
   }
 
   async deleteMating(id: string) {
-    if (!confirm('Bu çiftleşme/gebelik kaydını silmek istediğinize emin misiniz?')) return;
+    const confirmed = await this.alertService.confirmDelete(
+      'Çiftleşme / Gebelik Kaydını Sil',
+      'Bu çiftleşme veya gebelik kaydını silmek istediğinize emin misiniz?'
+    );
+    if (!confirmed) return;
     try {
       await this.matingService.softDelete(id);
+      this.alertService.toastSuccess('Kayıt başarıyla silindi');
     } catch (err: any) {
-      alert('Silme işlemi başarısız: ' + err.message);
+      this.alertService.error('Silme Başarısız', err.message);
     }
   }
 }

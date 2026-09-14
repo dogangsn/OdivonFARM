@@ -104,6 +104,11 @@ export const routes: Routes = [
           import('./features/recycle-bin/recycle-bin.component').then((m) => m.RecycleBinComponent),
       },
       {
+        path: 'abonelik',
+        loadComponent: () =>
+          import('./features/subscription/subscription.component').then((m) => m.SubscriptionComponent),
+      },
+      {
         path: 'tanimlamalar',
         children: [
           { path: '', pathMatch: 'full', redirectTo: 'cariler' },
@@ -172,6 +177,16 @@ export const routes: Routes = [
               import('./features/definitions/accounting-items/accounting-items.component').then(
                 (m) => m.AccountingItemsComponent
               ),
+          },
+          {
+            path: 'kullanicilar',
+            loadComponent: () =>
+              import('./features/definitions/users/users.component').then((m) => m.UsersComponent),
+          },
+          {
+            path: 'roller',
+            loadComponent: () =>
+              import('./features/definitions/roles/roles.component').then((m) => m.RolesComponent),
           },
         ],
       },

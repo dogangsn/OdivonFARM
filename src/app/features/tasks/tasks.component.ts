@@ -10,6 +10,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { TaskService } from '../../core/services/task.service';
 import { FarmTask, TaskStatus } from '../../core/models/operations.model';
+import { AlertService } from '../../core/services/alert.service';
 
 @Component({
   selector: 'app-tasks',
@@ -30,6 +31,7 @@ import { FarmTask, TaskStatus } from '../../core/models/operations.model';
 })
 export class TasksComponent {
   private taskService = inject(TaskService);
+  private alertService = inject(AlertService);
   private fb = inject(FormBuilder);
 
   tasks$ = this.taskService.list();
@@ -112,11 +114,17 @@ export class TasksComponent {
   }
 
   async deleteTask(task: FarmTask) {
-    if (!confirm(`"${task.title}" görevini silmek istediğinize emin misiniz?`)) return;
+    const confirmed = await this.alertService.confirmDelete(
+      'Görevi Sil',
+      `"${task.title}" görevini silmek istediğinize emin misiniz?`
+    );
+    if (!confirmed) return;
     try {
       await this.taskService.softDelete(task.id!);
-    } catch (err) {
+      this.alertService.toastSuccess('Görev başarıyla silindi');
+    } catch (err: any) {
       console.error('Görev silinemedi:', err);
+      this.alertService.error('Silme Başarısız', err?.message || 'Görev silinemedi.');
     }
   }
 }

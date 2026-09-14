@@ -28,6 +28,11 @@ export interface Animal extends BaseDoc {
 export interface Breed extends BaseDoc {
   name: string;
   description?: string;
+  animalTypeId?: string;
+  category?: 'kucukbas' | 'buyukbas' | 'kanatli' | 'diger' | string;
+  origin?: string;
+  purpose?: 'et' | 'sut' | 'kombine' | 'damizlik' | 'yontem' | 'diger' | string;
+  colorTheme?: string;
 }
 
 /** farms/{farmId}/animalTypes/{typeId} — Hayvan Tipleri (Koyun, Keçi, Koç ...) */

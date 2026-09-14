@@ -34,7 +34,7 @@ module.exports = {
         },
       },
       fontFamily: {
-        sans: ['"Plus Jakarta Sans"', '"Inter"', ...defaultTheme.fontFamily.sans],
+        sans: ['"Plus Jakarta Sans"', ...defaultTheme.fontFamily.sans],
         mono: ['"IBM Plex Mono"', ...defaultTheme.fontFamily.mono],
       },
       spacing: {

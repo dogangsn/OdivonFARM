@@ -11,6 +11,7 @@ import { TreatmentTypeService } from '../../core/services/definitions/treatment-
 import { DiseaseService } from '../../core/services/definitions/disease.service';
 import { Treatment, TreatmentType, Disease } from '../../core/models/health.model';
 import { Animal } from '../../core/models/animal.model';
+import { AlertService } from '../../core/services/alert.service';
 
 @Component({
   selector: 'app-treatments',
@@ -30,6 +31,7 @@ export class TreatmentsComponent {
   private animalService = inject(AnimalService);
   private treatmentTypeService = inject(TreatmentTypeService);
   private diseaseService = inject(DiseaseService);
+  private alertService = inject(AlertService);
 
   // Raw data streams
   readonly treatments = toSignal(this.treatmentService.list(), { initialValue: [] as Treatment[] });
@@ -268,11 +270,16 @@ export class TreatmentsComponent {
   }
 
   async deleteTreatment(id: string) {
-    if (!confirm('Bu tedavi/aşı kaydını silmek istediğinize emin misiniz?')) return;
+    const confirmed = await this.alertService.confirmDelete(
+      'Tedavi / Aşı Kaydını Sil',
+      'Bu tedavi veya aşı kaydını silmek istediğinize emin misiniz?'
+    );
+    if (!confirmed) return;
     try {
       await this.treatmentService.softDelete(id);
+      this.alertService.toastSuccess('Tedavi kaydı başarıyla silindi');
     } catch (err: any) {
-      alert('Silme işlemi başarısız oldu: ' + err.message);
+      this.alertService.error('Silme Başarısız', err.message);
     }
   }
 }

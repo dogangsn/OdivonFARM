@@ -9,6 +9,9 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { filter, of, catchError } from 'rxjs';
 import { AuthService } from '../../../core/auth/auth.service';
 import { FarmContextService } from '../../../core/services/farm-context.service';
+import { SubscriptionService } from '../../../core/services/subscription.service';
+import { AlertService } from '../../../core/services/alert.service';
+import Swal from 'sweetalert2';
 
 export interface NavItem {
   label: string;
@@ -49,9 +52,51 @@ export class ShellComponent {
   private auth = inject(AuthService);
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
+  private alertService = inject(AlertService);
   farmContext = inject(FarmContextService);
+  subService = inject(SubscriptionService);
 
   searchQuery = signal('');
+
+  async renameCurrentFarm() {
+    this.closeAllMenus();
+    const currentName = this.farmContext.activeFarmName();
+    const isDark = document.documentElement.classList.contains('dark');
+
+    const { value: newName } = await Swal.fire({
+      title: 'Çiftlik Adını Düzenle',
+      input: 'text',
+      inputValue: currentName,
+      inputPlaceholder: 'Örn: Anadolu Çiftliği, Özkan Hayvancılık...',
+      showCancelButton: true,
+      confirmButtonText: 'Kaydet',
+      cancelButtonText: 'Vazgeç',
+      confirmButtonColor: '#4f46e5',
+      background: isDark ? '#1e293b' : '#ffffff',
+      color: isDark ? '#f8fafc' : '#0f172a',
+      inputValidator: (val) => {
+        if (!val || !val.trim()) {
+          return 'Lütfen geçerli bir çiftlik adı giriniz.';
+        }
+        return null;
+      },
+    });
+
+    if (newName && newName.trim() && newName.trim() !== currentName) {
+      const success = await this.farmContext.updateFarmName(newName.trim());
+      if (success) {
+        this.alertService.toastSuccess(`Çiftlik adı "${newName.trim()}" olarak güncellendi!`);
+      } else {
+        this.alertService.error('Hata', 'Çiftlik adı güncellenemedi.');
+      }
+    }
+  }
+
+  switchFarm(farmId: string, farmName?: string) {
+    this.farmContext.setActiveFarm(farmId, farmName);
+    this.closeAllMenus();
+    this.alertService.toastSuccess(`Aktif çiftlik seçildi: ${farmName || farmId}`);
+  }
 
   onSearchInput(event: Event) {
     const input = event.target as HTMLInputElement;
@@ -192,14 +237,15 @@ export class ShellComponent {
       const activeFarm = this.farmContext.activeFarmId();
       if (memberships && activeFarm) {
         const m = memberships.find((x) => x.farmId === activeFarm);
-        if (m?.role === 'admin' || m?.role === 'yonetici') return 'Çiftlik Yöneticisi';
+        if (m?.role === 'admin') return 'Yönetici (Admin)';
+        if (m?.role === 'yonetici') return 'İşletme Müdürü';
         if (m?.role === 'veteriner') return 'Veteriner Hekim';
         if (m?.role === 'saha') return 'Saha Personeli';
         if (m?.role === 'muhasebe') return 'Muhasebe Sorumlusu';
         if (m?.role === 'okuyucu') return 'Gözlemci';
       }
     } catch {}
-    return 'Çiftlik Yöneticisi';
+    return 'Yönetici (Admin)';
   });
 
   userInitials = computed(() => {
@@ -254,6 +300,8 @@ export class ShellComponent {
           label: 'Tanımlamalar',
           icon: 'heroicons_outline:adjustments',
           children: [
+            { label: 'Kullanıcılar', icon: 'heroicons_outline:users', route: '/tanimlamalar/kullanicilar' },
+            { label: 'Roller & Yetkiler', icon: 'heroicons_outline:shield-check', route: '/tanimlamalar/roller' },
             { label: 'Cariler', icon: 'heroicons_outline:user-group', route: '/tanimlamalar/cariler' },
             { label: 'Irklar', icon: 'heroicons_outline:sparkles', route: '/tanimlamalar/irklar' },
             { label: 'Hayvan Tipleri', icon: 'heroicons_outline:tag', route: '/tanimlamalar/hayvan-tipleri' },
@@ -268,6 +316,7 @@ export class ShellComponent {
             { label: 'Muhasebe Kalemleri', icon: 'heroicons_outline:receipt-refund', route: '/tanimlamalar/muhasebe-kalemleri' },
           ],
         },
+        { label: 'Paketler & Abonelik', icon: 'heroicons_outline:credit-card', route: '/abonelik', badge: 'Plan', badgeColor: 'bg-gradient-to-r from-indigo-500 to-purple-600' },
         { label: 'Geri Dönüşüm', icon: 'heroicons_outline:trash', route: '/geri-donusum' },
       ],
     },

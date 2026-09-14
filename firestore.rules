@@ -27,5 +27,9 @@ service cloud.firestore {
         allow read, write: if isSignedIn();
       }
     }
+
+    match /mail/{mailId} {
+      allow create, read: if isSignedIn();
+    }
   }
 }

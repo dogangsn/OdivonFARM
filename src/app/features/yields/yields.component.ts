@@ -10,6 +10,7 @@ import { AnimalService } from '../../core/services/animal.service';
 import { HerdService } from '../../core/services/definitions/herd.service';
 import { YieldRecord, YieldType } from '../../core/models/production.model';
 import { Animal, Herd } from '../../core/models/animal.model';
+import { AlertService } from '../../core/services/alert.service';
 
 @Component({
   selector: 'app-yields',
@@ -28,6 +29,7 @@ export class YieldsComponent {
   private yieldService = inject(YieldRecordService);
   private animalService = inject(AnimalService);
   private herdService = inject(HerdService);
+  private alertService = inject(AlertService);
 
   readonly yields = toSignal(this.yieldService.list(), { initialValue: [] as YieldRecord[] });
   readonly animals = toSignal(this.animalService.list(), { initialValue: [] as Animal[] });
@@ -248,14 +250,17 @@ export class YieldsComponent {
 
   async deleteYield(id?: string) {
     if (!id) return;
-    if (!confirm('Bu verim kaydını silmek istediğinize emin misiniz?')) {
-      return;
-    }
+    const confirmed = await this.alertService.confirmDelete(
+      'Verim Kaydını Sil',
+      'Bu verim kaydını silmek istediğinize emin misiniz?'
+    );
+    if (!confirmed) return;
     try {
       await this.yieldService.softDelete(id);
+      this.alertService.toastSuccess('Verim kaydı başarıyla silindi');
     } catch (err) {
       console.error('Silme hatası:', err);
-      alert('Kayıt silinirken bir hata oluştu.');
+      this.alertService.error('Hata Oluştu', 'Kayıt silinirken bir hata oluştu.');
     }
   }
 

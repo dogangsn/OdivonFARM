@@ -1,0 +1,245 @@
+<div class="min-h-full p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto">
+  <!-- PAGE HEADER -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div class="flex items-center gap-3.5">
+      <div
+        class="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 text-white flex items-center justify-center shadow-lg shadow-indigo-500/25 ring-1 ring-white/20 flex-shrink-0"
+      >
+        <mat-icon class="icon-size-6 text-white">admin_panel_settings</mat-icon>
+      </div>
+      <div>
+        <div class="flex items-center gap-2">
+          <span class="text-xs font-semibold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">
+            Sistem & Tanımlamalar
+          </span>
+          <span class="text-slate-300 dark:text-slate-700">•</span>
+          <span class="text-xs font-medium text-slate-500 dark:text-slate-400">
+            6 Standart Sistem Rolü
+          </span>
+        </div>
+        <h1 class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight leading-tight">
+          Roller & Yetki Matrisi
+        </h1>
+        <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+          Kullanıcı rollerinin çiftlik içerisindeki yetki ve erişim sınırları
+        </p>
+      </div>
+    </div>
+
+    <!-- View Mode Toggle -->
+    <div class="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl border border-slate-200 dark:border-slate-700 self-start sm:self-auto">
+      <button
+        type="button"
+        (click)="selectedTab.set('cards')"
+        class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer"
+        [ngClass]="selectedTab() === 'cards' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-xs' : 'text-slate-500 hover:text-slate-800 dark:hover:text-white'"
+      >
+        <mat-icon class="icon-size-4">dashboard</mat-icon>
+        <span>Rol Kartları</span>
+      </button>
+      <button
+        type="button"
+        (click)="selectedTab.set('matrix')"
+        class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer"
+        [ngClass]="selectedTab() === 'matrix' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-xs' : 'text-slate-500 hover:text-slate-800 dark:hover:text-white'"
+      >
+        <mat-icon class="icon-size-4">table_chart</mat-icon>
+        <span>Yetki Matrisi</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- HIGHLIGHT BANNER: ADMIN GUARANTEE -->
+  <div class="p-4 rounded-2xl bg-gradient-to-r from-rose-500/10 via-indigo-500/5 to-purple-500/10 border border-rose-500/20 flex items-start sm:items-center justify-between gap-4">
+    <div class="flex items-start sm:items-center gap-3.5">
+      <div class="w-10 h-10 rounded-xl bg-rose-500 text-white flex items-center justify-center flex-shrink-0 shadow-md shadow-rose-500/20">
+        <mat-icon class="icon-size-5">verified_user</mat-icon>
+      </div>
+      <div>
+        <h3 class="text-xs font-bold text-slate-900 dark:text-white">
+          Çiftlik Kurucusu (İlk Kayıt Olan Kullanıcı) = Varsayılan Yönetici (Admin)
+        </h3>
+        <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+          Sisteme üye olan kullanıcı ilk çiftliğini oluşturduğunda otomatik olarak Yönetici (Admin) kabul edilir ve tam yetkiye sahip olur. Çiftlik sahibi daha sonra dilediği personeli uygun rollerle sisteme dahil edebilir.
+        </p>
+      </div>
+    </div>
+    <button
+      type="button"
+      (click)="viewMembersWithRole('admin')"
+      class="flex-shrink-0 px-3 py-1.5 text-xs font-bold rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 text-slate-700 dark:text-slate-200 shadow-xs transition-colors cursor-pointer"
+    >
+      Kullanıcıları Yönet
+    </button>
+  </div>
+
+  <!-- TAB 1: ROLE CARDS -->
+  @if (selectedTab() === 'cards') {
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      @for (role of roleList; track role.key) {
+        @let memberCount = roleMemberCounts()[role.key] || 0;
+        <div
+          class="odivon-card p-5 border flex flex-col justify-between transition-all duration-200 hover:shadow-lg relative overflow-hidden group"
+          [ngClass]="role.borderClass"
+        >
+          <!-- Top Color Stripe -->
+          <div class="absolute top-0 left-0 right-0 h-1.5" [ngClass]="role.badgeClass"></div>
+
+          <div>
+            <!-- Header: Title & Member Count -->
+            <div class="flex items-start justify-between gap-3">
+              <div class="flex items-center gap-2.5">
+                <div class="w-10 h-10 rounded-xl flex items-center justify-center border shadow-xs" [ngClass]="role.badgeClass">
+                  <mat-icon class="icon-size-5">security</mat-icon>
+                </div>
+                <div>
+                  <h3 class="text-sm font-black text-slate-900 dark:text-white">
+                    {{ role.label }}
+                  </h3>
+                  <p class="text-[11px] font-mono text-slate-400">
+                    kod: {{ role.key }}
+                  </p>
+                </div>
+              </div>
+
+              <!-- Member Count Pill -->
+              <span
+                class="text-[11px] font-bold px-2.5 py-1 rounded-full border shadow-2xs"
+                [ngClass]="memberCount > 0 ? role.badgeClass : 'bg-slate-100 dark:bg-slate-800 text-slate-400 border-slate-200 dark:border-slate-700'"
+              >
+                {{ memberCount }} Üye
+              </span>
+            </div>
+
+            <!-- Description -->
+            <p class="text-xs text-slate-600 dark:text-slate-300 mt-3 leading-relaxed">
+              {{ role.longDescription }}
+            </p>
+
+            <!-- Categorized Permissions -->
+            <div class="mt-4 pt-3.5 border-t border-slate-100 dark:border-slate-800/80 space-y-3">
+              <div class="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                Erişim Yetkileri
+              </div>
+              @for (cat of role.permissions; track cat.category) {
+                <div class="space-y-1">
+                  <div class="text-[11px] font-semibold text-slate-700 dark:text-slate-300">
+                    {{ cat.category }}
+                  </div>
+                  <div class="flex flex-wrap gap-1">
+                    @for (item of cat.items; track item) {
+                      <span class="text-[10px] px-2 py-0.5 rounded-md bg-slate-50 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/60 text-slate-600 dark:text-slate-400">
+                        {{ item }}
+                      </span>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+
+          <!-- Card Footer -->
+          <div class="mt-5 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+            <span class="text-[11px] text-slate-400">
+              Sistem Standart Rolü
+            </span>
+            <button
+              type="button"
+              (click)="viewMembersWithRole(role.key)"
+              class="flex items-center gap-1 text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer"
+            >
+              <span>Üyeleri Gör</span>
+              <mat-icon class="icon-size-4">arrow_forward</mat-icon>
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- TAB 2: PERMISSIONS MATRIX TABLE -->
+  @else {
+    <div class="odivon-card overflow-hidden border">
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs">
+          <thead class="bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-bold uppercase tracking-wider">
+            <tr>
+              <th class="py-3.5 px-4 min-w-[200px]">Modül / Yetki</th>
+              <th class="py-3.5 px-3 text-center text-rose-600 dark:text-rose-400">Admin</th>
+              <th class="py-3.5 px-3 text-center text-indigo-600 dark:text-indigo-400">Yönetici</th>
+              <th class="py-3.5 px-3 text-center text-emerald-600 dark:text-emerald-400">Veteriner</th>
+              <th class="py-3.5 px-3 text-center text-amber-600 dark:text-amber-400">Saha</th>
+              <th class="py-3.5 px-3 text-center text-cyan-600 dark:text-cyan-400">Muhasebe</th>
+              <th class="py-3.5 px-3 text-center text-slate-500">Okuyucu</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+            @for (row of matrixRows; track row.action) {
+              <tr class="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors">
+                <!-- Action Name -->
+                <td class="py-3 px-4">
+                  <div class="font-bold text-slate-900 dark:text-white">{{ row.action }}</div>
+                  <div class="text-[10px] text-slate-400 uppercase font-semibold">{{ row.module }}</div>
+                </td>
+
+                <!-- Admin -->
+                <td class="py-3 px-3 text-center">
+                  @if (row.admin) {
+                    <mat-icon class="icon-size-4 text-emerald-500 inline-block">check_circle</mat-icon>
+                  } @else {
+                    <span class="text-slate-300 dark:text-slate-700">—</span>
+                  }
+                </td>
+
+                <!-- Yönetici -->
+                <td class="py-3 px-3 text-center">
+                  @if (row.yonetici) {
+                    <mat-icon class="icon-size-4 text-emerald-500 inline-block">check_circle</mat-icon>
+                  } @else {
+                    <span class="text-slate-300 dark:text-slate-700">—</span>
+                  }
+                </td>
+
+                <!-- Veteriner -->
+                <td class="py-3 px-3 text-center">
+                  @if (row.veteriner) {
+                    <mat-icon class="icon-size-4 text-emerald-500 inline-block">check_circle</mat-icon>
+                  } @else {
+                    <span class="text-slate-300 dark:text-slate-700">—</span>
+                  }
+                </td>
+
+                <!-- Saha -->
+                <td class="py-3 px-3 text-center">
+                  @if (row.saha) {
+                    <mat-icon class="icon-size-4 text-emerald-500 inline-block">check_circle</mat-icon>
+                  } @else {
+                    <span class="text-slate-300 dark:text-slate-700">—</span>
+                  }
+                </td>
+
+                <!-- Muhasebe -->
+                <td class="py-3 px-3 text-center">
+                  @if (row.muhasebe) {
+                    <mat-icon class="icon-size-4 text-emerald-500 inline-block">check_circle</mat-icon>
+                  } @else {
+                    <span class="text-slate-300 dark:text-slate-700">—</span>
+                  }
+                </td>
+
+                <!-- Okuyucu -->
+                <td class="py-3 px-3 text-center">
+                  @if (row.okuyucu) {
+                    <mat-icon class="icon-size-4 text-emerald-500 inline-block">check_circle</mat-icon>
+                  } @else {
+                    <span class="text-slate-300 dark:text-slate-700">—</span>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+</div>

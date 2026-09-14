@@ -1,10 +1,9 @@
 @use '@angular/material' as mat;
 @import '@angular/cdk/overlay-prebuilt.css';
+@import 'sweetalert2/dist/sweetalert2.min.css';
 
 @include mat.core();
 
-/* Inter Font */
-@import 'assets/fonts/inter/inter.css';
 
 /* Tailwind Core Layers */
 @tailwind base;
@@ -46,27 +45,59 @@
 
 html {
   height: 100%;
-  font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   @include mat.theme(
     (
       color: (
         primary: mat.$violet-palette,
         tertiary: mat.$azure-palette,
       ),
-      typography: Roboto,
+      typography: 'Plus Jakarta Sans',
       density: 0,
     )
   );
 }
 
 body {
-  font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   background-color: var(--odivon-bg-default);
   color: var(--odivon-text-default);
   margin: 0;
   height: 100%;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Global Font Enforcement: Ensure all UI controls, inputs, buttons, and Material components inherit Plus Jakarta Sans */
+button,
+input,
+optgroup,
+select,
+textarea,
+.mat-mdc-button-base,
+.mat-mdc-dialog-container,
+.mat-mdc-form-field,
+.mat-mdc-select,
+.mat-mdc-menu-panel,
+.mat-mdc-table,
+.mat-mdc-paginator,
+.mat-mdc-tab,
+.mat-mdc-card,
+.mat-mdc-tooltip,
+.mat-mdc-snack-bar-container {
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+}
+
+/* Preserve icon font families */
+.material-icons,
+.material-icons-outlined,
+.material-icons-two-tone,
+.material-icons-round,
+.material-icons-sharp,
+.material-symbols-outlined,
+.material-symbols-rounded,
+.material-symbols-sharp {
+  font-family: 'Material Symbols Outlined', 'Material Icons' !important;
 }
 
 /* Native Accordion Details/Summary Reset */
@@ -150,5 +181,99 @@ details summary::-webkit-details-marker {
 .dark .glass-panel {
   background: rgba(15, 23, 42, 0.82);
   border-color: rgba(51, 65, 85, 0.6);
+}
+
+/* Odivon Modern SweetAlert2 Styling */
+.odivon-swal-popup.swal2-popup {
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+  border-radius: 1.5rem !important;
+  padding: 1.75rem !important;
+  box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25) !important;
+  border: 1px solid rgba(226, 232, 240, 0.8) !important;
+
+  .swal2-title {
+    font-size: 1.25rem !important;
+    font-weight: 700 !important;
+    letter-spacing: -0.02em !important;
+    color: #0f172a !important;
+    padding-top: 0.5rem !important;
+  }
+
+  .swal2-html-container {
+    font-size: 0.875rem !important;
+    color: #64748b !important;
+    line-height: 1.5 !important;
+    margin: 0.75rem 0 0 0 !important;
+  }
+
+  .swal2-actions {
+    margin-top: 1.5rem !important;
+    gap: 0.75rem !important;
+  }
+
+  .swal2-styled {
+    border-radius: 0.75rem !important;
+    font-weight: 600 !important;
+    font-size: 0.875rem !important;
+    padding: 0.625rem 1.25rem !important;
+    transition: all 0.2s ease !important;
+  }
+
+  .swal2-confirm {
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25) !important;
+
+    &:hover {
+      box-shadow: 0 6px 16px rgba(99, 102, 241, 0.35) !important;
+    }
+  }
+
+  .swal2-cancel {
+    color: #475569 !important;
+
+    &:hover {
+      color: #1e293b !important;
+    }
+  }
+}
+
+/* Dark mode styling for SweetAlert2 */
+.dark .odivon-swal-popup.swal2-popup {
+  background: #1e293b !important;
+  border-color: rgba(51, 65, 85, 0.8) !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important;
+
+  .swal2-title {
+    color: #f8fafc !important;
+  }
+
+  .swal2-html-container {
+    color: #94a3b8 !important;
+  }
+
+  .swal2-cancel {
+    color: #cbd5e1 !important;
+
+    &:hover {
+      color: #ffffff !important;
+    }
+  }
+}
+
+/* Toast popup styling */
+.odivon-swal-toast.swal2-toast {
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+  border-radius: 1rem !important;
+  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.15), 0 8px 10px -6px rgba(15, 23, 42, 0.1) !important;
+  padding: 0.75rem 1rem !important;
+  border: 1px solid rgba(226, 232, 240, 0.8) !important;
+
+  .swal2-title {
+    font-size: 0.875rem !important;
+    font-weight: 600 !important;
+  }
+}
+
+.dark .odivon-swal-toast.swal2-toast {
+  border-color: rgba(51, 65, 85, 0.8) !important;
 }
 

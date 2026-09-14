@@ -1,60 +1,525 @@
-<div class="accounts">
-  <div class="header">
-    <h2>Cariler</h2>
-    <button mat-flat-button color="primary" (click)="openForm()">
-      <mat-icon>add</mat-icon>
-      Cari Ekle
-    </button>
+<div class="min-h-full p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto">
+  <!-- PAGE HEADER -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div class="flex items-center gap-3.5">
+      <div
+        class="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center shadow-lg shadow-indigo-500/25 ring-1 ring-white/20 flex-shrink-0"
+      >
+        <mat-icon class="icon-size-6 text-white">contacts</mat-icon>
+      </div>
+      <div>
+        <div class="flex items-center gap-2">
+          <span class="text-xs font-semibold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">
+            Çiftlik Tanımlamaları
+          </span>
+          <span class="text-slate-300 dark:text-slate-700">•</span>
+          <span class="text-xs font-medium text-slate-500 dark:text-slate-400">
+            {{ metrics().total }} Kayıtlı Cari
+          </span>
+        </div>
+        <h1 class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight leading-tight">
+          Cariler (Müşteri & Tedarikçiler)
+        </h1>
+        <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+          Tedarikçi, alıcı, veteriner hekim ve diğer cari hesap tanımlamalarını yönetin.
+        </p>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="flex items-center gap-2.5 self-start sm:self-auto">
+      <button
+        type="button"
+        (click)="openCreateModal()"
+        class="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white text-xs font-bold shadow-md shadow-indigo-500/20 hover:shadow-indigo-500/30 transition-all duration-200 cursor-pointer active:scale-95"
+      >
+        <mat-icon class="icon-size-4">add</mat-icon>
+        <span>Yeni Cari Ekle</span>
+      </button>
+    </div>
   </div>
 
-  <div class="grid">
-    @for (acc of accounts(); track acc.id) {
-      <mat-card>
-        <mat-card-title>{{ acc.title }}</mat-card-title>
-        <mat-card-subtitle>{{ acc.phone || 'Telefon: Bilinmiyor' }}</mat-card-subtitle>
-        <mat-card-content>
-          <p>{{ acc.description }}</p>
-        </mat-card-content>
-        <mat-card-actions>
-          <button mat-icon-button (click)="remove(acc.id!)" aria-label="Sil">
-            <mat-icon>delete_outline</mat-icon>
+  <!-- STATS SUMMARY CARDS -->
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+    <!-- Card 1: Toplam Cari -->
+    <div class="odivon-card p-4 flex items-center gap-3.5">
+      <div class="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center flex-shrink-0">
+        <mat-icon class="icon-size-5">people</mat-icon>
+      </div>
+      <div class="min-w-0">
+        <div class="text-[11px] font-semibold text-slate-500 dark:text-slate-400 truncate">Toplam Cari</div>
+        <div class="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+          {{ metrics().total }}
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 2: Telefon Bilgili -->
+    <div class="odivon-card p-4 flex items-center gap-3.5">
+      <div class="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center flex-shrink-0">
+        <mat-icon class="icon-size-5">phone_in_talk</mat-icon>
+      </div>
+      <div class="min-w-0">
+        <div class="text-[11px] font-semibold text-slate-500 dark:text-slate-400 truncate">Telefon Bilgili</div>
+        <div class="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+          {{ metrics().withPhone }}
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 3: Adres Tanımlı -->
+    <div class="odivon-card p-4 flex items-center gap-3.5">
+      <div class="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center flex-shrink-0">
+        <mat-icon class="icon-size-5">location_on</mat-icon>
+      </div>
+      <div class="min-w-0">
+        <div class="text-[11px] font-semibold text-slate-500 dark:text-slate-400 truncate">Adres Tanımlı</div>
+        <div class="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+          {{ metrics().withAddress }}
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 4: Notlu / Açıklamalı -->
+    <div class="odivon-card p-4 flex items-center gap-3.5">
+      <div class="w-10 h-10 rounded-xl bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 flex items-center justify-center flex-shrink-0">
+        <mat-icon class="icon-size-5">description</mat-icon>
+      </div>
+      <div class="min-w-0">
+        <div class="text-[11px] font-semibold text-slate-500 dark:text-slate-400 truncate">Açıklama / Notlu</div>
+        <div class="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+          {{ metrics().withNotes }}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOOLBAR & FILTERS -->
+  <div class="odivon-card p-3 sm:p-4 flex flex-col md:flex-row md:items-center justify-between gap-3">
+    <!-- Search Input -->
+    <div class="relative flex-1 min-w-[200px] max-w-md">
+      <mat-icon class="absolute left-3 top-1/2 -translate-y-1/2 icon-size-4 text-slate-400">search</mat-icon>
+      <input
+        type="text"
+        [ngModel]="searchTerm()"
+        (ngModelChange)="searchTerm.set($event)"
+        placeholder="Cari ünvan, telefon, adres veya not ara..."
+        class="w-full pl-9 pr-8 py-2 text-xs rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium"
+      />
+      @if (searchTerm()) {
+        <button
+          type="button"
+          (click)="searchTerm.set('')"
+          class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+        >
+          <mat-icon class="icon-size-4">close</mat-icon>
+        </button>
+      }
+    </div>
+
+    <!-- View Mode Toggle -->
+    <div class="flex items-center gap-2 self-end md:self-auto">
+      <div class="flex items-center bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200/60 dark:border-slate-700/60">
+        <button
+          type="button"
+          (click)="viewMode.set('grid')"
+          [class]="viewMode() === 'grid' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-xs font-bold' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'"
+          class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs transition-all cursor-pointer"
+          matTooltip="Kart Görünümü"
+        >
+          <mat-icon class="icon-size-4">grid_view</mat-icon>
+          <span class="hidden sm:inline">Kartlar</span>
+        </button>
+        <button
+          type="button"
+          (click)="viewMode.set('table')"
+          [class]="viewMode() === 'table' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-xs font-bold' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'"
+          class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs transition-all cursor-pointer"
+          matTooltip="Tablo Görünümü"
+        >
+          <mat-icon class="icon-size-4">table_rows</mat-icon>
+          <span class="hidden sm:inline">Tablo</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTENT SECTION -->
+  @if (filteredAccounts().length === 0) {
+    <!-- Empty State -->
+    <div class="odivon-card p-12 text-center flex flex-col items-center justify-center max-w-lg mx-auto">
+      <div class="w-16 h-16 rounded-2xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-500 dark:text-indigo-400 flex items-center justify-center mb-4">
+        <mat-icon class="icon-size-8">contacts</mat-icon>
+      </div>
+      <h3 class="text-base font-bold text-slate-800 dark:text-white">
+        @if (searchTerm()) {
+          Aramanızla Eşleşen Cari Bulunamadı
+        } @else {
+          Henüz Cari Kaydı Eklenmemiş
+        }
+      </h3>
+      <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-sm">
+        @if (searchTerm()) {
+          "{{ searchTerm() }}" kriterine uygun cari kaydı bulunamadı. Aramayı temizlemeyi deneyin.
+        } @else {
+          Çiftliğiniz için hayvan alımı, yem tedariki veya veterinerlik hizmeti aldığınız kişi ve kurumları cari olarak ekleyin.
+        }
+      </p>
+      <div class="mt-6 flex gap-3">
+        @if (searchTerm()) {
+          <button
+            type="button"
+            (click)="searchTerm.set('')"
+            class="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer"
+          >
+            Filtreyi Temizle
           </button>
-        </mat-card-actions>
-      </mat-card>
-    } @empty {
-      <p class="empty">Kayıt bulunamadı.</p>
-    }
-  </div>
+        }
+        <button
+          type="button"
+          (click)="openCreateModal()"
+          class="flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 text-white text-xs font-bold hover:bg-indigo-700 shadow-md shadow-indigo-500/20 transition-all cursor-pointer"
+        >
+          <mat-icon class="icon-size-4">add</mat-icon>
+          <span>Yeni Cari Ekle</span>
+        </button>
+      </div>
+    </div>
+  } @else if (viewMode() === 'grid') {
+    <!-- MODERN GRID VIEW -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+      @for (acc of filteredAccounts(); track acc.id) {
+        @let theme = getThemeConfig(acc);
+        <div
+          class="odivon-card group p-5 flex flex-col justify-between hover:border-indigo-500/40 dark:hover:border-indigo-500/40 hover:shadow-lg transition-all duration-200 relative overflow-hidden"
+        >
+          <!-- Top Accent Line -->
+          <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r {{ theme.bgClass }} opacity-80"></div>
 
-  @if (showForm()) {
-    <div class="modal-backdrop" (click)="closeForm()">
-      <mat-card class="modal" (click)="$event.stopPropagation()">
-        <h3>Cari Ekle</h3>
+          <div>
+            <!-- Header: Avatar + Title + Actions -->
+            <div class="flex items-start justify-between gap-3 mb-3">
+              <div class="flex items-center gap-3 min-w-0">
+                <div
+                  class="w-11 h-11 rounded-2xl bg-gradient-to-br {{ theme.bgClass }} text-white font-black flex items-center justify-center text-sm shadow-md flex-shrink-0 tracking-wider"
+                >
+                  {{ getInitials(acc.title) }}
+                </div>
+                <div class="min-w-0">
+                  <h3 class="font-bold text-sm text-slate-900 dark:text-white truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                    {{ acc.title }}
+                  </h3>
+                  <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border mt-0.5 {{ theme.badgeClass }}">
+                    Cari Kartı
+                  </span>
+                </div>
+              </div>
 
-        <mat-form-field appearance="outline" class="full">
-          <mat-label>*Cari Ünvan</mat-label>
-          <input matInput [ngModel]="form().title" (ngModelChange)="updateField('title', $event)" />
-        </mat-form-field>
+              <!-- Action Menu Buttons -->
+              <div class="flex items-center gap-1 opacity-90 group-hover:opacity-100 transition-opacity">
+                <button
+                  type="button"
+                  (click)="openEditModal(acc)"
+                  class="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                  matTooltip="Düzenle"
+                >
+                  <mat-icon class="icon-size-4">edit</mat-icon>
+                </button>
+                <button
+                  type="button"
+                  (click)="deleteAccount(acc)"
+                  class="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                  matTooltip="Sil"
+                >
+                  <mat-icon class="icon-size-4">delete_outline</mat-icon>
+                </button>
+              </div>
+            </div>
 
-        <mat-form-field appearance="outline" class="full">
-          <mat-label>Açıklama</mat-label>
-          <input matInput [ngModel]="form().description" (ngModelChange)="updateField('description', $event)" />
-        </mat-form-field>
+            <!-- Details Section -->
+            <div class="space-y-2 text-xs py-1">
+              <!-- Phone -->
+              <div class="flex items-center gap-2 text-slate-600 dark:text-slate-300">
+                <mat-icon class="icon-size-4 text-emerald-500 flex-shrink-0">phone</mat-icon>
+                @if (acc.phone) {
+                  <a [href]="'tel:' + acc.phone" class="font-medium hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors truncate hover:underline">
+                    {{ acc.phone }}
+                  </a>
+                } @else {
+                  <span class="text-slate-400 dark:text-slate-500 italic">Telefon belirtilmemiş</span>
+                }
+              </div>
 
-        <mat-form-field appearance="outline" class="full">
-          <mat-label>Adres</mat-label>
-          <input matInput [ngModel]="form().address" (ngModelChange)="updateField('address', $event)" />
-        </mat-form-field>
+              <!-- Address -->
+              <div class="flex items-start gap-2 text-slate-600 dark:text-slate-300">
+                <mat-icon class="icon-size-4 text-amber-500 flex-shrink-0 mt-0.5">place</mat-icon>
+                <span class="truncate-2-lines flex-1 {{ !acc.address ? 'text-slate-400 dark:text-slate-500 italic' : '' }}">
+                  {{ acc.address || 'Adres belirtilmemiş' }}
+                </span>
+              </div>
 
-        <mat-form-field appearance="outline" class="full">
-          <mat-label>Telefon</mat-label>
-          <input matInput [ngModel]="form().phone" (ngModelChange)="updateField('phone', $event)" />
-        </mat-form-field>
+              <!-- Description / Notes -->
+              @if (acc.description) {
+                <div class="mt-2.5 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/50 dark:border-slate-700/50 text-[11px] text-slate-600 dark:text-slate-300 line-clamp-2">
+                  {{ acc.description }}
+                </div>
+              }
+            </div>
+          </div>
 
-        <p class="hint">*girilmesi zorunlu alanlar</p>
+          <!-- Bottom Footer -->
+          <div class="pt-3 mt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-[10px] text-slate-400">
+            <span>Aktif Kayıt</span>
+            <button
+              type="button"
+              (click)="openEditModal(acc)"
+              class="font-semibold text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer"
+            >
+              Detayları Düzenle →
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+  } @else {
+    <!-- MODERN TABLE VIEW -->
+    <div class="odivon-card overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs">
+          <thead class="bg-slate-50 dark:bg-slate-800/60 border-b border-slate-200/80 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider text-[10px]">
+            <tr>
+              <th class="py-3 px-4">Cari Ünvan</th>
+              <th class="py-3 px-4">Telefon</th>
+              <th class="py-3 px-4">Adres</th>
+              <th class="py-3 px-4">Açıklama</th>
+              <th class="py-3 px-4 text-right">İşlemler</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+            @for (acc of filteredAccounts(); track acc.id) {
+              @let theme = getThemeConfig(acc);
+              <tr class="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors">
+                <!-- Title & Avatar -->
+                <td class="py-3 px-4">
+                  <div class="flex items-center gap-3">
+                    <div
+                      class="w-9 h-9 rounded-xl bg-gradient-to-br {{ theme.bgClass }} text-white font-bold flex items-center justify-center text-xs shadow-xs flex-shrink-0"
+                    >
+                      {{ getInitials(acc.title) }}
+                    </div>
+                    <div>
+                      <div class="font-bold text-slate-900 dark:text-white">{{ acc.title }}</div>
+                      <div class="text-[10px] text-slate-400">ID: {{ acc.id ? acc.id.slice(0, 8) : '—' }}</div>
+                    </div>
+                  </div>
+                </td>
 
-        <button mat-flat-button color="primary" class="full" (click)="save()">Kaydet</button>
-      </mat-card>
+                <!-- Phone -->
+                <td class="py-3 px-4">
+                  @if (acc.phone) {
+                    <a [href]="'tel:' + acc.phone" class="font-semibold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1.5">
+                      <mat-icon class="icon-size-3.5">phone</mat-icon>
+                      <span>{{ acc.phone }}</span>
+                    </a>
+                  } @else {
+                    <span class="text-slate-400 italic">—</span>
+                  }
+                </td>
+
+                <!-- Address -->
+                <td class="py-3 px-4 text-slate-600 dark:text-slate-300 max-w-xs truncate">
+                  {{ acc.address || '—' }}
+                </td>
+
+                <!-- Description -->
+                <td class="py-3 px-4 text-slate-500 dark:text-slate-400 max-w-xs truncate">
+                  {{ acc.description || '—' }}
+                </td>
+
+                <!-- Actions -->
+                <td class="py-3 px-4 text-right">
+                  <div class="flex items-center justify-end gap-1">
+                    <button
+                      type="button"
+                      (click)="openEditModal(acc)"
+                      class="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                      matTooltip="Düzenle"
+                    >
+                      <mat-icon class="icon-size-4">edit</mat-icon>
+                    </button>
+                    <button
+                      type="button"
+                      (click)="deleteAccount(acc)"
+                      class="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                      matTooltip="Sil"
+                    >
+                      <mat-icon class="icon-size-4">delete_outline</mat-icon>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+
+  <!-- MODERN CENTERED MODAL -->
+  @if (isModalOpen()) {
+    <div
+      class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200"
+      (click)="closeModal()"
+    >
+      <div
+        class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-150"
+        (click)="$event.stopPropagation()"
+      >
+        <!-- Modal Header -->
+        <div class="px-6 py-4.5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/30">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center shadow-md shadow-indigo-500/20">
+              <mat-icon class="icon-size-5">contacts</mat-icon>
+            </div>
+            <div>
+              <h2 class="text-base font-bold text-slate-900 dark:text-white leading-tight">
+                {{ isEditing() ? 'Cari Kartı Düzenle' : 'Yeni Cari Kartı Ekle' }}
+              </h2>
+              <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                Cari hesap ve iletişim bilgilerini tanımlayın.
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            (click)="closeModal()"
+            class="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+          >
+            <mat-icon class="icon-size-5">close</mat-icon>
+          </button>
+        </div>
+
+        <!-- Modal Body Form -->
+        <form (ngSubmit)="saveAccount()" class="p-5 sm:p-6 space-y-4 overflow-y-auto max-h-[calc(85vh-130px)]">
+          <!-- Error alert -->
+          @if (errorMessage()) {
+            <div class="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/50 border border-rose-200/60 dark:border-rose-800/60 text-xs text-rose-700 dark:text-rose-300 flex items-center gap-2">
+              <mat-icon class="icon-size-4 text-rose-600">error</mat-icon>
+              <span>{{ errorMessage() }}</span>
+            </div>
+          }
+
+          <!-- Cari Ünvan -->
+          <div>
+            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+              Cari Ünvan / Kişi veya Firma Adı <span class="text-rose-500">*</span>
+            </label>
+            <input
+              type="text"
+              [ngModel]="form().title"
+              (ngModelChange)="updateFormField('title', $event)"
+              name="title"
+              placeholder="Örn: Özkan Yem Sanayi, Dr. Ahmet Yılmaz, Merkez Veterinerlik"
+              class="w-full px-3.5 py-2.5 text-xs rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium"
+              required
+            />
+          </div>
+
+          <!-- Telefon & Adres (2 Sütun) -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            <!-- Telefon -->
+            <div>
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                Telefon Numarası
+              </label>
+              <input
+                type="tel"
+                [ngModel]="form().phone"
+                (ngModelChange)="updateFormField('phone', $event)"
+                name="phone"
+                placeholder="Örn: 0532 123 45 67"
+                class="w-full px-3.5 py-2.5 text-xs rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium"
+              />
+            </div>
+
+            <!-- Adres -->
+            <div>
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                Şehir / Adres
+              </label>
+              <input
+                type="text"
+                [ngModel]="form().address"
+                (ngModelChange)="updateFormField('address', $event)"
+                name="address"
+                placeholder="Örn: Konya / Karatay"
+                class="w-full px-3.5 py-2.5 text-xs rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium"
+              />
+            </div>
+          </div>
+
+          <!-- Renk Rozeti / Teması -->
+          <div>
+            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+              Kart Renk Teması
+            </label>
+            <div class="flex items-center gap-2.5 flex-wrap">
+              @for (theme of colorThemes; track theme.id) {
+                <button
+                  type="button"
+                  (click)="updateFormField('colorTheme', theme.id)"
+                  class="w-8 h-8 rounded-xl bg-gradient-to-br {{ theme.bgClass }} flex items-center justify-center transition-all cursor-pointer {{ form().colorTheme === theme.id ? 'ring-2 ring-offset-2 ring-indigo-500 scale-110' : 'opacity-70 hover:opacity-100' }}"
+                  matTooltip="{{ theme.label }}"
+                >
+                  @if (form().colorTheme === theme.id) {
+                    <mat-icon class="icon-size-4 text-white">check</mat-icon>
+                  }
+                </button>
+              }
+            </div>
+          </div>
+
+          <!-- Açıklama & Notlar -->
+          <div>
+            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+              Açıklama & Özel Notlar
+            </label>
+            <textarea
+              [ngModel]="form().description"
+              (ngModelChange)="updateFormField('description', $event)"
+              name="description"
+              rows="3"
+              placeholder="Örn: Süt alımı yapılan ana tedarikçi, haftalık periyotlarla teslimat yapılır..."
+              class="w-full px-3.5 py-2.5 text-xs rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium resize-none"
+            ></textarea>
+          </div>
+
+          <!-- Modal Footer Actions -->
+          <div class="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-3">
+            <button
+              type="button"
+              (click)="closeModal()"
+              class="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+            >
+              Vazgeç
+            </button>
+            <button
+              type="submit"
+              [disabled]="isSaving()"
+              class="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white text-xs font-bold shadow-md shadow-indigo-500/25 transition-all cursor-pointer disabled:opacity-50"
+            >
+              @if (isSaving()) {
+                <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                <span>Kaydediliyor...</span>
+              } @else {
+                <mat-icon class="icon-size-4">check</mat-icon>
+                <span>{{ isEditing() ? 'Değişiklikleri Kaydet' : 'Cariyi Kaydet' }}</span>
+              }
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   }
 </div>

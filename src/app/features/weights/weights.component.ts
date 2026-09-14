@@ -9,6 +9,7 @@ import { WeightRecordService } from '../../core/services/weight-record.service';
 import { AnimalService } from '../../core/services/animal.service';
 import { WeightRecord } from '../../core/models/production.model';
 import { Animal } from '../../core/models/animal.model';
+import { AlertService } from '../../core/services/alert.service';
 
 interface EnrichedWeightRecord extends WeightRecord {
   previousWeightKg?: number;
@@ -33,6 +34,7 @@ interface EnrichedWeightRecord extends WeightRecord {
 export class WeightsComponent {
   private weightService = inject(WeightRecordService);
   private animalService = inject(AnimalService);
+  private alertService = inject(AlertService);
 
   readonly weightRecords = toSignal(this.weightService.list(), { initialValue: [] as WeightRecord[] });
   readonly animals = toSignal(this.animalService.list(), { initialValue: [] as Animal[] });
@@ -260,11 +262,16 @@ export class WeightsComponent {
   }
 
   async deleteRecord(id: string) {
-    if (!confirm('Bu tartım kaydını silmek istediğinize emin misiniz?')) return;
+    const confirmed = await this.alertService.confirmDelete(
+      'Tartım Kaydını Sil',
+      'Bu tartım kaydını silmek istediğinize emin misiniz?'
+    );
+    if (!confirmed) return;
     try {
       await this.weightService.softDelete(id);
+      this.alertService.toastSuccess('Tartım kaydı başarıyla silindi');
     } catch (err: any) {
-      alert('Silme işlemi başarısız: ' + err.message);
+      this.alertService.error('Silme Başarısız', err.message);
     }
   }
 }

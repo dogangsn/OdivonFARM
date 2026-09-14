@@ -1,0 +1,698 @@
+<div class="min-h-full p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto">
+  <!-- PAGE HEADER -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div class="flex items-center gap-3.5">
+      <div
+        class="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 text-white flex items-center justify-center shadow-lg shadow-indigo-500/25 ring-1 ring-white/20 flex-shrink-0"
+      >
+        <mat-icon class="icon-size-6 text-white">group</mat-icon>
+      </div>
+      <div>
+        <div class="flex items-center gap-2">
+          <span class="text-xs font-semibold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">
+            Yetkilendirme & Erişim
+          </span>
+          <span class="text-slate-300 dark:text-slate-700">•</span>
+          <span class="text-xs font-medium text-slate-500 dark:text-slate-400">
+            {{ metrics().total }} Üye Kayıtlı
+          </span>
+        </div>
+        <h1 class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight leading-tight">
+          Çiftlik Kullanıcıları & Ekip
+        </h1>
+        <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+          Çiftliğe erişebilen kullanıcılar, unvanları ve atanmış yetki rolleri
+        </p>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="flex items-center gap-2.5 self-start sm:self-auto">
+      <button
+        type="button"
+        (click)="openCreateModal()"
+        class="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-500 hover:to-pink-500 text-white text-xs font-bold shadow-md shadow-indigo-500/20 hover:shadow-indigo-500/30 transition-all duration-200 cursor-pointer active:scale-95"
+      >
+        <mat-icon class="icon-size-4">person_add</mat-icon>
+        <span>Yeni Kullanıcı Ekle</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- STATS SUMMARY CARDS -->
+  <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+    <!-- Card 1: Toplam Kullanıcı -->
+    <div class="odivon-card p-4 flex items-center gap-3.5">
+      <div class="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center flex-shrink-0">
+        <mat-icon class="icon-size-5">badge</mat-icon>
+      </div>
+      <div class="min-w-0">
+        <div class="text-[11px] font-semibold text-slate-500 dark:text-slate-400 truncate">Toplam Ekip</div>
+        <div class="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+          {{ metrics().total }}
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 2: Yöneticiler (Admin) -->
+    <div class="odivon-card p-4 flex items-center gap-3.5">
+      <div class="w-10 h-10 rounded-xl bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center flex-shrink-0">
+        <mat-icon class="icon-size-5">security</mat-icon>
+      </div>
+      <div class="min-w-0">
+        <div class="text-[11px] font-semibold text-slate-500 dark:text-slate-400 truncate">Yöneticiler</div>
+        <div class="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+          {{ metrics().admins }}
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 3: Veteriner Hekim -->
+    <div class="odivon-card p-4 flex items-center gap-3.5">
+      <div class="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center flex-shrink-0">
+        <mat-icon class="icon-size-5">medical_services</mat-icon>
+      </div>
+      <div class="min-w-0">
+        <div class="text-[11px] font-semibold text-slate-500 dark:text-slate-400 truncate">Veteriner Hekim</div>
+        <div class="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+          {{ metrics().vets }}
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 4: Saha & Bakım -->
+    <div class="odivon-card p-4 flex items-center gap-3.5">
+      <div class="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center flex-shrink-0">
+        <mat-icon class="icon-size-5">engineering</mat-icon>
+      </div>
+      <div class="min-w-0">
+        <div class="text-[11px] font-semibold text-slate-500 dark:text-slate-400 truncate">Saha Personeli</div>
+        <div class="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+          {{ metrics().fieldStaff }}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOOLBAR & FILTERS -->
+  <div class="odivon-card p-3 sm:p-4 flex flex-col md:flex-row md:items-center justify-between gap-3">
+    <!-- Search Input -->
+    <div class="relative flex-1 max-w-md">
+      <mat-icon class="absolute left-3 top-1/2 -translate-y-1/2 icon-size-4 text-slate-400">search</mat-icon>
+      <input
+        type="text"
+        [ngModel]="searchTerm()"
+        (ngModelChange)="searchTerm.set($event)"
+        placeholder="Ad, e-posta, unvan veya role göre ara..."
+        class="w-full pl-9 pr-8 py-2 text-xs rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+      />
+      @if (searchTerm()) {
+        <button
+          type="button"
+          (click)="searchTerm.set('')"
+          class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+        >
+          <mat-icon class="icon-size-4">close</mat-icon>
+        </button>
+      }
+    </div>
+
+    <!-- Role Filter Pills & View Toggle -->
+    <div class="flex items-center gap-2 overflow-x-auto pb-1 md:pb-0">
+      <!-- Role Filter Select -->
+      <div class="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl text-xs font-medium border border-slate-200 dark:border-slate-700">
+        <button
+          type="button"
+          (click)="selectedRoleFilter.set('all')"
+          class="px-2.5 py-1 rounded-lg transition-colors cursor-pointer"
+          [ngClass]="selectedRoleFilter() === 'all' ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white font-bold shadow-xs' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700'"
+        >
+          Tümü
+        </button>
+        <button
+          type="button"
+          (click)="selectedRoleFilter.set('admin')"
+          class="px-2.5 py-1 rounded-lg transition-colors cursor-pointer"
+          [ngClass]="selectedRoleFilter() === 'admin' ? 'bg-rose-500 text-white font-bold shadow-xs' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700'"
+        >
+          Yönetici
+        </button>
+        <button
+          type="button"
+          (click)="selectedRoleFilter.set('veteriner')"
+          class="px-2.5 py-1 rounded-lg transition-colors cursor-pointer"
+          [ngClass]="selectedRoleFilter() === 'veteriner' ? 'bg-emerald-500 text-white font-bold shadow-xs' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700'"
+        >
+          Veteriner
+        </button>
+        <button
+          type="button"
+          (click)="selectedRoleFilter.set('saha')"
+          class="px-2.5 py-1 rounded-lg transition-colors cursor-pointer"
+          [ngClass]="selectedRoleFilter() === 'saha' ? 'bg-amber-500 text-white font-bold shadow-xs' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700'"
+        >
+          Saha
+        </button>
+      </div>
+
+      <!-- View Mode Buttons -->
+      <div class="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl border border-slate-200 dark:border-slate-700">
+        <button
+          type="button"
+          (click)="viewMode.set('grid')"
+          class="p-1.5 rounded-lg transition-colors cursor-pointer"
+          [ngClass]="viewMode() === 'grid' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-xs' : 'text-slate-400 hover:text-slate-600'"
+          matTooltip="Kart Görünümü"
+        >
+          <mat-icon class="icon-size-4">grid_view</mat-icon>
+        </button>
+        <button
+          type="button"
+          (click)="viewMode.set('table')"
+          class="p-1.5 rounded-lg transition-colors cursor-pointer"
+          [ngClass]="viewMode() === 'table' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-xs' : 'text-slate-400 hover:text-slate-600'"
+          matTooltip="Tablo Görünümü"
+        >
+          <mat-icon class="icon-size-4">view_list</mat-icon>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- LOADING STATE -->
+  @if (loading()) {
+    <div class="odivon-card p-12 flex flex-col items-center justify-center text-center space-y-3">
+      <div class="w-10 h-10 border-3 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+      <p class="text-xs text-slate-500 font-medium">Kullanıcılar yükleniyor...</p>
+    </div>
+  }
+
+  <!-- EMPTY STATE -->
+  @else if (filteredMembers().length === 0) {
+    <div class="odivon-card p-12 flex flex-col items-center justify-center text-center space-y-3">
+      <div class="w-16 h-16 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400">
+        <mat-icon class="icon-size-8">people_outline</mat-icon>
+      </div>
+      <div>
+        <h3 class="text-sm font-bold text-slate-800 dark:text-white">Kullanıcı Bulunamadı</h3>
+        <p class="text-xs text-slate-500 max-w-sm mt-1">
+          Arama kriterlerinize uygun kayıt bulunamadı. Yeni bir kullanıcı ekleyebilir veya filtreleri temizleyebilirsiniz.
+        </p>
+      </div>
+      <button
+        type="button"
+        (click)="openCreateModal()"
+        class="mt-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-md transition-all cursor-pointer"
+      >
+        Yeni Kullanıcı Ekle
+      </button>
+    </div>
+  }
+
+  <!-- GRID VIEW -->
+  @else if (viewMode() === 'grid') {
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      @for (member of filteredMembers(); track member.id || member.email) {
+        @let roleInfo = getRoleInfo(member.role);
+        <div
+          class="odivon-card p-5 relative overflow-hidden transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 border flex flex-col justify-between group"
+          [ngClass]="roleInfo.borderClass"
+        >
+          <!-- Top Accent Stripe -->
+          <div class="absolute top-0 left-0 right-0 h-1" [ngClass]="roleInfo.badgeClass"></div>
+
+          <div>
+            <!-- Header: Avatar & Info -->
+            <div class="flex items-start gap-3.5">
+              <!-- Avatar with Initials -->
+              <div
+                class="w-12 h-12 rounded-2xl bg-gradient-to-br text-white font-black text-sm flex items-center justify-center shadow-md ring-2 ring-white/20 flex-shrink-0"
+                [ngClass]="getAvatarGradient(member.role)"
+              >
+                {{ getInitials(member.displayName, member.email) }}
+              </div>
+
+              <!-- Name & Title -->
+              <div class="min-w-0 flex-1">
+                <div class="flex items-center gap-1.5 flex-wrap">
+                  <h3 class="text-sm font-black text-slate-900 dark:text-white truncate">
+                    {{ member.displayName || 'İsimsiz Kullanıcı' }}
+                  </h3>
+                  @if (member.role === 'admin') {
+                    <span class="text-[10px] px-1.5 py-0.5 rounded font-bold bg-rose-500/10 text-rose-500 border border-rose-500/20">
+                      Admin
+                    </span>
+                  }
+                </div>
+
+                <p class="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5 font-medium">
+                  {{ member.title || roleInfo.label }}
+                </p>
+
+                <!-- Role Badge with Icon -->
+                <div class="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold border" [ngClass]="roleInfo.badgeClass">
+                  <span class="truncate">{{ roleInfo.label }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Contact & Role Details -->
+            <div class="mt-4 pt-3.5 border-t border-slate-100 dark:border-slate-800/80 space-y-2 text-xs">
+              <!-- Email -->
+              <div class="flex items-center gap-2 text-slate-600 dark:text-slate-400">
+                <mat-icon class="icon-size-4 text-slate-400 flex-shrink-0">alternate_email</mat-icon>
+                <span class="truncate font-mono text-[11px]">{{ member.email }}</span>
+              </div>
+
+              <!-- Phone if present -->
+              @if (member.phone) {
+                <div class="flex items-center gap-2 text-slate-600 dark:text-slate-400">
+                  <mat-icon class="icon-size-4 text-slate-400 flex-shrink-0">phone</mat-icon>
+                  <span class="truncate">{{ member.phone }}</span>
+                </div>
+              }
+
+              <!-- Short Role description -->
+              <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed border border-slate-100 dark:border-slate-800">
+                {{ roleInfo.shortDescription }}
+              </div>
+            </div>
+          </div>
+
+          <!-- Card Actions Footer -->
+          <div class="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2">
+            <!-- Quick Role Change Button -->
+            <button
+              type="button"
+              (click)="openRoleChangeModal(member)"
+              class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 transition-colors cursor-pointer"
+            >
+              <mat-icon class="icon-size-4">manage_accounts</mat-icon>
+              <span>Rolü Değiştir</span>
+            </button>
+
+            <div class="flex items-center gap-1">
+              <!-- Edit Details -->
+              <button
+                type="button"
+                (click)="openEditModal(member)"
+                class="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                matTooltip="Bilgileri Düzenle"
+              >
+                <mat-icon class="icon-size-4">edit</mat-icon>
+              </button>
+
+              <!-- Remove from Farm -->
+              <button
+                type="button"
+                (click)="removeMember(member)"
+                class="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
+                matTooltip="Çiftlikten Çıkar"
+              >
+                <mat-icon class="icon-size-4">person_remove</mat-icon>
+              </button>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- TABLE VIEW -->
+  @else {
+    <div class="odivon-card overflow-hidden border">
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs">
+          <thead class="bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">
+            <tr>
+              <th class="py-3 px-4">Kullanıcı</th>
+              <th class="py-3 px-4">E-posta</th>
+              <th class="py-3 px-4">Telefon</th>
+              <th class="py-3 px-4">Unvan</th>
+              <th class="py-3 px-4">Rol</th>
+              <th class="py-3 px-4 text-right">İşlemler</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+            @for (member of filteredMembers(); track member.id || member.email) {
+              @let roleInfo = getRoleInfo(member.role);
+              <tr class="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors">
+                <!-- Name & Avatar -->
+                <td class="py-3 px-4">
+                  <div class="flex items-center gap-3">
+                    <div
+                      class="w-8 h-8 rounded-xl bg-gradient-to-br text-white font-bold text-xs flex items-center justify-center shadow-xs flex-shrink-0"
+                      [ngClass]="getAvatarGradient(member.role)"
+                    >
+                      {{ getInitials(member.displayName, member.email) }}
+                    </div>
+                    <div>
+                      <div class="font-bold text-slate-900 dark:text-white">
+                        {{ member.displayName }}
+                      </div>
+                      <div class="text-[10px] text-slate-400">
+                        {{ member.status === 'active' ? 'Aktif' : 'Davet Edildi' }}
+                      </div>
+                    </div>
+                  </div>
+                </td>
+
+                <!-- Email -->
+                <td class="py-3 px-4 font-mono text-slate-600 dark:text-slate-300">
+                  {{ member.email }}
+                </td>
+
+                <!-- Phone -->
+                <td class="py-3 px-4 text-slate-500">
+                  {{ member.phone || '—' }}
+                </td>
+
+                <!-- Title -->
+                <td class="py-3 px-4 text-slate-700 dark:text-slate-300 font-medium">
+                  {{ member.title || roleInfo.label }}
+                </td>
+
+                <!-- Role Badge -->
+                <td class="py-3 px-4">
+                  <span class="inline-flex items-center px-2 py-0.5 rounded-md font-bold text-[11px] border" [ngClass]="roleInfo.badgeClass">
+                    {{ roleInfo.label }}
+                  </span>
+                </td>
+
+                <!-- Actions -->
+                <td class="py-3 px-4 text-right">
+                  <div class="flex items-center justify-end gap-1">
+                    <button
+                      type="button"
+                      (click)="openRoleChangeModal(member)"
+                      class="p-1.5 rounded-lg text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 transition-colors cursor-pointer"
+                      matTooltip="Rol Değiştir"
+                    >
+                      <mat-icon class="icon-size-4">manage_accounts</mat-icon>
+                    </button>
+                    <button
+                      type="button"
+                      (click)="openEditModal(member)"
+                      class="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                      matTooltip="Düzenle"
+                    >
+                      <mat-icon class="icon-size-4">edit</mat-icon>
+                    </button>
+                    <button
+                      type="button"
+                      (click)="removeMember(member)"
+                      class="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
+                      matTooltip="Çıkar"
+                    >
+                      <mat-icon class="icon-size-4">person_remove</mat-icon>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+</div>
+
+<!-- ========================================================================= -->
+<!-- MODAL: KULLANICI EKLE / DÜZENLE                                          -->
+<!-- ========================================================================= -->
+@if (isModalOpen()) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto">
+    <!-- Backdrop -->
+    <div
+      class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm transition-opacity"
+      (click)="closeModal()"
+    ></div>
+
+    <!-- Dialog Panel -->
+    <div class="relative w-full max-w-2xl bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden my-8 z-10">
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-indigo-600/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
+            <mat-icon class="icon-size-5">
+              {{ editingMember() ? 'manage_accounts' : 'person_add' }}
+            </mat-icon>
+          </div>
+          <div>
+            <h3 class="text-base font-black text-slate-900 dark:text-white">
+              {{ editingMember() ? 'Kullanıcı Bilgilerini Düzenle' : 'Çiftliğe Yeni Kullanıcı Ekle' }}
+            </h3>
+            <p class="text-xs text-slate-500">
+              Kullanıcının kimlik bilgilerini ve çiftlik erişim rolünü belirleyin
+            </p>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          (click)="closeModal()"
+          class="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+        >
+          <mat-icon class="icon-size-5">close</mat-icon>
+        </button>
+      </div>
+
+      <!-- Modal Body Form -->
+      <form (ngSubmit)="saveMember()" class="p-6 space-y-4 max-h-[75vh] overflow-y-auto">
+        <!-- 2-Column Inputs -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <!-- Ad Soyad -->
+          <div class="space-y-1">
+            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
+              Ad Soyad <span class="text-rose-500">*</span>
+            </label>
+            <input
+              type="text"
+              [(ngModel)]="formModel.displayName"
+              name="displayName"
+              required
+              placeholder="Örn: Ahmet Yılmaz"
+              class="w-full px-3.5 py-2.5 text-xs rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium"
+            />
+          </div>
+
+          <!-- E-posta Adresi -->
+          <div class="space-y-1">
+            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
+              E-posta Adresi <span class="text-rose-500">*</span>
+            </label>
+            <input
+              type="email"
+              [(ngModel)]="formModel.email"
+              name="email"
+              [disabled]="!!editingMember()"
+              required
+              placeholder="ahmet@example.com"
+              class="w-full px-3.5 py-2.5 text-xs rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium disabled:opacity-60 disabled:cursor-not-allowed"
+            />
+          </div>
+
+          <!-- Telefon Numarası -->
+          <div class="space-y-1">
+            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
+              Telefon Numarası
+            </label>
+            <input
+              type="tel"
+              [(ngModel)]="formModel.phone"
+              name="phone"
+              placeholder="05XX XXX XX XX"
+              class="w-full px-3.5 py-2.5 text-xs rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium"
+            />
+          </div>
+
+          <!-- Unvan -->
+          <div class="space-y-1">
+            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
+              Unvan / Görev Tanımı
+            </label>
+            <input
+              type="text"
+              [(ngModel)]="formModel.title"
+              name="title"
+              placeholder="Örn: Baş Veteriner Hekim, Sürü Sorumlusu"
+              class="w-full px-3.5 py-2.5 text-xs rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium"
+            />
+          </div>
+        </div>
+
+        <!-- ROL SEÇİMİ (Kartlar) -->
+        <div class="space-y-2 pt-2">
+          <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
+            Erişim Rolü & Yetkiler <span class="text-rose-500">*</span>
+          </label>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            @for (roleItem of roleList; track roleItem.key) {
+              <div
+                (click)="formModel.role = roleItem.key"
+                class="p-3 rounded-xl border-2 transition-all cursor-pointer flex items-start gap-2.5"
+                [ngClass]="formModel.role === roleItem.key ? 'border-indigo-500 bg-indigo-50/50 dark:bg-indigo-950/30 shadow-xs' : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 bg-white dark:bg-slate-800/50'"
+              >
+                <!-- Radio indicator -->
+                <div
+                  class="w-4 h-4 rounded-full border-2 mt-0.5 flex items-center justify-center flex-shrink-0 transition-colors"
+                  [ngClass]="formModel.role === roleItem.key ? 'border-indigo-600 bg-indigo-600' : 'border-slate-300 dark:border-slate-600'"
+                >
+                  @if (formModel.role === roleItem.key) {
+                    <div class="w-1.5 h-1.5 rounded-full bg-white"></div>
+                  }
+                </div>
+
+                <div class="min-w-0 flex-1">
+                  <div class="flex items-center gap-1.5">
+                    <span class="text-xs font-bold text-slate-900 dark:text-white">
+                      {{ roleItem.label }}
+                    </span>
+                  </div>
+                  <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-tight">
+                    {{ roleItem.shortDescription }}
+                  </p>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Selected Role Permissions Preview -->
+        @let activeRoleCatalog = getRoleInfo(formModel.role);
+        <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 space-y-2">
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-bold text-slate-900 dark:text-white">
+              "{{ activeRoleCatalog.label }}" Rolünün Yetkileri:
+            </span>
+          </div>
+          <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+            {{ activeRoleCatalog.longDescription }}
+          </p>
+          <div class="flex flex-wrap gap-1.5 pt-1">
+            @for (cat of activeRoleCatalog.permissions; track cat.category) {
+              @for (item of cat.items; track item) {
+                <span class="text-[10px] px-2 py-0.5 rounded-md bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-300 font-medium">
+                  ✓ {{ item }}
+                </span>
+              }
+            }
+          </div>
+        </div>
+
+        <!-- Info alert -->
+        <div class="flex items-start gap-2.5 p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/50 text-amber-800 dark:text-amber-300 text-xs">
+          <mat-icon class="icon-size-4 text-amber-500 mt-0.5 flex-shrink-0">info</mat-icon>
+          <p class="leading-relaxed">
+            Kullanıcı sisteme bu e-posta adresiyle giriş yaptığında veya kayıt olduğunda bu çiftlik doğrudan panelinde listelenecek ve belirlediğiniz role göre yetkilendirilecektir.
+          </p>
+        </div>
+
+        <!-- Modal Footer Actions -->
+        <div class="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-2.5">
+          <button
+            type="button"
+            (click)="closeModal()"
+            class="px-4 py-2 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer"
+          >
+            İptal
+          </button>
+          <button
+            type="submit"
+            [disabled]="isSubmitting()"
+            class="flex items-center gap-2 px-5 py-2.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 rounded-xl shadow-md transition-all cursor-pointer"
+          >
+            @if (isSubmitting()) {
+              <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            }
+            <span>{{ editingMember() ? 'Güncelle' : 'Kullanıcıyı Ekle' }}</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}
+
+<!-- ========================================================================= -->
+<!-- MODAL: HIZLI ROL DEĞİŞTİRME                                              -->
+<!-- ========================================================================= -->
+@if (isRoleChangeModalOpen() && selectedMemberForRoleChange()) {
+  @let member = selectedMemberForRoleChange()!;
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <!-- Backdrop -->
+    <div
+      class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm transition-opacity"
+      (click)="closeRoleChangeModal()"
+    ></div>
+
+    <div class="relative w-full max-w-lg bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden z-10 p-6 space-y-4">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+        <div>
+          <h3 class="text-base font-black text-slate-900 dark:text-white">Rol & Yetki Güncelle</h3>
+          <p class="text-xs text-slate-500 font-medium">
+            {{ member.displayName }} ({{ member.email }})
+          </p>
+        </div>
+        <button
+          type="button"
+          (click)="closeRoleChangeModal()"
+          class="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+        >
+          <mat-icon class="icon-size-5">close</mat-icon>
+        </button>
+      </div>
+
+      <!-- Role Options -->
+      <div class="space-y-2">
+        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
+          Yeni Rolü Seçiniz:
+        </label>
+        <div class="space-y-2">
+          @for (r of roleList; track r.key) {
+            <div
+              (click)="newRoleSelection.set(r.key)"
+              class="p-3 rounded-xl border-2 transition-all cursor-pointer flex items-center justify-between"
+              [ngClass]="newRoleSelection() === r.key ? 'border-indigo-500 bg-indigo-50/50 dark:bg-indigo-950/30' : 'border-slate-200 dark:border-slate-700 hover:border-slate-300'"
+            >
+              <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-lg flex items-center justify-center border font-bold text-xs" [ngClass]="r.badgeClass">
+                  <mat-icon class="icon-size-4">verified_user</mat-icon>
+                </div>
+                <div>
+                  <div class="text-xs font-bold text-slate-900 dark:text-white">{{ r.label }}</div>
+                  <div class="text-[11px] text-slate-500">{{ r.shortDescription }}</div>
+                </div>
+              </div>
+
+              @if (newRoleSelection() === r.key) {
+                <mat-icon class="icon-size-5 text-indigo-600 dark:text-indigo-400">check_circle</mat-icon>
+              }
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-2.5">
+        <button
+          type="button"
+          (click)="closeRoleChangeModal()"
+          class="px-4 py-2 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 rounded-xl cursor-pointer"
+        >
+          İptal
+        </button>
+        <button
+          type="button"
+          (click)="saveRoleChange()"
+          [disabled]="isSubmitting()"
+          class="flex items-center gap-2 px-5 py-2.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 rounded-xl shadow-md cursor-pointer"
+        >
+          @if (isSubmitting()) {
+            <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+          }
+          <span>Rolü Kaydet</span>
+        </button>
+      </div>
+    </div>
+  </div>
+}

@@ -11,6 +11,7 @@ import { PaddockService } from '../../core/services/definitions/paddock.service'
 import { HerdService } from '../../core/services/definitions/herd.service';
 import { Count, CountType } from '../../core/models/operations.model';
 import { Animal, Paddock, Herd } from '../../core/models/animal.model';
+import { AlertService } from '../../core/services/alert.service';
 
 @Component({
   selector: 'app-counting',
@@ -30,6 +31,7 @@ export class CountingComponent {
   private animalService = inject(AnimalService);
   private paddockService = inject(PaddockService);
   private herdService = inject(HerdService);
+  private alertService = inject(AlertService);
 
   readonly counts = toSignal(this.countService.list(), { initialValue: [] as Count[] });
   readonly animals = toSignal(this.animalService.list(), { initialValue: [] as Animal[] });
@@ -164,9 +166,15 @@ export class CountingComponent {
     this.viewMode.set('active-count');
   }
 
-  cancelActiveCount() {
+  async cancelActiveCount() {
     if (this.activeCountedIds().length > 0) {
-      if (!confirm('Devam eden sayım iptal edilecek. Emin misiniz?')) {
+      const confirmed = await this.alertService.confirm(
+        'Sayımı İptal Et',
+        'Devam eden sayım iptal edilecek. Emin misiniz?',
+        'Evet, İptal Et',
+        'Sayımı Sürdür'
+      );
+      if (!confirmed) {
         return;
       }
     }
@@ -232,7 +240,10 @@ export class CountingComponent {
   async requestBluetoothDevice() {
     const nav = navigator as any;
     if (!nav.bluetooth) {
-      alert('Tarayıcınız Web Bluetooth API desteklemiyor (Chrome masaüstü/Android önerilir). Manuel veya USB RFID okuyucu kullanabilirsiniz.');
+      await this.alertService.info(
+        'Bluetooth Desteği Bulunamadı',
+        'Tarayıcınız Web Bluetooth API desteklemiyor (Chrome masaüstü/Android önerilir). Manuel veya USB RFID okuyucu kullanabilirsiniz.'
+      );
       return;
     }
 
@@ -246,6 +257,7 @@ export class CountingComponent {
           text: `"${device.name}" Bluetooth cihazı bağlandı.`,
           success: true,
         });
+        this.alertService.toastSuccess(`"${device.name}" bağlandı`);
       }
     } catch (err: any) {
       console.warn('Bluetooth bağlantısı iptal edildi veya başarısız oldu:', err);
@@ -266,10 +278,11 @@ export class CountingComponent {
       };
 
       await this.countService.create(payload as any);
+      this.alertService.toastSuccess('Sayım oturumu başarıyla kaydedildi');
       this.viewMode.set('list');
     } catch (err: any) {
       console.error('Sayım kaydedilemedi:', err);
-      alert('Sayım kaydedilirken bir hata oluştu.');
+      this.alertService.error('Hata Oluştu', 'Sayım kaydedilirken bir hata oluştu.');
     } finally {
       this.isSaving.set(false);
     }
@@ -277,13 +290,17 @@ export class CountingComponent {
 
   async deleteCount(id?: string) {
     if (!id) return;
-    if (!confirm('Bu sayım oturumunu silmek istediğinize emin misiniz?')) {
-      return;
-    }
+    const confirmed = await this.alertService.confirmDelete(
+      'Sayım Oturumunu Sil',
+      'Bu sayım oturumunu silmek istediğinize emin misiniz?'
+    );
+    if (!confirmed) return;
     try {
       await this.countService.softDelete(id);
-    } catch (err) {
+      this.alertService.toastSuccess('Sayım oturumu başarıyla silindi');
+    } catch (err: any) {
       console.error('Silme hatası:', err);
+      this.alertService.error('Silme Başarısız', err?.message || 'Sayım silinirken hata oluştu.');
     }
   }
 

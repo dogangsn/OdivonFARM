@@ -89,16 +89,26 @@ export abstract class FirestoreCrudService<T extends BaseDoc> {
     );
   }
 
+  private cleanDocData<D extends Record<string, any>>(data: D): D {
+    const cleaned: any = {};
+    for (const [key, val] of Object.entries(data)) {
+      if (val !== undefined) {
+        cleaned[key] = val;
+      }
+    }
+    return cleaned;
+  }
+
   async create(data: Partial<T>): Promise<string> {
     const farmId = this.farmContext.requireActiveFarmId();
-    const payload = {
+    const payload = this.cleanDocData({
       ...data,
       farmId,
       deletedAt: null,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
-      createdBy: this.farmContext.currentUid(),
-    };
+      createdBy: this.farmContext.currentUid() || null,
+    });
     const ref = await addDoc(this.colRef(), payload);
     return ref.id;
   }
@@ -106,7 +116,8 @@ export abstract class FirestoreCrudService<T extends BaseDoc> {
   async update(id: string, data: Partial<T>): Promise<void> {
     const farmId = this.farmContext.requireActiveFarmId();
     const ref = doc(this.db, `farms/${farmId}/${this.collectionPath}/${id}`);
-    await updateDoc(ref, { ...data, updatedAt: serverTimestamp() } as DocumentData);
+    const payload = this.cleanDocData({ ...data, updatedAt: serverTimestamp() });
+    await updateDoc(ref, payload as DocumentData);
   }
 
   /** Soft delete — Geri Dönüşüm Merkezi'ne taşır */
