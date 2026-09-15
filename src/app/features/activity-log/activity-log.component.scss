@@ -1,5 +1,23 @@
-.page {
-  padding: 1.5rem;
-  .empty { color: rgba(0,0,0,0.54); }
-  .hint { color: rgba(0,0,0,0.5); font-size: 0.8rem; max-width: 560px; margin-top: 1rem; }
+:host {
+  display: block;
+  width: 100%;
+}
+
+.custom-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(156, 163, 175, 0.4) transparent;
+
+  &::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: rgba(156, 163, 175, 0.4);
+    border-radius: 9999px;
+  }
 }

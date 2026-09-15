@@ -1,14 +1,21 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { MatingService } from '../../core/services/mating.service';
 import { AnimalService } from '../../core/services/animal.service';
+import { BreedService } from '../../core/services/definitions/breed.service';
+import { HerdService } from '../../core/services/definitions/herd.service';
+import { PaddockService } from '../../core/services/definitions/paddock.service';
+import { AnimalTypeService } from '../../core/services/definitions/animal-type.service';
+import { SubscriptionService } from '../../core/services/subscription.service';
+import { WeightRecordService } from '../../core/services/weight-record.service';
 import { Mating, MatingStatus } from '../../core/models/production.model';
-import { Animal } from '../../core/models/animal.model';
+import { Animal, AnimalStatus, Breed, Herd, Paddock, AnimalType } from '../../core/models';
 import { AlertService } from '../../core/services/alert.service';
 
 interface EnrichedMating extends Mating {
@@ -33,9 +40,20 @@ export class BreedingComponent {
   private matingService = inject(MatingService);
   private animalService = inject(AnimalService);
   private alertService = inject(AlertService);
+  private breedService = inject(BreedService);
+  private herdService = inject(HerdService);
+  private paddockService = inject(PaddockService);
+  private animalTypeService = inject(AnimalTypeService);
+  private subService = inject(SubscriptionService);
+  private weightService = inject(WeightRecordService);
+  private router = inject(Router);
 
   readonly matings = toSignal(this.matingService.list(), { initialValue: [] as Mating[] });
   readonly animals = toSignal(this.animalService.list(), { initialValue: [] as Animal[] });
+  readonly breeds = toSignal(this.breedService.list(), { initialValue: [] as Breed[] });
+  readonly herds = toSignal(this.herdService.list(), { initialValue: [] as Herd[] });
+  readonly paddocks = toSignal(this.paddockService.list(), { initialValue: [] as Paddock[] });
+  readonly animalTypes = toSignal(this.animalTypeService.list(), { initialValue: [] as AnimalType[] });
 
   // UI State
   readonly searchTerm = signal('');
@@ -45,6 +63,46 @@ export class BreedingComponent {
   readonly editingId = signal<string | null>(null);
   readonly isSaving = signal(false);
   readonly errorMessage = signal<string | null>(null);
+
+  // Birth Modal & Pedigree State
+  readonly showBirthModal = signal(false);
+  readonly isSavingBirth = signal(false);
+  readonly birthErrorMessage = signal<string | null>(null);
+  readonly selectedMatingForBirth = signal<Partial<Mating> | null>(null);
+
+  readonly birthAnimalForm = signal<{
+    farmTagNo: string;
+    nationalTagNo: string;
+    rfid: string;
+    name: string;
+    gender: 'disi' | 'erkek';
+    status: AnimalStatus;
+    birthDate: string;
+    birthWeightKg: number | null;
+    animalTypeId: string;
+    breedId: string;
+    herdId: string;
+    paddockId: string;
+    motherId: string;
+    fatherId: string;
+    notes: string;
+  }>({
+    farmTagNo: '',
+    nationalTagNo: '',
+    rfid: '',
+    name: '',
+    gender: 'disi',
+    status: 'aktif',
+    birthDate: new Date().toISOString().substring(0, 10),
+    birthWeightKg: null,
+    animalTypeId: '',
+    breedId: '',
+    herdId: '',
+    paddockId: '',
+    motherId: '',
+    fatherId: '',
+    notes: '',
+  });
 
   // Form Model
   readonly form = signal<{
@@ -181,6 +239,33 @@ export class BreedingComponent {
     return this.animalMap().get(id);
   }
 
+  getBreedName(id?: string): string {
+    if (!id) return '—';
+    return this.breeds().find((b) => b.id === id)?.name || '—';
+  }
+
+  getHerdName(id?: string): string {
+    if (!id) return '—';
+    return this.herds().find((h) => h.id === id)?.name || '—';
+  }
+
+  getPaddockName(id?: string): string {
+    if (!id) return '—';
+    return this.paddocks().find((p) => p.id === id)?.name || '—';
+  }
+
+  getAnimalTypeName(id?: string): string {
+    if (!id) return '—';
+    return this.animalTypes().find((t) => t.id === id)?.name || '—';
+  }
+
+  getOffspringTags(mating: Mating): string[] {
+    if (!mating.offspringIds || mating.offspringIds.length === 0) return [];
+    return mating.offspringIds
+      .map((id) => this.getAnimal(id)?.farmTagNo)
+      .filter((tag): tag is string => !!tag);
+  }
+
   calculateExpectedBirthDate(dateStr: string, gestationDays = 150): string {
     try {
       const d = new Date(dateStr);
@@ -240,7 +325,143 @@ export class BreedingComponent {
     this.form.update((prev) => ({ ...prev, [field]: value }));
   }
 
+  // Birth Modal & Pedigree Auto-Mapping
+  openBirthModal(mating: Partial<Mating> & { femaleId: string }) {
+    if (!this.subService.canAddAnimal(this.animals().length)) {
+      this.alertService.confirm(
+        'Hayvan Kapasite Kotanız Doldu',
+        `Mevcut paketiniz en fazla ${this.subService.animalLimit()} baş hayvana izin vermektedir. Yeni doğan yavruyu sisteme eklemek için paketinizi yükseltebilirsiniz.`,
+        'Paketi Yükselt',
+        'Vazgeç'
+      ).then((confirmed) => {
+        if (confirmed) {
+          this.router.navigate(['/abonelik']);
+        }
+      });
+      return;
+    }
+
+    const mother = this.getAnimal(mating.femaleId);
+    const father = mating.maleId ? this.getAnimal(mating.maleId) : null;
+    const bDate = mating.actualBirthDate ? this.formatDate(mating.actualBirthDate) : new Date().toISOString().substring(0, 10);
+
+    const motherTag = mother?.farmTagNo || mating.femaleId;
+    const fatherTag = father?.farmTagNo || (mating.maleId ? mating.maleId : '');
+
+    this.selectedMatingForBirth.set(mating);
+    this.birthErrorMessage.set(null);
+
+    // Auto-map pedigree & lineage from mother and father
+    this.birthAnimalForm.set({
+      farmTagNo: '',
+      nationalTagNo: '',
+      rfid: '',
+      name: '',
+      gender: 'disi',
+      status: 'aktif',
+      birthDate: bDate,
+      birthWeightKg: null,
+      animalTypeId: mother?.animalTypeId || '',
+      breedId: mother?.breedId || '',
+      herdId: mother?.herdId || '',
+      paddockId: mother?.paddockId || '',
+      motherId: motherTag,
+      fatherId: fatherTag,
+      notes: `Doğum Kaydı — Anne: ${motherTag}${mother?.name ? ' (' + mother.name + ')' : ''}${fatherTag ? `, Baba: ${fatherTag}` + (father?.name ? ' (' + father.name + ')' : '') : ''}`,
+    });
+
+    this.showBirthModal.set(true);
+  }
+
+  closeBirthModal() {
+    this.showBirthModal.set(false);
+    this.birthErrorMessage.set(null);
+  }
+
+  updateBirthFormField<K extends keyof ReturnType<typeof this.birthAnimalForm>>(field: K, value: any) {
+    this.birthAnimalForm.update((prev) => ({ ...prev, [field]: value }));
+  }
+
+  async saveBirthAnimal(addAnother: boolean = false) {
+    const f = this.birthAnimalForm();
+    if (!f.farmTagNo?.trim()) {
+      this.birthErrorMessage.set('Lütfen yavru için bir Çiftlik Küpe Numarası giriniz.');
+      return;
+    }
+
+    this.isSavingBirth.set(true);
+    this.birthErrorMessage.set(null);
+
+    try {
+      // 1. Create the new offspring Animal
+      const newAnimalId = await this.animalService.create({
+        farmTagNo: f.farmTagNo.trim(),
+        nationalTagNo: f.nationalTagNo?.trim() || undefined,
+        rfid: f.rfid?.trim() || undefined,
+        name: f.name?.trim() || undefined,
+        gender: f.gender,
+        status: 'aktif',
+        birthDate: f.birthDate || undefined,
+        breedId: f.breedId || undefined,
+        animalTypeId: f.animalTypeId || undefined,
+        herdId: f.herdId || undefined,
+        paddockId: f.paddockId || undefined,
+        motherId: f.motherId?.trim() || undefined,
+        fatherId: f.fatherId?.trim() || undefined,
+        notes: f.notes?.trim() || undefined,
+      });
+
+      // 2. If birth weight provided, save weight record
+      if (f.birthWeightKg && f.birthWeightKg > 0) {
+        try {
+          await this.weightService.create({
+            animalId: newAnimalId,
+            date: f.birthDate,
+            weightKg: Number(f.birthWeightKg),
+            note: 'Doğum Ağırlığı',
+          });
+        } catch (e) {
+          console.warn('Could not save birth weight record:', e);
+        }
+      }
+
+      // 3. Update the mating record: status -> 'dogurdu', actualBirthDate -> f.birthDate, append offspringId
+      const currentMating = this.selectedMatingForBirth();
+      if (currentMating && currentMating.id) {
+        const existingOffspring = currentMating.offspringIds || [];
+        await this.matingService.update(currentMating.id, {
+          status: 'dogurdu',
+          actualBirthDate: f.birthDate,
+          offspringIds: [...existingOffspring, newAnimalId],
+        });
+      }
+
+      if (addAnother) {
+        this.alertService.toastSuccess(`${f.farmTagNo} küpeli yavru kaydedildi. Diğer yavruyu girebilirsiniz.`);
+        this.birthAnimalForm.update((prev) => ({
+          ...prev,
+          farmTagNo: '',
+          nationalTagNo: '',
+          rfid: '',
+          name: '',
+          birthWeightKg: null,
+        }));
+      } else {
+        this.closeBirthModal();
+        this.alertService.toastSuccess('Yavru hayvan ve doğum kaydı başarıyla tamamlandı.');
+      }
+    } catch (err: any) {
+      this.birthErrorMessage.set(err.message || 'Yavru hayvan kaydedilirken bir hata oluştu.');
+    } finally {
+      this.isSavingBirth.set(false);
+    }
+  }
+
   async quickStatusChange(mating: Mating, newStatus: MatingStatus) {
+    if (newStatus === 'dogurdu') {
+      this.openBirthModal(mating);
+      return;
+    }
     try {
       await this.matingService.update(mating.id!, { status: newStatus });
       this.alertService.toastSuccess('Durum başarıyla güncellendi');
@@ -274,14 +495,29 @@ export class BreedingComponent {
         note: f.note || undefined,
       };
 
-      if (this.isEditing() && this.editingId()) {
-        await this.matingService.update(this.editingId()!, payload);
+      let matingId = this.editingId();
+      if (this.isEditing() && matingId) {
+        await this.matingService.update(matingId, payload);
       } else {
-        await this.matingService.create(payload as any);
+        matingId = await this.matingService.create(payload as any);
       }
 
       this.closeDrawer();
       this.alertService.toastSuccess('Kayıt başarıyla kaydedildi');
+
+      // If status is 'dogurdu', automatically open the Birth Modal with pedigree pre-populated!
+      if (payload.status === 'dogurdu') {
+        const savedMating: Partial<Mating> & { femaleId: string } = {
+          id: matingId || undefined,
+          femaleId: payload.femaleId!,
+          maleId: payload.maleId,
+          matingDate: payload.matingDate,
+          status: 'dogurdu',
+          actualBirthDate: payload.actualBirthDate || new Date().toISOString().substring(0, 10),
+          offspringIds: (this.isEditing() && this.editingId()) ? (this.matings().find(m => m.id === this.editingId())?.offspringIds || []) : [],
+        };
+        this.openBirthModal(savedMating);
+      }
     } catch (err: any) {
       this.errorMessage.set(err.message || 'Kayıt sırasında bir hata oluştu.');
     } finally {

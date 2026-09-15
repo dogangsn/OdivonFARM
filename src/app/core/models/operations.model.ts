@@ -35,10 +35,18 @@ export interface Count extends BaseDoc {
 /** farms/{farmId}/activityLog/{id} — Çiftlikte Yapılanlar (aktivite akışı) */
 export interface ActivityLogEntry extends BaseDoc {
   actorUid: string;
+  actorName?: string;
+  actorEmail?: string;
   action: string;
+  category?: 'hayvan' | 'saglik' | 'ureme' | 'tartim' | 'hareket' | 'sayim' | 'stok' | 'saha' | 'diger' | string;
   entityType?: string;
   entityId?: string;
+  entityName?: string;
   message: string;
+  details?: Record<string, any>;
+  icon?: string;
+  color?: string;
+  date?: any;
 }
 
 /** farms/{farmId}/references/{id} — Referanslar (veteriner, tedarikçi vb. dış kaynaklar) */

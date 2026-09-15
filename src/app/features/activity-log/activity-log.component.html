@@ -1,19 +1,516 @@
-<div class="page">
-  <h2>Çiftlikte Yapılanlar</h2>
+<div class="flex flex-col flex-auto min-w-0">
 
-  <mat-list>
-    @for (e of entries(); track e.id) {
-      <mat-list-item>
-        <mat-icon matListItemIcon>history</mat-icon>
-        <span matListItemTitle>{{ e.message }}</span>
-      </mat-list-item>
-    } @empty {
-      <p class="empty">Henüz kayıtlı aktivite yok.</p>
+  <!-- Header -->
+  <div class="relative flex flex-col sm:flex-row flex-0 sm:items-center sm:justify-between py-6 md:py-8 px-6 md:px-8 border-b bg-card">
+    <div>
+      <div class="flex items-center gap-3">
+        <div class="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shadow-xs">
+          <mat-icon class="icon-size-6" [svgIcon]="'heroicons_outline:clock'"></mat-icon>
+        </div>
+        <div>
+          <div class="flex items-center gap-2.5">
+            <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight text-default">Çiftlikte Yapılanlar</h1>
+            <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
+              Canlı Akış & Denetim Günlüğü
+            </span>
+          </div>
+          <div class="text-xs font-medium text-secondary mt-0.5">
+            Tüm modüllerden gelen doğum, sağlık, tartım, sayım, padok transferi ve saha operasyonları akışı.
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick KPI Badges -->
+      <div class="flex items-center gap-2 mt-4 flex-wrap">
+        <span class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-default">
+          Toplam Faaliyet: <strong class="text-indigo-600">{{ totalCount() }}</strong>
+        </span>
+        <span class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 border border-emerald-200/50">
+          Bugün Yapılanlar: <strong>{{ todayCount() }}</strong>
+        </span>
+        <span class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-purple-50 dark:bg-purple-950/50 text-purple-700 dark:text-purple-400 border border-purple-200/50">
+          Doğum & Üreme: <strong>{{ birthCount() }}</strong>
+        </span>
+        <span class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-400 border border-amber-200/50">
+          Sağlık & Aşı: <strong>{{ healthCount() }}</strong>
+        </span>
+        <span class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-400 border border-blue-200/50">
+          Padok & Sayım: <strong>{{ movementCount() }}</strong>
+        </span>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="flex shrink-0 items-center mt-6 sm:mt-0 sm:ml-4 gap-2.5">
+      <button
+        mat-stroked-button
+        class="!rounded-xl !px-3.5 !py-2.5 !text-xs !font-bold !border-slate-300 dark:!border-slate-700 hover:!bg-slate-100 dark:hover:!bg-slate-800"
+        (click)="exportToCsv()"
+        matTooltip="Aktiviteleri CSV olarak indir">
+        <mat-icon class="icon-size-4 mr-1.5" [svgIcon]="'heroicons_solid:download'"></mat-icon>
+        <span>CSV İndir</span>
+      </button>
+
+      <button
+        mat-flat-button
+        class="!bg-indigo-600 !text-white !rounded-xl !px-4 !py-2.5 !font-bold flex items-center shadow-md shadow-indigo-500/20"
+        (click)="openAddModal()">
+        <mat-icon class="icon-size-4 mr-1.5" [svgIcon]="'heroicons_solid:plus'"></mat-icon>
+        <span>+ Saha Notu / Aktivite Ekle</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="flex-auto p-6 md:p-8 space-y-6 max-w-screen-xl mx-auto w-full bg-default pb-20">
+
+    <!-- Filters & Controls Bar -->
+    <div class="p-4 rounded-2xl bg-card shadow-sm border border-gray-200/80 dark:border-gray-700/60 space-y-3.5">
+      
+      <!-- Top Line: Search + Date Range + View Mode Toggle -->
+      <div class="flex flex-col md:flex-row items-center justify-between gap-3">
+        <!-- Search Input -->
+        <div class="relative w-full md:w-80">
+          <mat-icon class="absolute left-3.5 top-1/2 -translate-y-1/2 icon-size-4 text-secondary pointer-events-none" [svgIcon]="'heroicons_solid:search'"></mat-icon>
+          <input
+            type="text"
+            [ngModel]="searchTerm()"
+            (ngModelChange)="searchTerm.set($event)"
+            placeholder="İşlem, küpe, açıklama veya kullanıcı ara..."
+            class="w-full pl-9 pr-8 py-2 text-xs bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-default placeholder-secondary font-medium" />
+          @if (searchTerm()) {
+            <button
+              (click)="searchTerm.set('')"
+              class="absolute right-2.5 top-1/2 -translate-y-1/2 text-secondary hover:text-default">
+              <mat-icon class="icon-size-3.5" [svgIcon]="'heroicons_solid:x'"></mat-icon>
+            </button>
+          }
+        </div>
+
+        <!-- Date Range Filter & View Switcher -->
+        <div class="flex items-center gap-2.5 w-full md:w-auto justify-between md:justify-end">
+          <select
+            [ngModel]="dateRangeFilter()"
+            (ngModelChange)="dateRangeFilter.set($event)"
+            class="px-3 py-1.5 text-xs bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none text-default font-semibold cursor-pointer">
+            <option value="all">Tüm Zamanlar</option>
+            <option value="today">Bugün</option>
+            <option value="3days">Son 3 Gün</option>
+            <option value="7days">Son 7 Gün</option>
+            <option value="month">Son 30 Gün</option>
+          </select>
+
+          <!-- View Mode (Timeline vs Table) -->
+          <div class="flex items-center p-0.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+            <button
+              type="button"
+              (click)="viewMode.set('timeline')"
+              class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5"
+              [ngClass]="viewMode() === 'timeline' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-300 shadow-2xs' : 'text-secondary hover:text-default'">
+              <mat-icon class="icon-size-3.5" [svgIcon]="'heroicons_outline:clock'"></mat-icon>
+              <span>Zaman Tüneli</span>
+            </button>
+            <button
+              type="button"
+              (click)="viewMode.set('table')"
+              class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5"
+              [ngClass]="viewMode() === 'table' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-300 shadow-2xs' : 'text-secondary hover:text-default'">
+              <mat-icon class="icon-size-3.5" [svgIcon]="'heroicons_outline:view-boards'"></mat-icon>
+              <span>Tablo</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Category Filter Pills -->
+      <div class="flex items-center gap-1.5 overflow-x-auto pb-1 custom-scroll">
+        <button
+          (click)="selectedCategory.set('all')"
+          class="px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap"
+          [ngClass]="selectedCategory() === 'all' ? 'bg-indigo-600 text-white shadow-xs' : 'bg-slate-100 dark:bg-slate-800 text-secondary hover:text-default'">
+          Tümü ({{ allActivities().length }})
+        </button>
+        <button
+          (click)="selectedCategory.set('ureme')"
+          class="px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1"
+          [ngClass]="selectedCategory() === 'ureme' ? 'bg-purple-600 text-white shadow-xs' : 'bg-slate-100 dark:bg-slate-800 text-secondary hover:text-default'">
+          <span>Doğum & Çiftleşme</span>
+        </button>
+        <button
+          (click)="selectedCategory.set('hayvan')"
+          class="px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1"
+          [ngClass]="selectedCategory() === 'hayvan' ? 'bg-indigo-600 text-white shadow-xs' : 'bg-slate-100 dark:bg-slate-800 text-secondary hover:text-default'">
+          <span>Hayvan Kayıtları</span>
+        </button>
+        <button
+          (click)="selectedCategory.set('saglik')"
+          class="px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1"
+          [ngClass]="selectedCategory() === 'saglik' ? 'bg-amber-600 text-white shadow-xs' : 'bg-slate-100 dark:bg-slate-800 text-secondary hover:text-default'">
+          <span>Sağlık & Aşı</span>
+        </button>
+        <button
+          (click)="selectedCategory.set('tartim')"
+          class="px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1"
+          [ngClass]="selectedCategory() === 'tartim' ? 'bg-teal-600 text-white shadow-xs' : 'bg-slate-100 dark:bg-slate-800 text-secondary hover:text-default'">
+          <span>Canlı Ağırlık</span>
+        </button>
+        <button
+          (click)="selectedCategory.set('hareket')"
+          class="px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1"
+          [ngClass]="selectedCategory() === 'hareket' ? 'bg-blue-600 text-white shadow-xs' : 'bg-slate-100 dark:bg-slate-800 text-secondary hover:text-default'">
+          <span>Padok Transferi</span>
+        </button>
+        <button
+          (click)="selectedCategory.set('sayim')"
+          class="px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1"
+          [ngClass]="selectedCategory() === 'sayim' ? 'bg-emerald-600 text-white shadow-xs' : 'bg-slate-100 dark:bg-slate-800 text-secondary hover:text-default'">
+          <span>Sayım & RFID</span>
+        </button>
+        <button
+          (click)="selectedCategory.set('stok')"
+          class="px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1"
+          [ngClass]="selectedCategory() === 'stok' ? 'bg-violet-600 text-white shadow-xs' : 'bg-slate-100 dark:bg-slate-800 text-secondary hover:text-default'">
+          <span>Yem & Stok</span>
+        </button>
+        <button
+          (click)="selectedCategory.set('saha')"
+          class="px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1"
+          [ngClass]="selectedCategory() === 'saha' ? 'bg-slate-700 text-white shadow-xs' : 'bg-slate-100 dark:bg-slate-800 text-secondary hover:text-default'">
+          <span>Saha & Rutin</span>
+        </button>
+      </div>
+
+    </div>
+
+    <!-- Results count -->
+    <div class="text-xs font-medium text-secondary flex items-center justify-between">
+      <span>Toplam <strong class="text-default">{{ filteredActivities().length }}</strong> aktivite kaydı listeleniyor</span>
+      @if (searchTerm() || selectedCategory() !== 'all' || dateRangeFilter() !== 'all') {
+        <button
+          (click)="searchTerm.set(''); selectedCategory.set('all'); dateRangeFilter.set('all')"
+          class="text-indigo-600 dark:text-indigo-400 hover:underline font-bold text-xs">
+          Filtreleri Temizle
+        </button>
+      }
+    </div>
+
+    <!-- TIMELINE VIEW -->
+    @if (viewMode() === 'timeline') {
+      @if (groupedTimelineActivities().length > 0) {
+        <div class="space-y-8">
+          @for (group of groupedTimelineActivities(); track group.groupLabel) {
+            <div class="space-y-4">
+              <!-- Group Date Label Badge -->
+              <div class="flex items-center gap-3">
+                <span class="px-3 py-1 rounded-xl text-xs font-extrabold uppercase tracking-wider bg-slate-200 dark:bg-slate-800 text-default shadow-2xs border border-slate-300/60 dark:border-slate-700/60">
+                  {{ group.groupLabel }}
+                </span>
+                <div class="flex-1 h-px bg-slate-200 dark:bg-slate-800"></div>
+                <span class="text-[11px] font-bold text-secondary">{{ group.activities.length }} işlem</span>
+              </div>
+
+              <!-- Vertical Timeline Items -->
+              <div class="relative pl-6 sm:pl-8 border-l-2 border-slate-200 dark:border-slate-800 ml-3 sm:ml-4 space-y-4">
+                @for (item of group.activities; track item.id) {
+                  <div class="relative group">
+                    <!-- Timeline Node Indicator Dot -->
+                    <div
+                      class="absolute -left-[31px] sm:-left-[39px] top-3.5 w-8 h-8 rounded-full flex items-center justify-center ring-4 ring-default bg-card shadow-xs transition-transform group-hover:scale-110"
+                      [ngClass]="item.iconBgClass">
+                      <mat-icon class="icon-size-4" [ngClass]="item.iconColorClass" [svgIcon]="item.icon"></mat-icon>
+                    </div>
+
+                    <!-- Activity Card -->
+                    <div class="p-4 sm:p-5 rounded-2xl bg-card border border-gray-200/80 dark:border-gray-800 shadow-xs hover:shadow-md transition-all">
+                      <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-2 mb-2">
+                        <div>
+                          <div class="flex items-center gap-2 flex-wrap">
+                            <h3 class="text-sm sm:text-base font-extrabold text-default tracking-tight">
+                              {{ item.title }}
+                            </h3>
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border" [ngClass]="item.badgeClass">
+                              {{ item.categoryLabel }}
+                            </span>
+                          </div>
+                          <div class="text-xs text-secondary mt-1 leading-relaxed">
+                            {{ item.description }}
+                          </div>
+                        </div>
+
+                        <!-- Time info -->
+                        <div class="flex sm:flex-col items-center sm:items-end gap-1.5 shrink-0 text-right">
+                          <span class="text-xs font-bold text-default font-mono">
+                            {{ item.timeStr }}
+                          </span>
+                          <span class="text-[10px] font-medium text-secondary">
+                            {{ item.relativeTime }}
+                          </span>
+                        </div>
+                      </div>
+
+                      <!-- Footer meta: Performer & Detail badges -->
+                      <div class="mt-3 pt-2.5 border-t border-gray-100 dark:border-gray-800/80 flex flex-wrap items-center justify-between gap-2 text-xs">
+                        <div class="flex items-center gap-1.5 text-secondary">
+                          <div class="w-5 h-5 rounded-full bg-slate-200 dark:bg-slate-700 text-[10px] font-bold flex items-center justify-center text-default">
+                            {{ item.actorName.charAt(0).toUpperCase() }}
+                          </div>
+                          <span class="font-semibold text-default">{{ item.actorName }}</span>
+                          @if (item.actorEmail) {
+                            <span class="text-[10px] text-secondary">({{ item.actorEmail }})</span>
+                          }
+                        </div>
+
+                        <!-- Entity or Attribute Pill -->
+                        @if (item.entityName) {
+                          <div class="flex items-center gap-1 text-[11px] font-mono font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/40 px-2 py-0.5 rounded-md border border-indigo-200/50">
+                            <mat-icon class="icon-size-3" [svgIcon]="'heroicons_solid:tag'"></mat-icon>
+                            <span>{{ item.entityName }}</span>
+                          </div>
+                        }
+                      </div>
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      } @else {
+        <!-- Empty State -->
+        <div class="bg-card rounded-2xl p-12 text-center shadow-sm border border-gray-200/80 dark:border-gray-700/60 max-w-lg mx-auto">
+          <div class="w-16 h-16 rounded-2xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mx-auto mb-4 shadow-sm">
+            <mat-icon class="icon-size-8" [svgIcon]="'heroicons_outline:clock'"></mat-icon>
+          </div>
+          <h3 class="text-lg font-bold text-default">Aktivite Bulunamadı</h3>
+          <p class="text-xs text-secondary mt-1 mb-6">
+            Arama veya filtreleme kriterlerinize uygun çiftlik faaliyeti bulunmamaktadır.
+          </p>
+          <button
+            mat-flat-button
+            class="!bg-indigo-600 !text-white !rounded-xl !px-5 !py-2.5 !font-bold"
+            (click)="openAddModal()">
+            + Yeni Saha Notu Ekle
+          </button>
+        </div>
+      }
     }
-  </mat-list>
 
-  <p class="hint">
-    Bu akış, ileride her serviste create/update/softDelete işlemleri sonrasında
-    otomatik kayıt eklenerek (Cloud Function veya servis katmanında) beslenecektir.
-  </p>
+    <!-- TABLE VIEW -->
+    @if (viewMode() === 'table') {
+      @if (filteredActivities().length > 0) {
+        <div class="bg-card rounded-2xl shadow-sm border border-gray-200/80 dark:border-gray-700/60 overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-gray-50 dark:bg-slate-800/60 text-secondary font-bold uppercase tracking-wider border-b border-gray-200/80 dark:border-gray-700/60">
+                <tr>
+                  <th class="py-3 px-4">Tarih / Saat</th>
+                  <th class="py-3 px-4">Kategori</th>
+                  <th class="py-3 px-4">İşlem / Başlık</th>
+                  <th class="py-3 px-4">Açıklama Detayı</th>
+                  <th class="py-3 px-4">İlgili Varlık</th>
+                  <th class="py-3 px-4">İşlemi Yapan</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-100 dark:divide-gray-700/50">
+                @for (item of filteredActivities(); track item.id) {
+                  <tr class="hover:bg-gray-50/80 dark:hover:bg-slate-800/40 transition-colors">
+                    <!-- Date & Time -->
+                    <td class="py-3 px-4 font-mono whitespace-nowrap">
+                      <div class="font-bold text-default">{{ item.dateStr }}</div>
+                      <div class="text-[10px] text-secondary">{{ item.timeStr }} ({{ item.relativeTime }})</div>
+                    </td>
+
+                    <!-- Category -->
+                    <td class="py-3 px-4 whitespace-nowrap">
+                      <span class="px-2.5 py-1 rounded-lg text-xs font-bold uppercase tracking-wider border" [ngClass]="item.badgeClass">
+                        {{ item.categoryLabel }}
+                      </span>
+                    </td>
+
+                    <!-- Title -->
+                    <td class="py-3 px-4 font-bold text-default">
+                      <div class="flex items-center gap-2">
+                        <mat-icon class="icon-size-4 flex-shrink-0" [ngClass]="item.iconColorClass" [svgIcon]="item.icon"></mat-icon>
+                        <span>{{ item.title }}</span>
+                      </div>
+                    </td>
+
+                    <!-- Description -->
+                    <td class="py-3 px-4 text-secondary max-w-sm truncate" [matTooltip]="item.description">
+                      {{ item.description }}
+                    </td>
+
+                    <!-- Entity -->
+                    <td class="py-3 px-4 font-mono whitespace-nowrap">
+                      @if (item.entityName) {
+                        <span class="font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/40 px-2 py-0.5 rounded border border-indigo-200/50">
+                          {{ item.entityName }}
+                        </span>
+                      } @else {
+                        <span class="text-secondary">—</span>
+                      }
+                    </td>
+
+                    <!-- Actor -->
+                    <td class="py-3 px-4 font-medium text-default whitespace-nowrap">
+                      {{ item.actorName }}
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      } @else {
+        <!-- Empty State -->
+        <div class="bg-card rounded-2xl p-12 text-center shadow-sm border border-gray-200/80 dark:border-gray-700/60 max-w-lg mx-auto">
+          <h3 class="text-lg font-bold text-default">Kayıt bulunamadı</h3>
+          <p class="text-xs text-secondary mt-1">Filtre kriterlerinize uygun aktivite yok.</p>
+        </div>
+      }
+    }
+
+  </div>
+
+  <!-- ADD MANUAL ACTIVITY MODAL -->
+  @if (showAddModal()) {
+    <div
+      class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6"
+      (click)="closeAddModal()">
+      <div
+        class="w-full max-w-xl bg-card rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-800 overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-150"
+        (click)="$event.stopPropagation()">
+
+        <!-- Modal Header -->
+        <div class="p-6 border-b border-gray-100 dark:border-gray-800 bg-gradient-to-r from-indigo-500/10 via-purple-500/5 to-transparent flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-11 h-11 rounded-2xl bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300 flex items-center justify-center shadow-xs">
+              <mat-icon class="icon-size-5" [svgIcon]="'heroicons_solid:plus'"></mat-icon>
+            </div>
+            <div>
+              <h2 class="text-lg font-extrabold text-default tracking-tight">Yeni Saha Faaliyeti / Not Ekle</h2>
+              <p class="text-xs text-secondary mt-0.5">Çiftlikte yapılan bakım, dezenfeksiyon veya rutin işleri kaydedin.</p>
+            </div>
+          </div>
+          <button mat-icon-button (click)="closeAddModal()">
+            <mat-icon class="icon-size-5" [svgIcon]="'heroicons_solid:x'"></mat-icon>
+          </button>
+        </div>
+
+        <!-- Modal Form Body -->
+        <div class="p-6 overflow-y-auto space-y-4 custom-scroll flex-1">
+          <!-- Title -->
+          <div>
+            <label class="block text-xs font-semibold text-default mb-1">* Faaliyet / İşlem Başlığı</label>
+            <input
+              type="text"
+              [ngModel]="addForm().title"
+              (ngModelChange)="updateAddFormField('title', $event)"
+              placeholder="Örn: Padok 2 Dezenfeksiyon ve Altlık Değişimi"
+              class="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 text-default font-bold" />
+          </div>
+
+          <!-- Category & Date -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-semibold text-default mb-1">Kategori</label>
+              <select
+                [ngModel]="addForm().category"
+                (ngModelChange)="updateAddFormField('category', $event)"
+                class="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none text-default font-medium">
+                <option value="saha">Saha & Rutin Bakım</option>
+                <option value="hayvan">Hayvan İşlemi</option>
+                <option value="saglik">Sağlık & Kontrol</option>
+                <option value="hareket">Barınak & Düzenleme</option>
+                <option value="stok">Yem & Stok Operasyonu</option>
+                <option value="diger">Diğer</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-default mb-1">Tarih</label>
+              <input
+                type="date"
+                [ngModel]="addForm().date"
+                (ngModelChange)="updateAddFormField('date', $event)"
+                class="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none text-default font-medium" />
+            </div>
+          </div>
+
+          <!-- Time & Related Paddock -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-semibold text-default mb-1">Saat</label>
+              <input
+                type="time"
+                [ngModel]="addForm().time"
+                (ngModelChange)="updateAddFormField('time', $event)"
+                class="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none text-default font-medium" />
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-default mb-1">İlgili Padok (Opsiyonel)</label>
+              <select
+                [ngModel]="addForm().relatedPaddockId"
+                (ngModelChange)="updateAddFormField('relatedPaddockId', $event)"
+                class="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none text-default font-medium">
+                <option value="">Seçilmedi</option>
+                @for (p of paddocks(); track p.id) {
+                  <option [value]="p.id">{{ p.name }}</option>
+                }
+              </select>
+            </div>
+          </div>
+
+          <!-- Related Animal -->
+          <div>
+            <label class="block text-xs font-semibold text-default mb-1">İlgili Hayvan (Opsiyonel)</label>
+            <select
+              [ngModel]="addForm().relatedAnimalId"
+              (ngModelChange)="updateAddFormField('relatedAnimalId', $event)"
+              class="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none text-default font-medium">
+              <option value="">Seçilmedi</option>
+              @for (a of animals(); track a.id) {
+                <option [value]="a.id">{{ a.farmTagNo }} {{ a.name ? '— ' + a.name : '' }}</option>
+              }
+            </select>
+          </div>
+
+          <!-- Description -->
+          <div>
+            <label class="block text-xs font-semibold text-default mb-1">Açıklama / Saha Notları</label>
+            <textarea
+              [ngModel]="addForm().description"
+              (ngModelChange)="updateAddFormField('description', $event)"
+              rows="3"
+              placeholder="Yapılan işin detayları, kullanılan malzemeler, tespit edilen durumlar..."
+              class="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none resize-none text-default"></textarea>
+          </div>
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="p-5 border-t border-gray-100 dark:border-gray-800 bg-gray-50/70 dark:bg-slate-800/60 flex items-center justify-end gap-3">
+          <button
+            mat-button
+            class="!text-xs !font-semibold !rounded-xl !px-4"
+            (click)="closeAddModal()">
+            Vazgeç
+          </button>
+          <button
+            mat-flat-button
+            class="!bg-indigo-600 !text-white !rounded-xl !px-5 !py-2.5 !font-bold hover:!bg-indigo-700 shadow-md shadow-indigo-500/20"
+            [disabled]="isSavingLog()"
+            (click)="saveManualActivity()">
+            @if (isSavingLog()) {
+              <span>Kaydediliyor...</span>
+            } @else {
+              <span>Faaliyeti Kaydet</span>
+            }
+          </button>
+        </div>
+
+      </div>
+    </div>
+  }
+
 </div>

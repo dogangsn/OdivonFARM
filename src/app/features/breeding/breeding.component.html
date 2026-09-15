@@ -191,6 +191,12 @@
                       }">
                       {{ item.status }}
                     </span>
+                    @if (item.status === 'dogurdu' && getOffspringTags(item).length > 0) {
+                      <div class="mt-1 flex items-center gap-1 text-[11px] font-semibold text-purple-700 dark:text-purple-300 font-mono">
+                        <mat-icon class="icon-size-3 text-purple-600" [svgIcon]="'heroicons_solid:check-circle'"></mat-icon>
+                        <span>Yavru: {{ getOffspringTags(item).join(', ') }}</span>
+                      </div>
+                    }
                   </td>
 
                   <!-- Gestation Progress -->
@@ -210,7 +216,7 @@
                     } @else if (item.status === 'dogurdu') {
                       <span class="text-purple-600 dark:text-purple-400 font-bold text-xs flex items-center gap-1">
                         <mat-icon class="icon-size-3.5" [svgIcon]="'heroicons_solid:check-circle'"></mat-icon>
-                        <span>Tamamlandı</span>
+                        <span>Doğum Kaydedildi</span>
                       </span>
                     } @else {
                       <span class="text-secondary text-[11px]">—</span>
@@ -242,10 +248,21 @@
                     @if (item.status === 'gebe') {
                       <button
                         mat-stroked-button
-                        class="!text-[11px] !px-2 !py-0.5 !h-7 !rounded-lg !text-purple-600 !border-purple-200"
+                        class="!text-[11px] !px-2.5 !py-0.5 !h-7 !rounded-lg !text-purple-600 !border-purple-300 hover:!bg-purple-50"
                         (click)="quickStatusChange(item, 'dogurdu')"
-                        matTooltip="Doğum Kaydet">
-                        Doğurdu
+                        matTooltip="Doğum Kaydet & Yeni Yavru Ekle">
+                        <mat-icon class="icon-size-3.5 mr-1" [svgIcon]="'heroicons_solid:sparkles'"></mat-icon>
+                        <span>Doğurdu</span>
+                      </button>
+                    }
+                    @if (item.status === 'dogurdu') {
+                      <button
+                        mat-stroked-button
+                        class="!text-[11px] !px-2.5 !py-0.5 !h-7 !rounded-lg !text-purple-700 !border-purple-200 !bg-purple-50/70 dark:!bg-purple-950/40"
+                        (click)="openBirthModal(item)"
+                        matTooltip="Yeni Yavru Ekle (İkiz vb.)">
+                        <mat-icon class="icon-size-3.5 mr-1" [svgIcon]="'heroicons_solid:plus'"></mat-icon>
+                        <span>Yavru Ekle</span>
                       </button>
                     }
 
@@ -369,6 +386,15 @@
             </div>
           </div>
 
+          @if (form().status === 'dogurdu') {
+            <div class="p-3.5 rounded-xl bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-300 text-xs flex items-center gap-2.5">
+              <mat-icon class="icon-size-4 text-purple-600 flex-shrink-0" [svgIcon]="'heroicons_solid:sparkles'"></mat-icon>
+              <div>
+                <strong class="font-bold">Doğum & Soyağacı Entegrasyonu:</strong> Durum "Doğurdu" olarak kaydedildiğinde, Anne ve Baba soyağacı bilgileri otomatik eşlenerek Yavru Hayvan Ekleme modalı açılacaktır.
+              </div>
+            </div>
+          }
+
           <!-- Field 3: Tahmini Doğum & Gerçekleşen Doğum -->
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
@@ -422,6 +448,297 @@
               <span>{{ isEditing() ? 'Güncelle' : 'Kaydet' }}</span>
             }
           </button>
+        </div>
+
+      </div>
+    </div>
+  }
+
+  <!-- BIRTH & OFFSPRING ANIMAL REGISTRATION MODAL -->
+  @if (showBirthModal()) {
+    <div
+      class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6"
+      (click)="closeBirthModal()">
+      <div
+        class="w-full max-w-2xl bg-card rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-800 overflow-hidden flex flex-col max-h-[92vh] animate-in zoom-in-95 duration-150"
+        (click)="$event.stopPropagation()">
+
+        <!-- Modal Header -->
+        <div class="p-5 sm:p-6 border-b border-gray-100 dark:border-gray-800 bg-gradient-to-r from-purple-500/10 via-rose-500/5 to-transparent flex items-center justify-between">
+          <div class="flex items-center gap-3.5">
+            <div class="w-12 h-12 rounded-2xl bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300 flex items-center justify-center shadow-xs">
+              <mat-icon class="icon-size-6" [svgIcon]="'heroicons_solid:sparkles'"></mat-icon>
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <h2 class="text-lg sm:text-xl font-black text-default tracking-tight">Doğum Kaydı & Yeni Yavru Ekleme</h2>
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800">
+                  Otomatik Soyağacı
+                </span>
+              </div>
+              <p class="text-xs text-secondary mt-0.5">
+                Anne ve baba bilgileri otomatik eşlendi. Yavrunun küpe ve kimliğini onaylayıp kaydediniz.
+              </p>
+            </div>
+          </div>
+          <button
+            mat-icon-button
+            class="text-secondary hover:text-default"
+            (click)="closeBirthModal()">
+            <mat-icon class="icon-size-5" [svgIcon]="'heroicons_solid:x'"></mat-icon>
+          </button>
+        </div>
+
+        <!-- Modal Body -->
+        <div class="p-5 sm:p-6 overflow-y-auto space-y-5 custom-scroll flex-1">
+
+          @if (birthErrorMessage()) {
+            <div class="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2">
+              <mat-icon class="icon-size-4 text-rose-600 flex-shrink-0" [svgIcon]="'heroicons_solid:exclamation-circle'"></mat-icon>
+              <span>{{ birthErrorMessage() }}</span>
+            </div>
+          }
+
+          <!-- Visual Pedigree (Soyağacı) Banner -->
+          <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-850/60 border border-slate-200/80 dark:border-slate-750">
+            <div class="text-[11px] font-black uppercase tracking-wider text-secondary mb-3 flex items-center gap-1.5">
+              <mat-icon class="icon-size-3.5 text-purple-600" [svgIcon]="'heroicons_solid:badge-check'"></mat-icon>
+              <span>Eşleşen Soyağacı Bilgileri (Soykütüğü)</span>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <!-- Anne Card -->
+              <div class="p-3 rounded-xl bg-rose-50/60 dark:bg-rose-950/20 border border-rose-200/60 dark:border-rose-900/40 flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-rose-100 dark:bg-rose-900/50 text-rose-600 dark:text-rose-400 flex items-center justify-center font-black">
+                  <mat-icon class="icon-size-5" [svgIcon]="'heroicons_solid:heart'"></mat-icon>
+                </div>
+                <div class="min-w-0 flex-1">
+                  <div class="text-[10px] uppercase font-bold text-rose-600 dark:text-rose-400">Anne (Dişi Soyu)</div>
+                  <div class="font-extrabold text-sm text-default font-mono truncate">
+                    {{ birthAnimalForm().motherId || 'Belirtilmemiş' }}
+                  </div>
+                  <div class="text-[11px] text-secondary truncate">
+                    {{ getAnimal(selectedMatingForBirth()?.femaleId)?.name || 'İsimsiz' }} • {{ getBreedName(birthAnimalForm().breedId) }}
+                  </div>
+                </div>
+              </div>
+
+              <!-- Baba Card -->
+              <div class="p-3 rounded-xl bg-sky-50/60 dark:bg-sky-950/20 border border-sky-200/60 dark:border-sky-900/40 flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-sky-100 dark:bg-sky-900/50 text-sky-600 dark:text-sky-400 flex items-center justify-center font-black">
+                  <mat-icon class="icon-size-5" [svgIcon]="'heroicons_solid:badge-check'"></mat-icon>
+                </div>
+                <div class="min-w-0 flex-1">
+                  <div class="text-[10px] uppercase font-bold text-sky-600 dark:text-sky-400">Baba (Erkek Soyu)</div>
+                  <div class="font-extrabold text-sm text-default font-mono truncate">
+                    {{ birthAnimalForm().fatherId || 'Suni Tohumlama / Yok' }}
+                  </div>
+                  <div class="text-[11px] text-secondary truncate">
+                    {{ selectedMatingForBirth()?.maleId ? (getAnimal(selectedMatingForBirth()?.maleId)?.name || 'İsimsiz') : 'Suni Tohumlama' }}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 1: Yavrunun Kimliği -->
+          <div class="space-y-3">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-secondary">1. Yavru Kimlik Bilgileri</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-semibold text-default mb-1">* Çiftlik Küpe No</label>
+                <input
+                  type="text"
+                  [ngModel]="birthAnimalForm().farmTagNo"
+                  (ngModelChange)="updateBirthFormField('farmTagNo', $event)"
+                  placeholder="Örn: TR-2024-Y01"
+                  class="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 font-mono text-default font-bold" />
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold text-default mb-1">Cinsiyet</label>
+                <div class="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    (click)="updateBirthFormField('gender', 'disi')"
+                    class="py-2 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                    [ngClass]="birthAnimalForm().gender === 'disi' ? 'bg-rose-50 border-rose-300 text-rose-700 shadow-xs' : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-secondary'">
+                    <mat-icon class="icon-size-4" [svgIcon]="'heroicons_solid:heart'"></mat-icon>
+                    <span>Dişi</span>
+                  </button>
+                  <button
+                    type="button"
+                    (click)="updateBirthFormField('gender', 'erkek')"
+                    class="py-2 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                    [ngClass]="birthAnimalForm().gender === 'erkek' ? 'bg-sky-50 border-sky-300 text-sky-700 shadow-xs' : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-secondary'">
+                    <mat-icon class="icon-size-4" [svgIcon]="'heroicons_solid:badge-check'"></mat-icon>
+                    <span>Erkek</span>
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold text-default mb-1">Doğum Tarihi</label>
+                <input
+                  type="date"
+                  [ngModel]="birthAnimalForm().birthDate"
+                  (ngModelChange)="updateBirthFormField('birthDate', $event)"
+                  class="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/20 text-default font-medium" />
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold text-default mb-1">Doğum Ağırlığı (kg)</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  [ngModel]="birthAnimalForm().birthWeightKg"
+                  (ngModelChange)="updateBirthFormField('birthWeightKg', $event)"
+                  placeholder="Örn: 4.2"
+                  class="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/20 font-mono text-default font-semibold" />
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold text-default mb-1">İsim / Lakap (Opsiyonel)</label>
+                <input
+                  type="text"
+                  [ngModel]="birthAnimalForm().name"
+                  (ngModelChange)="updateBirthFormField('name', $event)"
+                  placeholder="Örn: Pamuk"
+                  class="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/20 text-default font-medium" />
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold text-default mb-1">Ulusal Küpe No (DKN)</label>
+                <input
+                  type="text"
+                  [ngModel]="birthAnimalForm().nationalTagNo"
+                  (ngModelChange)="updateBirthFormField('nationalTagNo', $event)"
+                  placeholder="Örn: 999123456"
+                  class="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/20 font-mono text-default" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 2: Otomatik Soyağacı & Konum -->
+          <div class="space-y-3 pt-3 border-t border-gray-100 dark:border-gray-800">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-secondary">2. Soyağacı & Barınak Eşleşmeleri</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-semibold text-default mb-1">Anne Küpe No (Soyağacı)</label>
+                <input
+                  type="text"
+                  [ngModel]="birthAnimalForm().motherId"
+                  (ngModelChange)="updateBirthFormField('motherId', $event)"
+                  class="w-full px-3 py-2 text-sm bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none font-mono text-default font-semibold" />
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold text-default mb-1">Baba Küpe No (Soyağacı)</label>
+                <input
+                  type="text"
+                  [ngModel]="birthAnimalForm().fatherId"
+                  (ngModelChange)="updateBirthFormField('fatherId', $event)"
+                  class="w-full px-3 py-2 text-sm bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none font-mono text-default font-semibold" />
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold text-default mb-1">Hayvan Tipi</label>
+                <select
+                  [ngModel]="birthAnimalForm().animalTypeId"
+                  (ngModelChange)="updateBirthFormField('animalTypeId', $event)"
+                  class="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none text-default font-medium">
+                  <option value="">Seçiniz</option>
+                  @for (t of animalTypes(); track t.id) {
+                    <option [value]="t.id">{{ t.name }}</option>
+                  }
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold text-default mb-1">Irk</label>
+                <select
+                  [ngModel]="birthAnimalForm().breedId"
+                  (ngModelChange)="updateBirthFormField('breedId', $event)"
+                  class="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none text-default font-medium">
+                  <option value="">Seçiniz</option>
+                  @for (b of breeds(); track b.id) {
+                    <option [value]="b.id">{{ b.name }}</option>
+                  }
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold text-default mb-1">Sürü</label>
+                <select
+                  [ngModel]="birthAnimalForm().herdId"
+                  (ngModelChange)="updateBirthFormField('herdId', $event)"
+                  class="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none text-default font-medium">
+                  <option value="">Seçiniz</option>
+                  @for (h of herds(); track h.id) {
+                    <option [value]="h.id">{{ h.name }}</option>
+                  }
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold text-default mb-1">Padok</label>
+                <select
+                  [ngModel]="birthAnimalForm().paddockId"
+                  (ngModelChange)="updateBirthFormField('paddockId', $event)"
+                  class="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none text-default font-medium">
+                  <option value="">Seçiniz</option>
+                  @for (p of paddocks(); track p.id) {
+                    <option [value]="p.id">{{ p.name }}</option>
+                  }
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 3: Notlar -->
+          <div class="pt-3 border-t border-gray-100 dark:border-gray-800">
+            <label class="block text-xs font-semibold text-default mb-1">Doğum Kayıt Notu</label>
+            <textarea
+              [ngModel]="birthAnimalForm().notes"
+              (ngModelChange)="updateBirthFormField('notes', $event)"
+              rows="2"
+              class="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none resize-none text-default"></textarea>
+          </div>
+
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="p-5 sm:p-6 border-t border-gray-100 dark:border-gray-800 bg-gray-50/70 dark:bg-slate-800/60 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <button
+            mat-button
+            type="button"
+            class="!text-xs !font-semibold !rounded-xl !px-4 w-full sm:w-auto"
+            (click)="closeBirthModal()">
+            Vazgeç
+          </button>
+
+          <div class="flex items-center gap-2 w-full sm:w-auto">
+            <button
+              mat-stroked-button
+              type="button"
+              class="!text-xs !font-semibold !rounded-xl !px-4 !border-purple-300 !text-purple-700 dark:!text-purple-300 hover:!bg-purple-50 flex-1 sm:flex-initial"
+              [disabled]="isSavingBirth()"
+              (click)="saveBirthAnimal(true)">
+              + İkinci Yavruyu Ekle (İkiz)
+            </button>
+
+            <button
+              mat-flat-button
+              type="button"
+              class="!bg-purple-600 !text-white !rounded-xl !px-5 !py-2.5 !font-bold hover:!bg-purple-700 shadow-md shadow-purple-500/20 flex-1 sm:flex-initial"
+              [disabled]="isSavingBirth()"
+              (click)="saveBirthAnimal(false)">
+              @if (isSavingBirth()) {
+                <span>Kaydediliyor...</span>
+              } @else {
+                <span>Yavruyu Kaydet & Tamamla</span>
+              }
+            </button>
+          </div>
         </div>
 
       </div>
