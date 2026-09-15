@@ -12,6 +12,7 @@ import { MatRippleModule } from '@angular/material/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 
 import { AnimalService } from '../../core/services/animal.service';
+import { AnimalMovementService } from '../../core/services/animal-movement.service';
 import { BreedService } from '../../core/services/definitions/breed.service';
 import { HerdService } from '../../core/services/definitions/herd.service';
 import { PaddockService } from '../../core/services/definitions/paddock.service';
@@ -24,6 +25,7 @@ import { SubscriptionService } from '../../core/services/subscription.service';
 
 import { AnimalDetailModalComponent } from './animal-detail-modal/animal-detail-modal.component';
 import { AnimalLocationModalComponent } from './animal-location-modal/animal-location-modal.component';
+import { AnimalDeathModalComponent } from './animal-death-modal/animal-death-modal.component';
 
 @Component({
   selector: 'app-animals',
@@ -41,12 +43,14 @@ import { AnimalLocationModalComponent } from './animal-location-modal/animal-loc
     MatRippleModule,
     AnimalDetailModalComponent,
     AnimalLocationModalComponent,
+    AnimalDeathModalComponent,
   ],
   templateUrl: './animals.component.html',
   styleUrl: './animals.component.scss',
 })
 export class AnimalsComponent {
   private animalService = inject(AnimalService);
+  private movementService = inject(AnimalMovementService);
   private alertService = inject(AlertService);
   private breedService = inject(BreedService);
   private herdService = inject(HerdService);
@@ -62,14 +66,117 @@ export class AnimalsComponent {
   paddocks = toSignal(this.paddockService.list(), { initialValue: [] as Paddock[] });
   animalTypes = toSignal(this.animalTypeService.list(), { initialValue: [] as AnimalType[] });
 
-  // Filter signals
+  // Filter signals - initialized with '' so dropdowns select 'Tüm ...' instead of appearing blank
   searchTerm = signal('');
-  genderFilter = signal<string | null>(null);
-  statusFilter = signal<AnimalStatus | null>(null);
-  herdFilter = signal<string | null>(null);
-  paddockFilter = signal<string | null>(null);
-  breedFilter = signal<string | null>(null);
+  genderFilter = signal<string>('');
+  statusFilter = signal<string>('');
+  animalTypeFilter = signal<string>('');
+  herdFilter = signal<string>('');
+  paddockFilter = signal<string>('');
+  breedFilter = signal<string>('');
   viewMode = signal<'grid' | 'table'>('grid');
+
+  /**
+   * Belirtilen hayvan tipine uygun ırkları filtreler.
+   * animalTypeId boş veya eşleşme yoksa güvenli şekilde filtreleme yapar.
+   */
+  filterBreedsByType(allBreeds: Breed[], animalTypeId: string): Breed[] {
+    if (!animalTypeId) return allBreeds;
+
+    const selectedType = this.animalTypes().find((t) => t.id === animalTypeId);
+    if (!selectedType) return allBreeds;
+
+    const typeName = (selectedType.name || '').trim().toLowerCase();
+
+    const isSheep = typeName.includes('koyun') || typeName.includes('koç') || typeName.includes('kuzu');
+    const isGoat = typeName.includes('keçi') || typeName.includes('teke') || typeName.includes('oğlak');
+    const isCattle = typeName.includes('inek') || typeName.includes('boğa') || typeName.includes('düve') ||
+                     typeName.includes('dana') || typeName.includes('buzağı') || typeName.includes('sığır');
+    const isBuffalo = typeName.includes('manda');
+    const isPoultry = typeName.includes('tavuk') || typeName.includes('hindi') || typeName.includes('kaz') || typeName.includes('ördek');
+
+    const result = allBreeds.filter((breed) => {
+      // 1. Doğrudan animalTypeId bağlantısı
+      if (breed.animalTypeId && breed.animalTypeId === animalTypeId) {
+        return true;
+      }
+
+      const breedName = (breed.name || '').toLowerCase();
+      const breedDesc = (breed.description || '').toLowerCase();
+      const category = (breed.category || '').toLowerCase();
+
+      // Koyun kontrolü
+      if (isSheep) {
+        const hasGoatWord = breedName.includes('keçi') || breedDesc.includes('keçi') || breedDesc.includes('teke');
+        if (hasGoatWord) return false;
+        return category === 'kucukbas' || category === '' || breedName.includes('koyun') || breedDesc.includes('koyun');
+      }
+
+      // Keçi kontrolü
+      if (isGoat) {
+        return breedName.includes('keçi') || breedDesc.includes('keçi') || breedDesc.includes('teke');
+      }
+
+      // Büyükbaş / Sığır kontrolü
+      if (isCattle) {
+        const isManda = breedName.includes('manda') || breedDesc.includes('manda');
+        if (isManda) return false;
+        return category === 'buyukbas' || category === '' || breedName.includes('sığır') || breedDesc.includes('sığır');
+      }
+
+      // Manda kontrolü
+      if (isBuffalo) {
+        return breedName.includes('manda') || breedDesc.includes('manda');
+      }
+
+      // Kanatlı kontrolü
+      if (isPoultry) {
+        return category === 'kanatli' || breedName.includes('tavuk') || breedDesc.includes('tavuk');
+      }
+
+      // Genel kategori eşleşmesi (kucukbas / buyukbas)
+      if (category) {
+        if (category === 'kucukbas' && (isSheep || isGoat)) return true;
+        if (category === 'buyukbas' && (isCattle || isBuffalo)) return true;
+      }
+
+      return false;
+    });
+
+    // Eğer filtre sonucunda hiçbir ırk bulunamazsa, kullanıcının seçimsiz kalmaması için tüm ırkları geri döndür
+    return result.length > 0 ? result : allBreeds;
+  }
+
+  // Form (Drawer) için hayvan tipine göre dinamik filtrelenen ırklar
+  filteredFormBreeds = computed(() => {
+    return this.filterBreedsByType(this.breeds(), this.form().animalTypeId || '');
+  });
+
+  // Liste ekranı üst filtre çubuğu için hayvan tipine göre dinamik filtrelenen ırklar
+  filteredFilterBreeds = computed(() => {
+    return this.filterBreedsByType(this.breeds(), this.animalTypeFilter() || '');
+  });
+
+  // Hayvan tipi formda değiştiğinde ırkı filtreler, geçersiz kalan ırkı sıfırlar
+  onAnimalTypeChange(typeId: string) {
+    this.updateFormField('animalTypeId', typeId);
+    const available = this.filterBreedsByType(this.breeds(), typeId);
+    const currentBreedId = this.form().breedId;
+    if (currentBreedId && !available.some((b) => b.id === currentBreedId)) {
+      this.updateFormField('breedId', '');
+    }
+  }
+
+  // Hayvan tipi üst filtrede değiştiğinde ırk filtresini günceller
+  onAnimalTypeFilterChange(typeId: string) {
+    this.animalTypeFilter.set(typeId);
+    if (this.breedFilter()) {
+      const allowedBreeds = this.filterBreedsByType(this.breeds(), typeId);
+      if (!allowedBreeds.some((b) => b.id === this.breedFilter())) {
+        this.breedFilter.set('');
+      }
+    }
+  }
 
   // Computed summary metrics
   totalCount = computed(() => this.animals().length);
@@ -82,6 +189,7 @@ export class AnimalsComponent {
     const term = this.searchTerm().trim().toLowerCase();
     const gFilter = this.genderFilter();
     const sFilter = this.statusFilter();
+    const tFilter = this.animalTypeFilter();
     const hFilter = this.herdFilter();
     const pFilter = this.paddockFilter();
     const bFilter = this.breedFilter();
@@ -89,6 +197,7 @@ export class AnimalsComponent {
     return this.animals().filter((a) => {
       if (gFilter && a.gender !== gFilter) return false;
       if (sFilter && a.status !== sFilter) return false;
+      if (tFilter && a.animalTypeId !== tFilter) return false;
       if (hFilter && a.herdId !== hFilter) return false;
       if (pFilter && a.paddockId !== pFilter) return false;
       if (bFilter && a.breedId !== bFilter) return false;
@@ -97,9 +206,11 @@ export class AnimalsComponent {
       return (
         a.farmTagNo?.toLowerCase().includes(term) ||
         a.nationalTagNo?.toLowerCase().includes(term) ||
+        a.nationalTagColor?.toLowerCase().includes(term) ||
         a.rfid?.toLowerCase().includes(term) ||
         a.name?.toLowerCase().includes(term) ||
-        a.notes?.toLowerCase().includes(term)
+        a.notes?.toLowerCase().includes(term) ||
+        a.description?.toLowerCase().includes(term)
       );
     });
   });
@@ -113,19 +224,40 @@ export class AnimalsComponent {
   form = signal<Partial<Animal>>({
     farmTagNo: '',
     nationalTagNo: '',
+    nationalTagColor: 'Sarı',
     rfid: '',
     name: '',
     gender: 'disi',
+    birthDate: '',
     status: 'aktif',
+    breedingStatus: 'damizlik',
+    breedingScore: null,
+    acquisitionDate: new Date().toISOString().substring(0, 10),
+    acquisitionMethod: 'dogum',
     breedId: '',
     animalTypeId: '',
     herdId: '',
     paddockId: '',
     motherId: '',
     fatherId: '',
-    birthDate: '',
     notes: '',
   });
+
+  formatDateForInput(val: any): string {
+    if (!val) return '';
+    if (typeof val === 'string') {
+      if (/^\d{4}-\d{2}-\d{2}$/.test(val)) return val;
+      if (val.length >= 10 && val[4] === '-' && val[7] === '-') {
+        return val.substring(0, 10);
+      }
+    }
+    const d = typeof val?.toDate === 'function' ? val.toDate() : new Date(val);
+    if (isNaN(d.getTime())) return '';
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  }
 
   openAddForm() {
     if (!this.subService.canAddAnimal(this.animals().length)) {
@@ -147,17 +279,22 @@ export class AnimalsComponent {
     this.form.set({
       farmTagNo: '',
       nationalTagNo: '',
+      nationalTagColor: 'Sarı',
       rfid: '',
       name: '',
       gender: 'disi',
+      birthDate: '',
       status: 'aktif',
+      breedingStatus: 'damizlik',
+      breedingScore: null,
+      acquisitionDate: new Date().toISOString().substring(0, 10),
+      acquisitionMethod: 'dogum',
       breedId: '',
       animalTypeId: '',
       herdId: '',
       paddockId: '',
       motherId: '',
       fatherId: '',
-      birthDate: '',
       notes: '',
     });
     this.showDrawer.set(true);
@@ -166,7 +303,16 @@ export class AnimalsComponent {
   openEditForm(animal: Animal) {
     this.isEditing.set(true);
     this.errorMessage.set(null);
-    this.form.set({ ...animal });
+    this.form.set({
+      ...animal,
+      nationalTagColor: animal.nationalTagColor || '',
+      breedingStatus: animal.breedingStatus || 'damizlik',
+      breedingScore: animal.breedingScore != null ? animal.breedingScore : null,
+      acquisitionMethod: animal.acquisitionMethod || 'dogum',
+      birthDate: this.formatDateForInput(animal.birthDate),
+      acquisitionDate: this.formatDateForInput(animal.acquisitionDate),
+      notes: animal.notes || animal.description || '',
+    });
     this.showDrawer.set(true);
   }
 
@@ -180,10 +326,20 @@ export class AnimalsComponent {
   }
 
   async saveAnimal() {
-    const data = this.form();
+    const data = { ...this.form() };
     if (!data.farmTagNo?.trim()) {
       this.errorMessage.set('Lütfen çiftlik küpe numarasını giriniz.');
       return;
+    }
+
+    if (data.breedingScore !== undefined && data.breedingScore !== null && (data.breedingScore as any) !== '') {
+      data.breedingScore = Number(data.breedingScore);
+    } else {
+      data.breedingScore = null;
+    }
+
+    if (data.notes) {
+      data.description = data.notes;
     }
 
     this.isSaving.set(true);
@@ -192,8 +348,13 @@ export class AnimalsComponent {
     try {
       if (this.isEditing() && data.id) {
         await this.animalService.update(data.id, data);
+        this.alertService.toastSuccess('Hayvan bilgileri güncellendi');
+        if (this.selectedAnimalForDetail()?.id === data.id) {
+          this.selectedAnimalForDetail.set({ ...this.selectedAnimalForDetail()!, ...data } as Animal);
+        }
       } else {
         await this.animalService.create(data);
+        this.alertService.toastSuccess('Yeni hayvan başarıyla eklendi');
       }
       this.closeDrawer();
     } catch (err: any) {
@@ -227,7 +388,7 @@ export class AnimalsComponent {
   isLocationModalOpen = signal(false);
 
   openDetailModal(animal: Animal) {
-    this.selectedAnimalForDetail.set(animal);
+    this.selectedAnimalForDetail.set({ ...animal });
     this.isDetailModalOpen.set(true);
   }
 
@@ -254,6 +415,125 @@ export class AnimalsComponent {
       if (refreshed) {
         this.selectedAnimalForDetail.set(refreshed);
       }
+    }
+  }
+
+  // Death / Slaughter / Sale Modal State
+  selectedAnimalForDeath = signal<Animal | null>(null);
+  initialDeathModalTab = signal<'olum' | 'kesim' | 'satis'>('olum');
+  isDeathModalOpen = signal(false);
+
+  openDeathModal(animal: Animal, tab: 'olum' | 'kesim' | 'satis' = 'olum') {
+    this.selectedAnimalForDeath.set({ ...animal });
+    const computedTab =
+      animal.status === 'satildi'
+        ? 'satis'
+        : animal.status === 'kesildi'
+        ? 'kesim'
+        : animal.status === 'oldu'
+        ? 'olum'
+        : tab;
+    this.initialDeathModalTab.set(computedTab);
+    this.isDeathModalOpen.set(true);
+  }
+
+  closeDeathModal() {
+    this.isDeathModalOpen.set(false);
+    this.selectedAnimalForDeath.set(null);
+  }
+
+  onDeathRecorded() {
+    const cur = this.selectedAnimalForDetail();
+    if (cur?.id) {
+      const refreshed = this.animals().find((a) => a.id === cur.id);
+      if (refreshed) {
+        this.selectedAnimalForDetail.set(refreshed);
+      }
+    }
+  }
+
+  async revertDeathStatus(animal: Animal) {
+    if (!animal.id) return;
+    const isSale = animal.status === 'satildi';
+    const isSlaughter = animal.status === 'kesildi';
+    const title = isSale ? 'Satış Kaydını Geri Al' : isSlaughter ? 'Kesim Kaydını Geri Al' : 'Ölüm Kaydını Geri Al';
+    const msg = `${animal.farmTagNo} küpeli hayvanın ${isSale ? 'satış' : isSlaughter ? 'kesim' : 'ölüm'} kaydını iptal edip tekrar 'Aktif' duruma getirmek istediğinize emin misiniz?`;
+
+    const confirmed = await this.alertService.confirm(
+      title,
+      msg,
+      'Evet, Aktif Yap',
+      'Vazgeç'
+    );
+    if (!confirmed) return;
+
+    try {
+      await this.animalService.update(animal.id, {
+        status: 'aktif',
+        deathDate: null,
+        deathReason: null,
+        deathExpertStatus: null,
+        deathNotes: null,
+        deathInfo: null,
+        slaughterDate: null,
+        slaughterMeatKg: null,
+        slaughterHeadCount: null,
+        slaughterLiverCount: null,
+        slaughterSkinCount: null,
+        slaughterExpertStatus: null,
+        slaughterNotes: null,
+        slaughterInfo: null,
+        saleDate: null,
+        salePrice: null,
+        saleWeightKg: null,
+        saleAccountId: null,
+        saleAccountTitle: null,
+        saleInfo: null,
+      });
+
+      try {
+        await this.movementService.create({
+          animalId: animal.id,
+          type: 'ciftlik-giris',
+          toId: animal.paddockId || undefined,
+          date: new Date().toISOString().substring(0, 10),
+          note: `${isSale ? 'Satış' : isSlaughter ? 'Kesim' : 'Ölüm'} kaydı iptal edildi, hayvan tekrar aktif sürüye dahil edildi.`,
+        } as any);
+      } catch (mErr) {
+        console.warn('Movement revert log warning:', mErr);
+      }
+
+      this.alertService.toastSuccess(`${isSale ? 'Satış' : isSlaughter ? 'Kesim' : 'Ölüm'} kaydı iptal edildi, hayvan tekrar aktif duruma getirildi.`);
+      if (this.selectedAnimalForDetail()?.id === animal.id) {
+        this.selectedAnimalForDetail.update((curr) =>
+          curr ? ({
+            ...curr,
+            status: 'aktif',
+            deathDate: null,
+            deathReason: null,
+            deathExpertStatus: null,
+            deathNotes: null,
+            deathInfo: null,
+            slaughterDate: null,
+            slaughterMeatKg: null,
+            slaughterHeadCount: null,
+            slaughterLiverCount: null,
+            slaughterSkinCount: null,
+            slaughterExpertStatus: null,
+            slaughterNotes: null,
+            slaughterInfo: null,
+            saleDate: null,
+            salePrice: null,
+            saleWeightKg: null,
+            saleAccountId: null,
+            saleAccountTitle: null,
+            saleInfo: null,
+          } as Animal) : null
+        );
+      }
+    } catch (err: any) {
+      console.error('Revert status error:', err);
+      this.alertService.error('İşlem Başarısız', err?.message || 'Durum güncellenirken bir hata oluştu.');
     }
   }
 

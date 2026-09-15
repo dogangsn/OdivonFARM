@@ -97,7 +97,11 @@ export class AnimalMovementsComponent {
     const typeF = this.typeFilter();
 
     if (typeF) {
-      list = list.filter((m) => m && m.type === typeF);
+      if (typeF === 'satis' || typeF === 'kesim' || typeF === 'olum') {
+        list = list.filter((m) => m && m.type === 'ciftlik-cikis' && this.getMovementSubCategory(m) === typeF);
+      } else {
+        list = list.filter((m) => m && m.type === typeF);
+      }
     }
 
     if (query) {
@@ -130,11 +134,142 @@ export class AnimalMovementsComponent {
     return (this.movements() || []).filter((m) => m && m.type === 'suru').length;
   });
 
+  readonly saleMovementsCount = computed(() => {
+    return (this.movements() || []).filter((m) => m && m.type === 'ciftlik-cikis' && this.getMovementSubCategory(m) === 'satis').length;
+  });
+
+  readonly slaughterMovementsCount = computed(() => {
+    return (this.movements() || []).filter((m) => m && m.type === 'ciftlik-cikis' && this.getMovementSubCategory(m) === 'kesim').length;
+  });
+
+  readonly deathMovementsCount = computed(() => {
+    return (this.movements() || []).filter((m) => m && m.type === 'ciftlik-cikis' && this.getMovementSubCategory(m) === 'olum').length;
+  });
+
   readonly farmInOutCount = computed(() => {
     return (this.movements() || []).filter((m) => m && (m.type === 'ciftlik-giris' || m.type === 'ciftlik-cikis')).length;
   });
 
   // Helpers
+  getMovementSubCategory(item: AnimalMovement): 'satis' | 'kesim' | 'olum' | 'diger' {
+    if (!item) return 'diger';
+    const note = (item.note || '').toLowerCase();
+    if (note.includes('satış') || note.includes('satis') || item.toId === 'satis') return 'satis';
+    if (note.includes('kesim') || item.toId === 'kesim') return 'kesim';
+    if (note.includes('ölüm') || note.includes('olum') || item.toId === 'olum') return 'olum';
+    return 'diger';
+  }
+
+  getMovementBadgeInfo(item: AnimalMovement): { label: string; bgClass: string; textClass: string; icon: string } {
+    if (item.type === 'padok') {
+      return {
+        label: 'Padok Değişimi',
+        bgClass: 'bg-indigo-50 dark:bg-indigo-950/50 border border-indigo-200/50',
+        textClass: 'text-indigo-700 dark:text-indigo-400',
+        icon: 'holiday_village',
+      };
+    }
+    if (item.type === 'suru') {
+      return {
+        label: 'Sürü Transferi',
+        bgClass: 'bg-purple-50 dark:bg-purple-950/50 border border-purple-200/50',
+        textClass: 'text-purple-700 dark:text-purple-400',
+        icon: 'groups',
+      };
+    }
+    if (item.type === 'ciftlik-giris') {
+      return {
+        label: 'Çiftlik Girişi',
+        bgClass: 'bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200/50',
+        textClass: 'text-emerald-700 dark:text-emerald-400',
+        icon: 'login',
+      };
+    }
+    // ciftlik-cikis subcategories
+    const sub = this.getMovementSubCategory(item);
+    if (sub === 'satis') {
+      return {
+        label: 'Satış (Çıkış)',
+        bgClass: 'bg-teal-50 dark:bg-teal-950/50 border border-teal-200/50',
+        textClass: 'text-teal-700 dark:text-teal-400',
+        icon: 'point_of_sale',
+      };
+    }
+    if (sub === 'kesim') {
+      return {
+        label: 'Kesim (Çıkış)',
+        bgClass: 'bg-amber-50 dark:bg-amber-950/50 border border-amber-200/50',
+        textClass: 'text-amber-700 dark:text-amber-400',
+        icon: 'content_cut',
+      };
+    }
+    if (sub === 'olum') {
+      return {
+        label: 'Ölüm (Çıkış)',
+        bgClass: 'bg-rose-50 dark:bg-rose-950/50 border border-rose-200/50',
+        textClass: 'text-rose-700 dark:text-rose-400',
+        icon: 'heart_broken',
+      };
+    }
+    return {
+      label: 'Çiftlik Çıkışı',
+      bgClass: 'bg-rose-50 dark:bg-rose-950/50 border border-rose-200/50',
+      textClass: 'text-rose-700 dark:text-rose-400',
+      icon: 'logout',
+    };
+  }
+
+  getFromDisplay(item: AnimalMovement): string {
+    if (item.fromId) {
+      if (item.type === 'padok') return this.paddockMap().get(item.fromId) || 'Padok';
+      if (item.type === 'suru') return this.herdMap().get(item.fromId) || 'Sürü';
+      const pName = this.paddockMap().get(item.fromId);
+      if (pName) return pName;
+    }
+    const animal = this.getAnimal(item.animalId);
+    if (animal?.paddockId && this.paddockMap().has(animal.paddockId)) {
+      return this.paddockMap().get(animal.paddockId)!;
+    }
+    if (animal?.herdId && this.herdMap().has(animal.herdId)) {
+      return this.herdMap().get(animal.herdId)!;
+    }
+    return item.type === 'ciftlik-giris' ? 'Dış Kaynak' : 'Çiftlik';
+  }
+
+  getToDisplay(item: AnimalMovement): string {
+    if (item.type === 'padok') {
+      return item.toId ? (this.paddockMap().get(item.toId) || 'Padok') : '—';
+    }
+    if (item.type === 'suru') {
+      return item.toId ? (this.herdMap().get(item.toId) || 'Sürü') : '—';
+    }
+    if (item.type === 'ciftlik-giris') {
+      const animal = this.getAnimal(item.animalId);
+      return (animal?.paddockId && this.paddockMap().get(animal.paddockId)) || 'Sürü / Çiftlik';
+    }
+    // ciftlik-cikis
+    const sub = this.getMovementSubCategory(item);
+    if (sub === 'satis') {
+      const note = item.note || '';
+      const match = note.match(/Cari:\s*([^,]+)/i);
+      if (match && match[1]) {
+        return `Alıcı: ${match[1].trim()}`;
+      }
+      const animal = this.getAnimal(item.animalId);
+      if (animal?.saleAccountTitle) {
+        return `Alıcı: ${animal.saleAccountTitle}`;
+      }
+      return 'Alıcı Cari (Satıldı)';
+    }
+    if (sub === 'kesim') {
+      return 'Mezbaha / Kesim';
+    }
+    if (sub === 'olum') {
+      return 'Zayiat / Vefat';
+    }
+    return 'Çiftlik Dışı';
+  }
+
   getTime(d: any): number {
     if (!d) return 0;
     if (typeof d === 'string') return new Date(d).getTime();

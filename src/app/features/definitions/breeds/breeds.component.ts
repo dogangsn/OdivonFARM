@@ -12,6 +12,8 @@ import { BreedService } from '../../../core/services/definitions/breed.service';
 import { AnimalService } from '../../../core/services/animal.service';
 import { AnimalTypeService } from '../../../core/services/definitions/animal-type.service';
 import { AlertService } from '../../../core/services/alert.service';
+import { SeedService } from '../../../core/services/seed.service';
+import { FarmContextService } from '../../../core/services/farm-context.service';
 
 export interface BreedFormData {
   name: string;
@@ -52,6 +54,24 @@ export class BreedsComponent {
   private animalService = inject(AnimalService);
   private animalTypeService = inject(AnimalTypeService);
   private alertService = inject(AlertService);
+  private seedService = inject(SeedService);
+  private farmContext = inject(FarmContextService);
+
+  async cleanupDuplicates() {
+    const farmId = this.farmContext.activeFarmId();
+    if (!farmId) return;
+
+    const res = await this.seedService.cleanDuplicates(farmId);
+    if (res.success) {
+      if (res.totalRemoved > 0) {
+        this.alertService.toastSuccess(`${res.totalRemoved} adet mükerrer ırk temizlendi!`);
+      } else {
+        this.alertService.toastSuccess('Mükerrer ırk kaydı bulunamadı, tüm liste tekil.');
+      }
+    } else {
+      this.alertService.error('Hata', 'Mükerrer ırklar temizlenirken bir sorun oluştu.');
+    }
+  }
 
   // Data streams
   readonly breeds = toSignal(this.breedService.list(), { initialValue: [] as Breed[] });

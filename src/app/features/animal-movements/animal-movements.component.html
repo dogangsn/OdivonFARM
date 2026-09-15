@@ -26,8 +26,14 @@
         <span class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-purple-50 dark:bg-purple-950/50 text-purple-700 dark:text-purple-400 border border-purple-200/50">
           Sürü Transferi: <strong>{{ herdMovementsCount() }}</strong>
         </span>
+        <span class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-teal-50 dark:bg-teal-950/50 text-teal-700 dark:text-teal-400 border border-teal-200/50">
+          Satış: <strong>{{ saleMovementsCount() }}</strong>
+        </span>
         <span class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-400 border border-amber-200/50">
-          Giriş / Çıkış: <strong>{{ farmInOutCount() }}</strong>
+          Kesim: <strong>{{ slaughterMovementsCount() }}</strong>
+        </span>
+        <span class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-400 border border-rose-200/50">
+          Ölüm / Zayiat: <strong>{{ deathMovementsCount() }}</strong>
         </span>
       </div>
     </div>
@@ -77,7 +83,10 @@
           <option value="padok">Padok Değişimi</option>
           <option value="suru">Sürü Transferi</option>
           <option value="ciftlik-giris">Çiftlik Girişi</option>
-          <option value="ciftlik-cikis">Çiftlik Çıkışı</option>
+          <option value="satis">Satış (Çıkış)</option>
+          <option value="kesim">Kesim (Çıkış)</option>
+          <option value="olum">Ölüm / Zayiat (Çıkış)</option>
+          <option value="ciftlik-cikis">Tüm Çıkışlar</option>
         </select>
 
         @if (searchTerm() || typeFilter()) {
@@ -120,7 +129,7 @@
                   </td>
 
                   <!-- Animal -->
-                  <td class="py-3.5 px-4">
+                  <td class="py-3.5 px-4 whitespace-nowrap">
                     <div class="flex items-center gap-2">
                       <div class="w-7 h-7 rounded-lg bg-cyan-50 dark:bg-cyan-950/50 text-cyan-600 flex items-center justify-center font-bold text-xs">
                         <mat-icon class="icon-size-3.5" [svgIcon]="'heroicons_solid:identification'"></mat-icon>
@@ -137,34 +146,30 @@
                   </td>
 
                   <!-- Movement Type Badge -->
-                  <td class="py-3.5 px-4">
+                  <td class="py-3.5 px-4 whitespace-nowrap">
+                    @let badge = getMovementBadgeInfo(item);
                     <span
-                      class="px-2.5 py-1 rounded-lg text-xs font-semibold"
-                      [ngClass]="{
-                        'bg-indigo-50 text-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-400 border border-indigo-200/50': item.type === 'padok',
-                        'bg-purple-50 text-purple-700 dark:bg-purple-950/50 dark:text-purple-400 border border-purple-200/50': item.type === 'suru',
-                        'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400 border border-emerald-200/50': item.type === 'ciftlik-giris',
-                        'bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-400 border border-rose-200/50': item.type === 'ciftlik-cikis'
-                      }">
-                      {{ item.type === 'padok' ? 'Padok Değişimi' : item.type === 'suru' ? 'Sürü Transferi' : item.type === 'ciftlik-giris' ? 'Çiftlik Girişi' : 'Çiftlik Çıkışı' }}
+                      class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold {{ badge.bgClass }} {{ badge.textClass }}">
+                      <mat-icon class="icon-size-3.5">{{ badge.icon }}</mat-icon>
+                      <span>{{ badge.label }}</span>
                     </span>
                   </td>
 
                   <!-- From -->
-                  <td class="py-3.5 px-4 text-secondary font-medium">
-                    {{ getLocationName(item.type, item.fromId) }}
+                  <td class="py-3.5 px-4 text-secondary font-medium whitespace-nowrap">
+                    {{ getFromDisplay(item) }}
                   </td>
 
                   <!-- To -->
-                  <td class="py-3.5 px-4 font-semibold text-default">
-                    <div class="flex items-center gap-1">
+                  <td class="py-3.5 px-4 font-semibold text-default whitespace-nowrap">
+                    <div class="flex items-center gap-1.5">
                       <mat-icon class="icon-size-3.5 text-cyan-500" [svgIcon]="'heroicons_solid:arrow-narrow-right'"></mat-icon>
-                      <span>{{ getLocationName(item.type, item.toId) }}</span>
+                      <span>{{ getToDisplay(item) }}</span>
                     </div>
                   </td>
 
                   <!-- Note -->
-                  <td class="py-3.5 px-4 text-secondary max-w-xs truncate">
+                  <td class="py-3.5 px-4 text-secondary max-w-xs truncate" [matTooltip]="item.note || ''">
                     {{ item.note || '—' }}
                   </td>
 

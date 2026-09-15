@@ -129,6 +129,52 @@
               <span>Düzenle</span>
             </button>
 
+            @if (animal.status === 'oldu') {
+              <button
+                mat-button
+                type="button"
+                class="!text-xs !font-bold !rounded-xl !px-3 !py-1.5 border transition-colors !text-rose-700 dark:!text-rose-300 !bg-rose-100/70 dark:!bg-rose-950/50 border-rose-300 dark:border-rose-800/60"
+                (click)="onDeathClick()"
+                matTooltip="Ölüm Bilgilerini Gör / Güncelle"
+              >
+                <mat-icon class="icon-size-4 mr-1 text-rose-600 dark:text-rose-400">heart_broken</mat-icon>
+                <span>Ölüm Bilgisi</span>
+              </button>
+            } @else if (animal.status === 'kesildi') {
+              <button
+                mat-button
+                type="button"
+                class="!text-xs !font-bold !rounded-xl !px-3 !py-1.5 border transition-colors !text-amber-700 dark:!text-amber-300 !bg-amber-100/70 dark:!bg-amber-950/50 border-amber-300 dark:border-amber-800/60"
+                (click)="onDeathClick()"
+                matTooltip="Kesim Bilgilerini Gör / Güncelle"
+              >
+                <mat-icon class="icon-size-4 mr-1 text-amber-600 dark:text-amber-400">content_cut</mat-icon>
+                <span>Kesim Bilgisi</span>
+              </button>
+            } @else if (animal.status === 'satildi') {
+              <button
+                mat-button
+                type="button"
+                class="!text-xs !font-bold !rounded-xl !px-3 !py-1.5 border transition-colors !text-teal-700 dark:!text-teal-300 !bg-teal-100/70 dark:!bg-teal-950/50 border-teal-300 dark:border-teal-800/60"
+                (click)="onDeathClick()"
+                matTooltip="Satış Bilgilerini Gör / Güncelle"
+              >
+                <mat-icon class="icon-size-4 mr-1 text-teal-600 dark:text-teal-400">point_of_sale</mat-icon>
+                <span>Satış Bilgisi</span>
+              </button>
+            } @else {
+              <button
+                mat-button
+                type="button"
+                class="!text-xs !font-bold !rounded-xl !px-3 !py-1.5 border transition-colors !text-rose-600 dark:!text-rose-400 !bg-rose-50 dark:!bg-rose-950/40 border-rose-200/60 dark:border-rose-800/40"
+                (click)="onDeathClick()"
+                matTooltip="Ölüm & Kesim İşlemleri"
+              >
+                <mat-icon class="icon-size-4 mr-1 text-rose-600 dark:text-rose-400">heart_broken</mat-icon>
+                <span>Ölüm & Kesim</span>
+              </button>
+            }
+
             <button
               type="button"
               (click)="close()"
@@ -254,6 +300,144 @@
         <!-- ============================================== -->
         @if (activeTab() === 'overview') {
           <div class="space-y-6 animate-in fade-in duration-200">
+            @if (animal.status === 'oldu') {
+              <!-- PROMINENT DEATH BANNER -->
+              <div class="p-4 rounded-2xl bg-rose-50/90 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 shadow-xs flex items-start gap-3.5">
+                <div class="w-10 h-10 rounded-xl bg-rose-100 dark:bg-rose-900/60 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0 shadow-xs">
+                  <mat-icon class="icon-size-5">heart_broken</mat-icon>
+                </div>
+                <div class="flex-1">
+                  <div class="flex items-center justify-between flex-wrap gap-2">
+                    <h4 class="text-sm font-bold text-rose-950 dark:text-rose-200 flex items-center gap-2">
+                      <span>Ölüm Kaydı Bildirilmiş</span>
+                      <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-rose-200/80 dark:bg-rose-900 text-rose-800 dark:text-rose-200">
+                        Pasif Sürü
+                      </span>
+                    </h4>
+                    <span class="text-xs font-mono font-bold px-2.5 py-1 rounded-lg bg-white dark:bg-slate-800 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800">
+                      Tarih: {{ animal.deathDate || animal.deathInfo?.date || '—' }}
+                    </span>
+                  </div>
+                  <div class="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-rose-900 dark:text-rose-200">
+                    <div class="bg-white/60 dark:bg-slate-900/40 p-2.5 rounded-xl border border-rose-100 dark:border-rose-900/40">
+                      <span class="text-slate-500 dark:text-slate-400 block text-[11px]">Ölüm Nedeni</span>
+                      <span class="font-bold text-slate-800 dark:text-slate-100">{{ animal.deathReason || animal.deathInfo?.reason || 'Belirtilmedi' }}</span>
+                    </div>
+                    <div class="bg-white/60 dark:bg-slate-900/40 p-2.5 rounded-xl border border-rose-100 dark:border-rose-900/40">
+                      <span class="text-slate-500 dark:text-slate-400 block text-[11px]">Sigorta / TARSİM Exper Durumu</span>
+                      <span class="font-bold text-slate-800 dark:text-slate-100">
+                        {{ (animal.deathExpertStatus || animal.deathInfo?.expertStatus) === 'cagrildi' ? 'Exper Çağırıldı' : 'Exper Çağırılmadı' }}
+                      </span>
+                    </div>
+                    @if (animal.deathNotes || animal.deathInfo?.notes) {
+                      <div class="sm:col-span-2 bg-white/60 dark:bg-slate-900/40 p-2.5 rounded-xl border border-rose-100 dark:border-rose-900/40 text-slate-700 dark:text-slate-300 italic">
+                        <span class="text-slate-500 dark:text-slate-400 block not-italic text-[11px]">Açıklama / Detay</span>
+                        "{{ animal.deathNotes || animal.deathInfo?.notes }}"
+                      </div>
+                    }
+                  </div>
+                </div>
+              </div>
+            }
+
+            @if (animal.status === 'kesildi') {
+              <!-- PROMINENT SLAUGHTER BANNER -->
+              <div class="p-4 rounded-2xl bg-amber-50/90 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 shadow-xs flex items-start gap-3.5">
+                <div class="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-900/60 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 shadow-xs">
+                  <mat-icon class="icon-size-5">content_cut</mat-icon>
+                </div>
+                <div class="flex-1">
+                  <div class="flex items-center justify-between flex-wrap gap-2">
+                    <h4 class="text-sm font-bold text-amber-950 dark:text-amber-200 flex items-center gap-2">
+                      <span>Kesim Kaydı Bildirilmiş</span>
+                      <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-amber-200/80 dark:bg-amber-900 text-amber-800 dark:text-amber-200">
+                        Kesildi (Pasif)
+                      </span>
+                    </h4>
+                    <span class="text-xs font-mono font-bold px-2.5 py-1 rounded-lg bg-white dark:bg-slate-800 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+                      Tarih: {{ animal.slaughterDate || animal.slaughterInfo?.date || '—' }}
+                    </span>
+                  </div>
+                  <div class="mt-2 grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs text-amber-900 dark:text-amber-200">
+                    <div class="bg-white/60 dark:bg-slate-900/40 p-2.5 rounded-xl border border-amber-100 dark:border-amber-900/40">
+                      <span class="text-slate-500 dark:text-slate-400 block text-[11px]">Karkas Et Miktarı</span>
+                      <span class="font-bold text-slate-800 dark:text-slate-100 text-sm">
+                        {{ (animal.slaughterMeatKg ?? animal.slaughterInfo?.meatKg ?? 0) + ' kg' }}
+                      </span>
+                    </div>
+                    <div class="bg-white/60 dark:bg-slate-900/40 p-2.5 rounded-xl border border-amber-100 dark:border-amber-900/40">
+                      <span class="text-slate-500 dark:text-slate-400 block text-[11px]">Sakatat & Deri</span>
+                      <span class="font-bold text-slate-800 dark:text-slate-100">
+                        Baş: {{ animal.slaughterHeadCount ?? animal.slaughterInfo?.headCount ?? 0 }} | 
+                        Ciğer: {{ animal.slaughterLiverCount ?? animal.slaughterInfo?.liverCount ?? 0 }} | 
+                        Deri: {{ animal.slaughterSkinCount ?? animal.slaughterInfo?.skinCount ?? 0 }}
+                      </span>
+                    </div>
+                    <div class="bg-white/60 dark:bg-slate-900/40 p-2.5 rounded-xl border border-amber-100 dark:border-amber-900/40">
+                      <span class="text-slate-500 dark:text-slate-400 block text-[11px]">Sigorta / Eksper Durumu</span>
+                      <span class="font-bold text-slate-800 dark:text-slate-100">
+                        {{ (animal.slaughterExpertStatus || animal.slaughterInfo?.expertStatus) === 'cagrildi' ? 'Exper Çağırıldı' : 'Exper Çağırılmadı' }}
+                      </span>
+                    </div>
+                    @if (animal.slaughterNotes || animal.slaughterInfo?.notes) {
+                      <div class="sm:col-span-3 bg-white/60 dark:bg-slate-900/40 p-2.5 rounded-xl border border-amber-100 dark:border-amber-900/40 text-slate-700 dark:text-slate-300 italic">
+                        <span class="text-slate-500 dark:text-slate-400 block not-italic text-[11px]">Açıklama / Detay</span>
+                        "{{ animal.slaughterNotes || animal.slaughterInfo?.notes }}"
+                      </div>
+                    }
+                  </div>
+                </div>
+              </div>
+            }
+
+            @if (animal.status === 'satildi') {
+              <!-- PROMINENT SALE BANNER -->
+              <div class="p-4 rounded-2xl bg-teal-50/90 dark:bg-teal-950/40 border border-teal-200 dark:border-teal-900/60 shadow-xs flex items-start gap-3.5">
+                <div class="w-10 h-10 rounded-xl bg-teal-100 dark:bg-teal-900/60 text-teal-600 dark:text-teal-400 flex items-center justify-center shrink-0 shadow-xs">
+                  <mat-icon class="icon-size-5">point_of_sale</mat-icon>
+                </div>
+                <div class="flex-1">
+                  <div class="flex items-center justify-between flex-wrap gap-2">
+                    <h4 class="text-sm font-bold text-teal-950 dark:text-teal-200 flex items-center gap-2">
+                      <span>Satış Kaydı Bildirilmiş</span>
+                      <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-teal-200/80 dark:bg-teal-900 text-teal-800 dark:text-teal-200">
+                        Satıldı (Pasif)
+                      </span>
+                    </h4>
+                    <span class="text-xs font-mono font-bold px-2.5 py-1 rounded-lg bg-white dark:bg-slate-800 text-teal-700 dark:text-teal-300 border border-teal-200 dark:border-teal-800">
+                      Tarih: {{ animal.saleDate || animal.saleInfo?.date || '—' }}
+                    </span>
+                  </div>
+                  <div class="mt-2 grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs text-teal-900 dark:text-teal-200">
+                    <div class="bg-white/60 dark:bg-slate-900/40 p-2.5 rounded-xl border border-teal-100 dark:border-teal-900/40">
+                      <span class="text-slate-500 dark:text-slate-400 block text-[11px]">Alıcı Cari</span>
+                      <span class="font-bold text-slate-800 dark:text-slate-100 text-sm">
+                        {{ animal.saleAccountTitle || animal.saleInfo?.accountTitle || 'Belirtilmedi' }}
+                      </span>
+                    </div>
+                    <div class="bg-white/60 dark:bg-slate-900/40 p-2.5 rounded-xl border border-teal-100 dark:border-teal-900/40">
+                      <span class="text-slate-500 dark:text-slate-400 block text-[11px]">Satış Fiyatı</span>
+                      <span class="font-bold text-emerald-600 dark:text-emerald-400 text-sm">
+                        {{ ((animal.salePrice ?? animal.saleInfo?.price) | number:'1.2-2') + ' ₺' }}
+                      </span>
+                    </div>
+                    <div class="bg-white/60 dark:bg-slate-900/40 p-2.5 rounded-xl border border-teal-100 dark:border-teal-900/40">
+                      <span class="text-slate-500 dark:text-slate-400 block text-[11px]">Satış Ağırlığı</span>
+                      <span class="font-bold text-slate-800 dark:text-slate-100">
+                        {{ (animal.saleWeightKg ?? animal.saleInfo?.weightKg) ? (animal.saleWeightKg ?? animal.saleInfo?.weightKg) + ' kg' : 'Belirtilmedi' }}
+                      </span>
+                    </div>
+                    @if (animal.saleInfo?.notes) {
+                      <div class="sm:col-span-3 bg-white/60 dark:bg-slate-900/40 p-2.5 rounded-xl border border-teal-100 dark:border-teal-900/40 text-slate-700 dark:text-slate-300 italic">
+                        <span class="text-slate-500 dark:text-slate-400 block not-italic text-[11px]">Açıklama / Detay</span>
+                        "{{ animal.saleInfo?.notes }}"
+                      </div>
+                    }
+                  </div>
+                </div>
+              </div>
+            }
+
             <!-- 5 KPI ANALYTICS CARDS -->
             <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5">
               <!-- KPI 1: Yaş -->
@@ -355,7 +539,14 @@
 
                   <div>
                     <span class="text-slate-400 dark:text-slate-500 block">Ulusal Küpe (DKN)</span>
-                    <span class="font-semibold text-slate-800 dark:text-slate-200 font-mono">{{ animal.nationalTagNo || '—' }}</span>
+                    <span class="font-semibold text-slate-800 dark:text-slate-200 font-mono">
+                      {{ animal.nationalTagNo || '—' }}
+                      @if (animal.nationalTagColor) {
+                        <span class="text-[11px] font-sans px-2 py-0.5 ml-1 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-medium">
+                          ({{ animal.nationalTagColor }})
+                        </span>
+                      }
+                    </span>
                   </div>
 
                   <div>
@@ -383,6 +574,28 @@
                   <div>
                     <span class="text-slate-400 dark:text-slate-500 block">Doğum Tarihi</span>
                     <span class="font-semibold text-slate-800 dark:text-slate-200">{{ formatDate(animal.birthDate) }}</span>
+                  </div>
+
+                  <div>
+                    <span class="text-slate-400 dark:text-slate-500 block">Damızlık Durumu & Puanı</span>
+                    <span class="font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 flex-wrap">
+                      <span>{{ getBreedingStatusLabel(animal.breedingStatus) }}</span>
+                      @if (animal.breedingScore != null) {
+                        <span class="px-1.5 py-0.5 rounded-md text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800/40">
+                          {{ animal.breedingScore }} Puan
+                        </span>
+                      }
+                    </span>
+                  </div>
+
+                  <div>
+                    <span class="text-slate-400 dark:text-slate-500 block">Edinme Yöntemi & Tarihi</span>
+                    <span class="font-semibold text-slate-800 dark:text-slate-200">
+                      {{ getAcquisitionMethodLabel(animal.acquisitionMethod) }}
+                      @if (animal.acquisitionDate) {
+                        <span class="text-slate-500 font-normal"> ({{ formatDate(animal.acquisitionDate) }})</span>
+                      }
+                    </span>
                   </div>
                 </div>
               </div>
@@ -1150,27 +1363,28 @@
               @if (movements().length > 0) {
                 <div class="space-y-2.5">
                   @for (m of movements(); track m.id) {
-                    <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-850 border border-slate-200/80 dark:border-slate-750 shadow-xs flex items-center justify-between gap-3">
-                      <div class="flex items-center gap-3">
-                        <div class="w-9 h-9 rounded-xl bg-cyan-50 dark:bg-cyan-950/50 text-cyan-600 dark:text-cyan-400 flex items-center justify-center font-bold text-xs shrink-0">
-                          <mat-icon class="icon-size-4">route</mat-icon>
+                    @let info = getMovementInfo(m);
+                    <div class="p-3.5 rounded-2xl border shadow-xs flex items-center justify-between gap-3 {{ info.bgClass }}">
+                      <div class="flex items-center gap-3 min-w-0">
+                        <div class="w-10 h-10 rounded-xl {{ info.iconBgClass }} {{ info.iconColorClass }} flex items-center justify-center shrink-0 shadow-xs">
+                          <mat-icon class="icon-size-5">{{ info.icon }}</mat-icon>
                         </div>
-                        <div>
-                          <div class="text-xs font-bold text-slate-800 dark:text-slate-200">
-                            {{ getPaddockName(m.fromId) }} ➔ {{ getPaddockName(m.toId) }}
+                        <div class="min-w-0">
+                          <div class="text-xs font-extrabold truncate {{ info.textClass }}">
+                            {{ info.title }}
                           </div>
-                          <div class="text-[11px] text-slate-500 italic">
-                            {{ m.note || 'Padok transferi' }}
+                          <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 truncate">
+                            {{ info.description }}
                           </div>
                         </div>
                       </div>
 
                       <div class="text-right shrink-0">
-                        <span class="text-xs font-semibold text-slate-600 dark:text-slate-400 block">
+                        <span class="text-xs font-semibold text-slate-600 dark:text-slate-300 block font-mono">
                           {{ formatDate(m.date) }}
                         </span>
-                        <span class="text-[10px] text-slate-400 uppercase font-bold">
-                          {{ m.type }}
+                        <span class="inline-block mt-0.5 px-2 py-0.5 rounded-md text-[10px] font-bold {{ info.badgeBgClass }} {{ info.badgeTextClass }}">
+                          {{ info.badgeLabel }}
                         </span>
                       </div>
                     </div>
@@ -1341,8 +1555,13 @@
               </div>
 
               <div class="p-2.5 rounded-xl border border-slate-200 bg-slate-50/50">
-                <span class="text-slate-500 block text-[10px] font-medium">Damızlık Durumu</span>
-                <span class="font-bold text-emerald-700 capitalize">{{ animal.status }}</span>
+                <span class="text-slate-500 block text-[10px] font-medium">Damızlık Durumu & Puanı</span>
+                <span class="font-bold text-emerald-700 capitalize">
+                  {{ getBreedingStatusLabel(animal.breedingStatus) }}
+                  @if (animal.breedingScore != null) {
+                    ({{ animal.breedingScore }} P)
+                  }
+                </span>
               </div>
             </div>
           </div>

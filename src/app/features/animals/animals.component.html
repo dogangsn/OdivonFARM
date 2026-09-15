@@ -86,18 +86,18 @@
       <div class="flex items-center gap-2.5 w-full md:w-auto flex-wrap flex-1 justify-start md:justify-end">
         <select
           [ngModel]="genderFilter()"
-          (ngModelChange)="genderFilter.set($event || null)"
-          class="px-3 py-2 text-xs font-medium bg-slate-100 dark:bg-slate-750 border border-slate-200 dark:border-slate-700 rounded-xl text-default focus:outline-none focus:ring-2 focus:ring-indigo-500/20">
-          <option [value]="''">Tüm Cinsiyetler</option>
+          (ngModelChange)="genderFilter.set($event)"
+          class="px-3 py-2 text-xs font-medium bg-slate-100 dark:bg-slate-750 border border-slate-200 dark:border-slate-700 rounded-xl text-default focus:outline-none focus:ring-2 focus:ring-indigo-500/20 cursor-pointer">
+          <option value="">Tüm Cinsiyetler</option>
           <option value="disi">Dişi</option>
           <option value="erkek">Erkek</option>
         </select>
 
         <select
           [ngModel]="statusFilter()"
-          (ngModelChange)="statusFilter.set($event || null)"
-          class="px-3 py-2 text-xs font-medium bg-slate-100 dark:bg-slate-750 border border-slate-200 dark:border-slate-700 rounded-xl text-default focus:outline-none focus:ring-2 focus:ring-indigo-500/20">
-          <option [value]="''">Tüm Durumlar</option>
+          (ngModelChange)="statusFilter.set($event)"
+          class="px-3 py-2 text-xs font-medium bg-slate-100 dark:bg-slate-750 border border-slate-200 dark:border-slate-700 rounded-xl text-default focus:outline-none focus:ring-2 focus:ring-indigo-500/20 cursor-pointer">
+          <option value="">Tüm Durumlar</option>
           <option value="aktif">Aktif</option>
           <option value="pasif">Pasif</option>
           <option value="satildi">Satıldı</option>
@@ -105,12 +105,36 @@
           <option value="oldu">Öldü</option>
         </select>
 
+        @if (animalTypes().length > 0) {
+          <select
+            [ngModel]="animalTypeFilter()"
+            (ngModelChange)="onAnimalTypeFilterChange($event)"
+            class="px-3 py-2 text-xs font-medium bg-slate-100 dark:bg-slate-750 border border-slate-200 dark:border-slate-700 rounded-xl text-default focus:outline-none cursor-pointer">
+            <option value="">Tüm Hayvan Tipleri</option>
+            @for (t of animalTypes(); track t.id) {
+              <option [value]="t.id">{{ t.name }}</option>
+            }
+          </select>
+        }
+
+        @if (breeds().length > 0) {
+          <select
+            [ngModel]="breedFilter()"
+            (ngModelChange)="breedFilter.set($event)"
+            class="px-3 py-2 text-xs font-medium bg-slate-100 dark:bg-slate-750 border border-slate-200 dark:border-slate-700 rounded-xl text-default focus:outline-none cursor-pointer">
+            <option value="">Tüm Irklar</option>
+            @for (b of filteredFilterBreeds(); track b.id) {
+              <option [value]="b.id">{{ b.name }}</option>
+            }
+          </select>
+        }
+
         @if (herds().length > 0) {
           <select
             [ngModel]="herdFilter()"
-            (ngModelChange)="herdFilter.set($event || null)"
-            class="px-3 py-2 text-xs font-medium bg-slate-100 dark:bg-slate-750 border border-slate-200 dark:border-slate-700 rounded-xl text-default focus:outline-none">
-            <option [value]="''">Tüm Sürüler</option>
+            (ngModelChange)="herdFilter.set($event)"
+            class="px-3 py-2 text-xs font-medium bg-slate-100 dark:bg-slate-750 border border-slate-200 dark:border-slate-700 rounded-xl text-default focus:outline-none cursor-pointer">
+            <option value="">Tüm Sürüler</option>
             @for (h of herds(); track h.id) {
               <option [value]="h.id">{{ h.name }}</option>
             }
@@ -120,19 +144,19 @@
         @if (paddocks().length > 0) {
           <select
             [ngModel]="paddockFilter()"
-            (ngModelChange)="paddockFilter.set($event || null)"
-            class="px-3 py-2 text-xs font-medium bg-slate-100 dark:bg-slate-750 border border-slate-200 dark:border-slate-700 rounded-xl text-default focus:outline-none">
-            <option [value]="''">Tüm Padoklar</option>
+            (ngModelChange)="paddockFilter.set($event)"
+            class="px-3 py-2 text-xs font-medium bg-slate-100 dark:bg-slate-750 border border-slate-200 dark:border-slate-700 rounded-xl text-default focus:outline-none cursor-pointer">
+            <option value="">Tüm Padoklar</option>
             @for (p of paddocks(); track p.id) {
               <option [value]="p.id">{{ p.name }}</option>
             }
           </select>
         }
 
-        @if (searchTerm() || genderFilter() || statusFilter() || herdFilter() || paddockFilter()) {
+        @if (searchTerm() || genderFilter() || statusFilter() || herdFilter() || paddockFilter() || breedFilter()) {
           <button
-            (click)="searchTerm.set(''); genderFilter.set(null); statusFilter.set(null); herdFilter.set(null); paddockFilter.set(null)"
-            class="text-xs font-semibold text-rose-600 hover:text-rose-700 px-2 py-1">
+            (click)="searchTerm.set(''); genderFilter.set(''); statusFilter.set(''); herdFilter.set(''); paddockFilter.set(''); breedFilter.set('')"
+            class="text-xs font-semibold text-rose-600 hover:text-rose-700 px-2 py-1 cursor-pointer">
             Temizle
           </button>
         }
@@ -189,10 +213,11 @@
                     [ngClass]="{
                       'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400 border border-emerald-200/50': animal.status === 'aktif',
                       'bg-slate-100 text-slate-600 dark:bg-slate-750 dark:text-slate-300': animal.status === 'pasif',
-                      'bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-400 border border-amber-200/50': animal.status === 'satildi',
-                      'bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-400 border border-rose-200/50': animal.status === 'oldu' || animal.status === 'kesildi'
+                      'bg-teal-50 text-teal-700 dark:bg-teal-950/50 dark:text-teal-400 border border-teal-200/50': animal.status === 'satildi',
+                      'bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-400 border border-amber-200/50': animal.status === 'kesildi',
+                      'bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-400 border border-rose-200/50': animal.status === 'oldu'
                     }">
-                    {{ animal.status }}
+                    {{ animal.status === 'satildi' ? 'SATILDI' : animal.status === 'kesildi' ? 'KESİLDİ' : animal.status === 'oldu' ? 'ÖLDÜ' : animal.status }}
                   </span>
                 </div>
 
@@ -242,10 +267,10 @@
                   <button
                     mat-icon-button
                     type="button"
-                    class="!text-secondary hover:!text-indigo-600 !rounded-xl"
+                    class="!inline-flex !items-center !justify-center !w-8 !h-8 !min-w-8 !min-h-8 !p-0 !text-secondary hover:!text-indigo-600 hover:!bg-slate-100 dark:hover:!bg-slate-800 !rounded-xl transition-colors"
                     [matMenuTriggerFor]="animalMenu"
                     matTooltip="İşlemler Menüsü">
-                    <mat-icon class="icon-size-4">more_vert</mat-icon>
+                    <mat-icon class="icon-size-5" [svgIcon]="'heroicons_solid:dots-vertical'"></mat-icon>
                   </button>
 
                   <mat-menu #animalMenu="matMenu" class="!rounded-2xl !p-1.5 shadow-xl border border-slate-100 dark:border-slate-800">
@@ -261,10 +286,43 @@
                       <mat-icon class="icon-size-4 text-cyan-600">place</mat-icon>
                       <span>Konumu / Padok Değiştir</span>
                     </button>
-                    <button mat-menu-item (click)="archiveAnimal(animal)" class="!rounded-xl !text-xs !font-medium">
-                      <mat-icon class="icon-size-4 text-amber-600">archive</mat-icon>
-                      <span>{{ animal.status === 'pasif' ? 'Arşivden Çıkar (Aktif Yap)' : 'Arşivle (Pasife Al)' }}</span>
-                    </button>
+                    @if (animal.status === 'oldu') {
+                      <button mat-menu-item (click)="openDeathModal(animal, 'olum')" class="!rounded-xl !text-xs !font-medium !text-rose-600">
+                        <mat-icon class="icon-size-4 text-rose-600">heart_broken</mat-icon>
+                        <span>Ölüm Bilgilerini Gör / Düzenle</span>
+                      </button>
+                      <button mat-menu-item (click)="revertDeathStatus(animal)" class="!rounded-xl !text-xs !font-medium !text-emerald-600">
+                        <mat-icon class="icon-size-4 text-emerald-600">restore</mat-icon>
+                        <span>Ölüm Kaydını Geri Al (Aktif Yap)</span>
+                      </button>
+                    } @else if (animal.status === 'kesildi') {
+                      <button mat-menu-item (click)="openDeathModal(animal, 'kesim')" class="!rounded-xl !text-xs !font-medium !text-amber-600">
+                        <mat-icon class="icon-size-4 text-amber-600">content_cut</mat-icon>
+                        <span>Kesim Bilgilerini Gör / Düzenle</span>
+                      </button>
+                      <button mat-menu-item (click)="revertDeathStatus(animal)" class="!rounded-xl !text-xs !font-medium !text-emerald-600">
+                        <mat-icon class="icon-size-4 text-emerald-600">restore</mat-icon>
+                        <span>Kesim Kaydını Geri Al (Aktif Yap)</span>
+                      </button>
+                    } @else if (animal.status === 'satildi') {
+                      <button mat-menu-item (click)="openDeathModal(animal, 'satis')" class="!rounded-xl !text-xs !font-medium !text-[#369a98]">
+                        <mat-icon class="icon-size-4 text-[#369a98]">point_of_sale</mat-icon>
+                        <span>Satış Bilgilerini Gör / Düzenle</span>
+                      </button>
+                      <button mat-menu-item (click)="revertDeathStatus(animal)" class="!rounded-xl !text-xs !font-medium !text-emerald-600">
+                        <mat-icon class="icon-size-4 text-emerald-600">restore</mat-icon>
+                        <span>Satış Kaydını Geri Al (Aktif Yap)</span>
+                      </button>
+                    } @else {
+                      <button mat-menu-item (click)="openDeathModal(animal, 'olum')" class="!rounded-xl !text-xs !font-medium !text-rose-600">
+                        <mat-icon class="icon-size-4 text-rose-600">heart_broken</mat-icon>
+                        <span>Ölüm & Kesim İşlemleri</span>
+                      </button>
+                      <button mat-menu-item (click)="openDeathModal(animal, 'satis')" class="!rounded-xl !text-xs !font-medium !text-[#369a98]">
+                        <mat-icon class="icon-size-4 text-[#369a98]">point_of_sale</mat-icon>
+                        <span>Satış Yap</span>
+                      </button>
+                    }
                     <div class="my-1 border-t border-slate-100 dark:border-slate-800"></div>
                     <button mat-menu-item (click)="deleteAnimal(animal.id!)" class="!rounded-xl !text-xs !font-medium !text-rose-600">
                       <mat-icon class="icon-size-4 text-rose-600">delete</mat-icon>
@@ -333,16 +391,26 @@
                   <td class="py-3.5 px-4">
                     <span
                       class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider"
-                      [ngClass]="animal.status === 'aktif' ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-600'">
-                      {{ animal.status }}
+                      [ngClass]="{
+                        'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400 border border-emerald-200/50': animal.status === 'aktif',
+                        'bg-slate-100 text-slate-600 dark:bg-slate-750 dark:text-slate-300': animal.status === 'pasif',
+                        'bg-teal-50 text-teal-700 dark:bg-teal-950/50 dark:text-teal-400 border border-teal-200/50': animal.status === 'satildi',
+                        'bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-400 border border-amber-200/50': animal.status === 'kesildi',
+                        'bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-400 border border-rose-200/50': animal.status === 'oldu'
+                      }">
+                      {{ animal.status === 'satildi' ? 'SATILDI' : animal.status === 'kesildi' ? 'KESİLDİ' : animal.status === 'oldu' ? 'ÖLDÜ' : animal.status }}
                     </span>
                   </td>
                   <td class="py-3.5 px-4 text-right space-x-1">
                     <button mat-icon-button (click)="openDetailModal(animal)" matTooltip="Detay & Analiz">
                       <mat-icon class="icon-size-4 text-indigo-600">visibility</mat-icon>
                     </button>
-                    <button mat-icon-button [matMenuTriggerFor]="tableMenu" matTooltip="İşlemler Menüsü">
-                      <mat-icon class="icon-size-4 text-secondary">more_vert</mat-icon>
+                    <button
+                      mat-icon-button
+                      class="!inline-flex !items-center !justify-center !w-8 !h-8 !min-w-8 !min-h-8 !p-0 !text-secondary hover:!text-indigo-600 hover:!bg-slate-100 dark:hover:!bg-slate-800 !rounded-xl transition-colors"
+                      [matMenuTriggerFor]="tableMenu"
+                      matTooltip="İşlemler Menüsü">
+                      <mat-icon class="icon-size-5" [svgIcon]="'heroicons_solid:dots-vertical'"></mat-icon>
                     </button>
                     <mat-menu #tableMenu="matMenu" class="!rounded-2xl !p-1.5 shadow-xl border border-slate-100 dark:border-slate-800">
                       <button mat-menu-item (click)="openDetailModal(animal)" class="!rounded-xl !text-xs !font-medium">
@@ -357,10 +425,43 @@
                         <mat-icon class="icon-size-4 text-cyan-600">place</mat-icon>
                         <span>Konumu Değiştir</span>
                       </button>
-                      <button mat-menu-item (click)="archiveAnimal(animal)" class="!rounded-xl !text-xs !font-medium">
-                        <mat-icon class="icon-size-4 text-amber-600">archive</mat-icon>
-                        <span>{{ animal.status === 'pasif' ? 'Arşivden Çıkar (Aktif Yap)' : 'Arşivle (Pasife Al)' }}</span>
-                      </button>
+                      @if (animal.status === 'oldu') {
+                        <button mat-menu-item (click)="openDeathModal(animal, 'olum')" class="!rounded-xl !text-xs !font-medium !text-rose-600">
+                          <mat-icon class="icon-size-4 text-rose-600">heart_broken</mat-icon>
+                          <span>Ölüm Bilgilerini Gör / Düzenle</span>
+                        </button>
+                        <button mat-menu-item (click)="revertDeathStatus(animal)" class="!rounded-xl !text-xs !font-medium !text-emerald-600">
+                          <mat-icon class="icon-size-4 text-emerald-600">restore</mat-icon>
+                          <span>Ölüm Kaydını Geri Al (Aktif Yap)</span>
+                        </button>
+                      } @else if (animal.status === 'kesildi') {
+                        <button mat-menu-item (click)="openDeathModal(animal, 'kesim')" class="!rounded-xl !text-xs !font-medium !text-amber-600">
+                          <mat-icon class="icon-size-4 text-amber-600">content_cut</mat-icon>
+                          <span>Kesim Bilgilerini Gör / Düzenle</span>
+                        </button>
+                        <button mat-menu-item (click)="revertDeathStatus(animal)" class="!rounded-xl !text-xs !font-medium !text-emerald-600">
+                          <mat-icon class="icon-size-4 text-emerald-600">restore</mat-icon>
+                          <span>Kesim Kaydını Geri Al (Aktif Yap)</span>
+                        </button>
+                      } @else if (animal.status === 'satildi') {
+                        <button mat-menu-item (click)="openDeathModal(animal, 'satis')" class="!rounded-xl !text-xs !font-medium !text-[#369a98]">
+                          <mat-icon class="icon-size-4 text-[#369a98]">point_of_sale</mat-icon>
+                          <span>Satış Bilgilerini Gör / Düzenle</span>
+                        </button>
+                        <button mat-menu-item (click)="revertDeathStatus(animal)" class="!rounded-xl !text-xs !font-medium !text-emerald-600">
+                          <mat-icon class="icon-size-4 text-emerald-600">restore</mat-icon>
+                          <span>Satış Kaydını Geri Al (Aktif Yap)</span>
+                        </button>
+                      } @else {
+                        <button mat-menu-item (click)="openDeathModal(animal, 'olum')" class="!rounded-xl !text-xs !font-medium !text-rose-600">
+                          <mat-icon class="icon-size-4 text-rose-600">heart_broken</mat-icon>
+                          <span>Ölüm & Kesim İşlemleri</span>
+                        </button>
+                        <button mat-menu-item (click)="openDeathModal(animal, 'satis')" class="!rounded-xl !text-xs !font-medium !text-[#369a98]">
+                          <mat-icon class="icon-size-4 text-[#369a98]">point_of_sale</mat-icon>
+                          <span>Satış Yap</span>
+                        </button>
+                      }
                       <div class="my-1 border-t border-slate-100 dark:border-slate-800"></div>
                       <button mat-menu-item (click)="deleteAnimal(animal.id!)" class="!rounded-xl !text-xs !font-medium !text-rose-600">
                         <mat-icon class="icon-size-4 text-rose-600">delete</mat-icon>
@@ -384,9 +485,9 @@
 
   <!-- SLIDE-OVER DRAWER (FORM) -->
   @if (showDrawer()) {
-    <div class="fixed inset-0 z-50 overflow-hidden bg-slate-900/50 backdrop-blur-sm flex justify-end" (click)="closeDrawer()">
+    <div class="fixed inset-0 z-[70] overflow-hidden bg-slate-900/60 backdrop-blur-xs flex justify-end" (click)="closeDrawer()">
       <div
-        class="w-full max-w-xl bg-card h-full shadow-2xl flex flex-col justify-between animate-in slide-in-from-right duration-200"
+        class="w-full max-w-xl bg-card h-full shadow-2xl flex flex-col justify-between animate-in slide-in-from-right duration-200 relative z-[71]"
         (click)="$event.stopPropagation()">
 
         <!-- Drawer Header -->
@@ -438,6 +539,33 @@
               </div>
 
               <div>
+                <label class="block text-xs font-semibold text-default mb-1">Ulusal Küpe Rengi</label>
+                <select
+                  [ngModel]="form().nationalTagColor"
+                  (ngModelChange)="updateFormField('nationalTagColor', $event)"
+                  class="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-default">
+                  <option value="">Seçiniz / Belirtilmemiş</option>
+                  <option value="Sarı">Sarı (Standart)</option>
+                  <option value="Beyaz">Beyaz</option>
+                  <option value="Kırmızı">Kırmızı</option>
+                  <option value="Mavi">Mavi</option>
+                  <option value="Yeşil">Yeşil</option>
+                  <option value="Turuncu">Turuncu</option>
+                  <option value="Mor">Mor</option>
+                  <option value="Diğer">Diğer</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold text-default mb-1">Doğum Tarihi</label>
+                <input
+                  type="date"
+                  [ngModel]="form().birthDate"
+                  (ngModelChange)="updateFormField('birthDate', $event)"
+                  class="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-default" />
+              </div>
+
+              <div>
                 <label class="block text-xs font-semibold text-default mb-1">RFID Kodu</label>
                 <input
                   type="text"
@@ -459,9 +587,9 @@
             </div>
           </div>
 
-          <!-- Group 2: Cinsiyet & Durum -->
+          <!-- Group 2: Cinsiyet & Durum & Damızlık -->
           <div class="space-y-3 pt-3 border-t border-gray-100 dark:border-gray-700/60">
-            <h3 class="text-xs font-bold uppercase tracking-wider text-secondary">2. Cinsiyet ve Durum</h3>
+            <h3 class="text-xs font-bold uppercase tracking-wider text-secondary">2. Cinsiyet, Durum & Damızlık</h3>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label class="block text-xs font-semibold text-default mb-1">Cinsiyet</label>
@@ -469,7 +597,7 @@
                   <button
                     type="button"
                     (click)="updateFormField('gender', 'disi')"
-                    class="py-2 px-3 rounded-xl border text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors"
+                    class="py-2 px-3 rounded-xl border text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                     [ngClass]="form().gender === 'disi' ? 'bg-rose-50 border-rose-300 text-rose-700 shadow-xs' : 'bg-slate-50 border-slate-200 text-secondary'">
                     <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                       <circle cx="12" cy="9" r="6"></circle>
@@ -481,7 +609,7 @@
                   <button
                     type="button"
                     (click)="updateFormField('gender', 'erkek')"
-                    class="py-2 px-3 rounded-xl border text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors"
+                    class="py-2 px-3 rounded-xl border text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                     [ngClass]="form().gender === 'erkek' ? 'bg-sky-50 border-sky-300 text-sky-700 shadow-xs' : 'bg-slate-50 border-slate-200 text-secondary'">
                     <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                       <circle cx="9.5" cy="14.5" r="5.5"></circle>
@@ -495,7 +623,7 @@
               </div>
 
               <div>
-                <label class="block text-xs font-semibold text-default mb-1">Durum</label>
+                <label class="block text-xs font-semibold text-default mb-1">Genel Durum</label>
                 <select
                   [ngModel]="form().status"
                   (ngModelChange)="updateFormField('status', $event)"
@@ -506,6 +634,33 @@
                   <option value="kesildi">Kesildi</option>
                   <option value="oldu">Öldü</option>
                 </select>
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold text-default mb-1">Damızlık Durumu</label>
+                <select
+                  [ngModel]="form().breedingStatus"
+                  (ngModelChange)="updateFormField('breedingStatus', $event)"
+                  class="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 text-default">
+                  <option value="damizlik">Damızlık</option>
+                  <option value="damizlik_adayi">Damızlık Adayı</option>
+                  <option value="damizlik_disi">Damızlık Dışı</option>
+                  <option value="besi">Besi / Kasaplık</option>
+                  <option value="belirtilmemis">Belirtilmemiş</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold text-default mb-1">Damızlık Puanı (0 - 100)</label>
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  step="1"
+                  [ngModel]="form().breedingScore"
+                  (ngModelChange)="updateFormField('breedingScore', $event)"
+                  placeholder="Örn: 85"
+                  class="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-default font-mono" />
               </div>
             </div>
           </div>
@@ -518,7 +673,7 @@
                 <label class="block text-xs font-semibold text-default mb-1">Hayvan Tipi</label>
                 <select
                   [ngModel]="form().animalTypeId"
-                  (ngModelChange)="updateFormField('animalTypeId', $event)"
+                  (ngModelChange)="onAnimalTypeChange($event)"
                   class="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none text-default">
                   <option value="">Seçiniz</option>
                   @for (t of animalTypes(); track t.id) {
@@ -528,13 +683,20 @@
               </div>
 
               <div>
-                <label class="block text-xs font-semibold text-default mb-1">Irk</label>
+                <label class="block text-xs font-semibold text-default mb-1">
+                  Irk
+                  @if (form().animalTypeId && filteredFormBreeds().length > 0) {
+                    <span class="text-indigo-600 dark:text-indigo-400 font-normal">({{ filteredFormBreeds().length }} ırk)</span>
+                  }
+                </label>
                 <select
                   [ngModel]="form().breedId"
                   (ngModelChange)="updateFormField('breedId', $event)"
                   class="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none text-default">
-                  <option value="">Seçiniz</option>
-                  @for (b of breeds(); track b.id) {
+                  <option value="">
+                    {{ form().animalTypeId ? 'Irk Seçiniz' : 'Seçiniz (Önce Hayvan Tipi seçebilirsiniz)' }}
+                  </option>
+                  @for (b of filteredFormBreeds(); track b.id) {
                     <option [value]="b.id">{{ b.name }}</option>
                   }
                 </select>
@@ -568,9 +730,39 @@
             </div>
           </div>
 
-          <!-- Group 4: Soykütüğü & Notlar -->
+          <!-- Group 4: Edinme Bilgileri -->
           <div class="space-y-3 pt-3 border-t border-gray-100 dark:border-gray-700/60">
-            <h3 class="text-xs font-bold uppercase tracking-wider text-secondary">4. Soykütüğü & Notlar</h3>
+            <h3 class="text-xs font-bold uppercase tracking-wider text-secondary">4. Edinme & Çiftliğe Giriş</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-semibold text-default mb-1">Edinme Tarihi</label>
+                <input
+                  type="date"
+                  [ngModel]="form().acquisitionDate"
+                  (ngModelChange)="updateFormField('acquisitionDate', $event)"
+                  class="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-default" />
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold text-default mb-1">Edinme Yöntemi</label>
+                <select
+                  [ngModel]="form().acquisitionMethod"
+                  (ngModelChange)="updateFormField('acquisitionMethod', $event)"
+                  class="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-default">
+                  <option value="dogum">Çiftlik Doğumu</option>
+                  <option value="satin_alma">Satın Alma</option>
+                  <option value="hibe">Hibe / Destek</option>
+                  <option value="devir">Devir / Transfer</option>
+                  <option value="ithalat">İthalat</option>
+                  <option value="diger">Diğer</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Group 5: Soykütüğü & Açıklama -->
+          <div class="space-y-3 pt-3 border-t border-gray-100 dark:border-gray-700/60">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-secondary">5. Soykütüğü & Açıklama</h3>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label class="block text-xs font-semibold text-default mb-1">Anne Küpe No</label>
@@ -594,12 +786,12 @@
             </div>
 
             <div>
-              <label class="block text-xs font-semibold text-default mb-1">Özel Notlar</label>
+              <label class="block text-xs font-semibold text-default mb-1">Açıklama / Özel Notlar</label>
               <textarea
                 [ngModel]="form().notes"
                 (ngModelChange)="updateFormField('notes', $event)"
-                rows="2"
-                placeholder="Aşı durumu, fiziksel ayırt edici özellikler..."
+                rows="3"
+                placeholder="Aşı durumu, sağlık geçmişi, fiziksel ayırt edici özellikler ve diğer açıklamalar..."
                 class="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none resize-none text-default"></textarea>
             </div>
           </div>
@@ -642,6 +834,7 @@
     (closed)="closeDetailModal()"
     (editRequested)="openEditForm($event)"
     (locationChangeRequested)="openLocationModal($event)"
+    (deathRequested)="openDeathModal($event)"
     (selectAnimal)="onSelectRelativeAnimal($event)">
   </app-animal-detail-modal>
 
@@ -654,5 +847,14 @@
     (closed)="closeLocationModal()"
     (locationUpdated)="onLocationUpdated()">
   </app-animal-location-modal>
+
+  <!-- MODAL: ÖLÜM & KESİM İŞLEMLERİ -->
+  <app-animal-death-modal
+    [isOpen]="isDeathModalOpen()"
+    [animal]="selectedAnimalForDeath()"
+    [initialTab]="initialDeathModalTab()"
+    (closed)="closeDeathModal()"
+    (deathRecorded)="onDeathRecorded()">
+  </app-animal-death-modal>
 
 </div>

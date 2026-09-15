@@ -224,7 +224,7 @@ export abstract class SimpleCrudListBase<T extends NamedEntity> {
 
     const confirmed = await this.alertService.confirm(
       'Varsayılanları Yükle',
-      'Türkiye hayvancılık standartlarına uygun hazır tanımlar (Hayvan Tipleri, Irklar, Padoklar, Tedavi Türleri, Hastalıklar) çiftliğinize yüklenecektir. Onaylıyor musunuz?',
+      'Türkiye hayvancılık standartlarına uygun hazır tanımlar (Hayvan Tipleri, Irklar, Padoklar, Tedavi Türleri, Hastalıklar) çiftliğinize yüklenecektir. Eksik olanlar eklenecek, mükerrer kayıtlar otomatik ayıklanacaktır. Onaylıyor musunuz?',
       'Evet, Yükle',
       'Vazgeç'
     );
@@ -232,9 +232,29 @@ export abstract class SimpleCrudListBase<T extends NamedEntity> {
 
     const res = await this.seedService.seedFarmDefaults(farmId);
     if (res.success) {
-      this.alertService.toastSuccess(`${res.totalSeeded} adet varsayılan tanım çiftliğe başarıyla yüklendi!`);
+      this.alertService.toastSuccess(
+        res.totalSeeded > 0
+          ? `${res.totalSeeded} adet yeni tanım çiftliğe yüklendi!`
+          : 'Tüm varsayılan tanımlar zaten çiftliğinizde mevcut.'
+      );
     } else {
       this.alertService.error('Hata', 'Varsayılan tanımlar yüklenirken bir sorun oluştu.');
+    }
+  }
+
+  async cleanupDuplicates() {
+    const farmId = this.farmContext.activeFarmId();
+    if (!farmId) return;
+
+    const res = await this.seedService.cleanDuplicates(farmId);
+    if (res.success) {
+      if (res.totalRemoved > 0) {
+        this.alertService.toastSuccess(`${res.totalRemoved} adet mükerrer kayıt temizlendi!`);
+      } else {
+        this.alertService.toastSuccess('Mükerrer kayıt bulunamadı, tüm tanımlar tekil.');
+      }
+    } else {
+      this.alertService.error('Hata', 'Mükerrer kayıtlar temizlenirken bir sorun oluştu.');
     }
   }
 }

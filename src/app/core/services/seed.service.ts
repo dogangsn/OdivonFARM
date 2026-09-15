@@ -327,76 +327,227 @@ export class SeedService {
 
   /**
    * Çiftliğe ait Hayvan Tipleri, Irklar, Padoklar, Tedavi Türleri ve Hastalıkları Firestore'a toplu (batch) olarak yükler.
+  /**
+   * Çiftlik tanımlarındaki (Hayvan Tipleri, Irklar, Padoklar, Tedavi Türleri, Hastalıklar) mükerrer kayıtları temizler.
+   * Aynı isimdeki kayıtlardan en eskisini tutar, diğer kopyaları soft-delete (deletedAt) yapar.
+   */
+  async cleanDuplicates(farmId: string): Promise<{ success: boolean; totalRemoved: number }> {
+    if (!farmId) return { success: false, totalRemoved: 0 };
+
+    try {
+      const collections = ['animalTypes', 'breeds', 'paddocks', 'treatmentTypes', 'diseases'];
+      let totalRemoved = 0;
+
+      for (const col of collections) {
+        const snap = await getDocs(query(collection(this.db, `farms/${farmId}/${col}`)));
+        const grouped = new Map<string, { id: string; createdAt: any; data: any }[]>();
+
+        for (const d of snap.docs) {
+          const data = d.data();
+          if (data['deletedAt']) continue;
+          const name = (data['name'] || '').trim().toLowerCase();
+          if (!name) continue;
+
+          if (!grouped.has(name)) {
+            grouped.set(name, []);
+          }
+          grouped.get(name)!.push({ id: d.id, createdAt: data['createdAt'], data });
+        }
+
+        const batch = writeBatch(this.db);
+        let batchCount = 0;
+
+        for (const [, items] of grouped.entries()) {
+          if (items.length > 1) {
+            // İlk kaydı tut, sonrakileri sil
+            const [, ...duplicates] = items;
+            for (const dup of duplicates) {
+              const ref = doc(this.db, `farms/${farmId}/${col}/${dup.id}`);
+              batch.update(ref, {
+                deletedAt: serverTimestamp(),
+                updatedAt: serverTimestamp(),
+              });
+              batchCount++;
+              totalRemoved++;
+            }
+          }
+        }
+
+        if (batchCount > 0) {
+          await batch.commit();
+        }
+      }
+
+      if (totalRemoved > 0) {
+        console.log(`[SeedService] ${totalRemoved} adet mükerrer tanım kaydı çiftlikten (${farmId}) temizlendi.`);
+      }
+      return { success: true, totalRemoved };
+    } catch (err) {
+      console.error('[SeedService] Mükerrer kayıtlar temizlenirken hata:', err);
+      return { success: false, totalRemoved: 0 };
+    }
+  }
+
+  /**
+   * Çiftliğe ait Hayvan Tipleri, Irklar, Padoklar, Tedavi Türleri ve Hastalıkları Firestore'a yükler.
+   * İdempotenttir: Halihazırda var olan tanımları tekrar eklemez, mükerrerlik oluşturmaz.
    */
   async seedFarmDefaults(farmId: string): Promise<{ success: boolean; totalSeeded: number }> {
     if (!farmId) throw new Error('Geçersiz farmId');
 
     try {
+      // Önce mevcut mükerrer kayıtları temizle
+      await this.cleanDuplicates(farmId);
+
       const batch = writeBatch(this.db);
       let count = 0;
 
       // 1. Hayvan Tipleri
+      const existingTypesSnap = await getDocs(query(collection(this.db, `farms/${farmId}/animalTypes`)));
+      const existingTypes = new Map<string, string>(); // name.toLowerCase() -> id
+      for (const d of existingTypesSnap.docs) {
+        const data = d.data();
+        if (!data['deletedAt'] && data['name']) {
+          existingTypes.set(data['name'].trim().toLowerCase(), d.id);
+        }
+      }
+
       for (const item of DEFAULT_ANIMAL_TYPES) {
-        const ref = doc(collection(this.db, `farms/${farmId}/animalTypes`));
-        batch.set(ref, {
-          ...item,
-          deletedAt: null,
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp(),
-        });
-        count++;
+        const key = item.name.trim().toLowerCase();
+        if (!existingTypes.has(key)) {
+          const ref = doc(collection(this.db, `farms/${farmId}/animalTypes`));
+          batch.set(ref, {
+            ...item,
+            deletedAt: null,
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+          });
+          existingTypes.set(key, ref.id);
+          count++;
+        }
       }
 
       // 2. Irklar
+      const existingBreedsSnap = await getDocs(query(collection(this.db, `farms/${farmId}/breeds`)));
+      const existingBreeds = new Set<string>();
+      for (const d of existingBreedsSnap.docs) {
+        const data = d.data();
+        if (!data['deletedAt'] && data['name']) {
+          existingBreeds.add(data['name'].trim().toLowerCase());
+        }
+      }
+
+      // Tip ID eşleştirmeleri: Koyun, Keçi, İnek
+      const koyunTypeId = existingTypes.get('koyun');
+      const keciTypeId = existingTypes.get('keçi');
+      const inekTypeId = existingTypes.get('inek');
+
       for (const item of DEFAULT_BREEDS) {
-        const ref = doc(collection(this.db, `farms/${farmId}/breeds`));
-        batch.set(ref, {
-          ...item,
-          deletedAt: null,
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp(),
-        });
-        count++;
+        const key = item.name.trim().toLowerCase();
+        if (!existingBreeds.has(key)) {
+          const ref = doc(collection(this.db, `farms/${farmId}/breeds`));
+          let animalTypeId: string | undefined = undefined;
+          if (item.category === 'kucukbas') {
+            if (item.name.toLowerCase().includes('keçi')) {
+              animalTypeId = keciTypeId;
+            } else {
+              animalTypeId = koyunTypeId;
+            }
+          } else if (item.category === 'buyukbas') {
+            animalTypeId = inekTypeId;
+          }
+
+          batch.set(ref, {
+            ...item,
+            ...(animalTypeId ? { animalTypeId } : {}),
+            deletedAt: null,
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+          });
+          existingBreeds.add(key);
+          count++;
+        }
       }
 
       // 3. Padoklar
+      const existingPaddocksSnap = await getDocs(query(collection(this.db, `farms/${farmId}/paddocks`)));
+      const existingPaddocks = new Set<string>();
+      for (const d of existingPaddocksSnap.docs) {
+        const data = d.data();
+        if (!data['deletedAt'] && data['name']) {
+          existingPaddocks.add(data['name'].trim().toLowerCase());
+        }
+      }
+
       for (const item of DEFAULT_PADDOCKS) {
-        const ref = doc(collection(this.db, `farms/${farmId}/paddocks`));
-        batch.set(ref, {
-          ...item,
-          deletedAt: null,
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp(),
-        });
-        count++;
+        const key = item.name.trim().toLowerCase();
+        if (!existingPaddocks.has(key)) {
+          const ref = doc(collection(this.db, `farms/${farmId}/paddocks`));
+          batch.set(ref, {
+            ...item,
+            deletedAt: null,
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+          });
+          existingPaddocks.add(key);
+          count++;
+        }
       }
 
       // 4. Tedavi Türleri
+      const existingTreatmentsSnap = await getDocs(query(collection(this.db, `farms/${farmId}/treatmentTypes`)));
+      const existingTreatments = new Set<string>();
+      for (const d of existingTreatmentsSnap.docs) {
+        const data = d.data();
+        if (!data['deletedAt'] && data['name']) {
+          existingTreatments.add(data['name'].trim().toLowerCase());
+        }
+      }
+
       for (const item of DEFAULT_TREATMENT_TYPES) {
-        const ref = doc(collection(this.db, `farms/${farmId}/treatmentTypes`));
-        batch.set(ref, {
-          ...item,
-          deletedAt: null,
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp(),
-        });
-        count++;
+        const key = item.name.trim().toLowerCase();
+        if (!existingTreatments.has(key)) {
+          const ref = doc(collection(this.db, `farms/${farmId}/treatmentTypes`));
+          batch.set(ref, {
+            ...item,
+            deletedAt: null,
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+          });
+          existingTreatments.add(key);
+          count++;
+        }
       }
 
       // 5. Hastalıklar
-      for (const item of DEFAULT_DISEASES) {
-        const ref = doc(collection(this.db, `farms/${farmId}/diseases`));
-        batch.set(ref, {
-          ...item,
-          deletedAt: null,
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp(),
-        });
-        count++;
+      const existingDiseasesSnap = await getDocs(query(collection(this.db, `farms/${farmId}/diseases`)));
+      const existingDiseases = new Set<string>();
+      for (const d of existingDiseasesSnap.docs) {
+        const data = d.data();
+        if (!data['deletedAt'] && data['name']) {
+          existingDiseases.add(data['name'].trim().toLowerCase());
+        }
       }
 
-      await batch.commit();
-      console.log(`[SeedService] ${count} adet varsayılan tanım çiftliğe (${farmId}) başarıyla yüklendi.`);
+      for (const item of DEFAULT_DISEASES) {
+        const key = item.name.trim().toLowerCase();
+        if (!existingDiseases.has(key)) {
+          const ref = doc(collection(this.db, `farms/${farmId}/diseases`));
+          batch.set(ref, {
+            ...item,
+            deletedAt: null,
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+          });
+          existingDiseases.add(key);
+          count++;
+        }
+      }
+
+      if (count > 0) {
+        await batch.commit();
+      }
+      console.log(`[SeedService] ${count} adet yeni varsayılan tanım çiftliğe (${farmId}) başarıyla yüklendi.`);
       return { success: true, totalSeeded: count };
     } catch (err) {
       console.error('[SeedService] Varsayılan kayıtlar yüklenirken hata:', err);
@@ -405,11 +556,14 @@ export class SeedService {
   }
 
   /**
-   * Çiftliğin tanımları boş ise otomatik olarak tohumlar.
+   * Çiftliğin tanımları boş ise otomatik olarak tohumlar, mükerrer varsa temizler.
    */
   async checkAndSeedIfEmpty(farmId: string): Promise<boolean> {
     if (!farmId) return false;
     try {
+      // Her ihtimale karşı mükerrerleri temizle
+      await this.cleanDuplicates(farmId);
+
       const typesSnap = await getDocs(query(collection(this.db, `farms/${farmId}/animalTypes`), limit(1)));
       if (typesSnap.empty) {
         const res = await this.seedFarmDefaults(farmId);
