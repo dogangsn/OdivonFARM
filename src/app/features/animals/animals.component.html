@@ -157,7 +157,22 @@
                     <div
                       class="w-11 h-11 rounded-2xl flex items-center justify-center font-bold text-sm shadow-xs"
                       [ngClass]="animal.gender === 'disi' ? 'bg-rose-50 text-rose-600 dark:bg-rose-950/50 dark:text-rose-400 border border-rose-200/50' : 'bg-sky-50 text-sky-600 dark:bg-sky-950/50 dark:text-sky-400 border border-sky-200/50'">
-                      <mat-icon class="icon-size-5" [svgIcon]="animal.gender === 'disi' ? 'heroicons_solid:heart' : 'heroicons_solid:badge-check'"></mat-icon>
+                      @if (animal.gender === 'disi') {
+                        <!-- Kadın / Dişi Cinsiyet Sembolü (♀) -->
+                        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                          <circle cx="12" cy="9" r="6"></circle>
+                          <line x1="12" y1="15" x2="12" y2="22"></line>
+                          <line x1="8.5" y1="18.5" x2="15.5" y2="18.5"></line>
+                        </svg>
+                      } @else {
+                        <!-- Erkek Cinsiyet Sembolü (♂) -->
+                        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                          <circle cx="9.5" cy="14.5" r="5.5"></circle>
+                          <line x1="13.5" y1="10.5" x2="20" y2="4"></line>
+                          <line x1="15" y1="4" x2="20" y2="4"></line>
+                          <line x1="20" y1="4" x2="20" y2="9"></line>
+                        </svg>
+                      }
                     </div>
                     <div>
                       <div class="font-extrabold text-base text-default leading-tight font-mono">
@@ -212,21 +227,51 @@
 
               <!-- Footer Actions -->
               <div class="mt-5 pt-3 border-t border-gray-100 dark:border-gray-700/60 flex items-center justify-between">
+                <!-- Direct Detay Button -->
                 <button
                   mat-button
-                  class="!text-xs !font-bold !text-indigo-600 !px-2.5 flex items-center"
-                  (click)="openEditForm(animal)">
-                  <mat-icon class="icon-size-4 mr-1" [svgIcon]="'heroicons_outline:pencil'"></mat-icon>
-                  <span>Düzenle</span>
+                  type="button"
+                  class="!text-xs !font-bold !text-indigo-600 dark:!text-indigo-400 !px-2.5 flex items-center hover:!bg-indigo-50 dark:hover:!bg-indigo-950/40 !rounded-xl"
+                  (click)="openDetailModal(animal)">
+                  <mat-icon class="icon-size-4 mr-1 text-indigo-600 dark:text-indigo-400">visibility</mat-icon>
+                  <span>Detay & Analiz</span>
                 </button>
 
-                <button
-                  mat-icon-button
-                  class="!text-secondary hover:!text-rose-600"
-                  (click)="deleteAnimal(animal.id!)"
-                  matTooltip="Sil">
-                  <mat-icon class="icon-size-4" [svgIcon]="'heroicons_outline:trash'"></mat-icon>
-                </button>
+                <!-- Dropdown Menu Trigger -->
+                <div class="flex items-center gap-1">
+                  <button
+                    mat-icon-button
+                    type="button"
+                    class="!text-secondary hover:!text-indigo-600 !rounded-xl"
+                    [matMenuTriggerFor]="animalMenu"
+                    matTooltip="İşlemler Menüsü">
+                    <mat-icon class="icon-size-4">more_vert</mat-icon>
+                  </button>
+
+                  <mat-menu #animalMenu="matMenu" class="!rounded-2xl !p-1.5 shadow-xl border border-slate-100 dark:border-slate-800">
+                    <button mat-menu-item (click)="openDetailModal(animal)" class="!rounded-xl !text-xs !font-medium">
+                      <mat-icon class="icon-size-4 text-indigo-600">visibility</mat-icon>
+                      <span>Detay ve Soy Ağacı</span>
+                    </button>
+                    <button mat-menu-item (click)="openEditForm(animal)" class="!rounded-xl !text-xs !font-medium">
+                      <mat-icon class="icon-size-4 text-slate-600">edit</mat-icon>
+                      <span>Düzenle</span>
+                    </button>
+                    <button mat-menu-item (click)="openLocationModal(animal)" class="!rounded-xl !text-xs !font-medium">
+                      <mat-icon class="icon-size-4 text-cyan-600">place</mat-icon>
+                      <span>Konumu / Padok Değiştir</span>
+                    </button>
+                    <button mat-menu-item (click)="archiveAnimal(animal)" class="!rounded-xl !text-xs !font-medium">
+                      <mat-icon class="icon-size-4 text-amber-600">archive</mat-icon>
+                      <span>{{ animal.status === 'pasif' ? 'Arşivden Çıkar (Aktif Yap)' : 'Arşivle (Pasife Al)' }}</span>
+                    </button>
+                    <div class="my-1 border-t border-slate-100 dark:border-slate-800"></div>
+                    <button mat-menu-item (click)="deleteAnimal(animal.id!)" class="!rounded-xl !text-xs !font-medium !text-rose-600">
+                      <mat-icon class="icon-size-4 text-rose-600">delete</mat-icon>
+                      <span>Kaydı Sil</span>
+                    </button>
+                  </mat-menu>
+                </div>
               </div>
             </div>
           }
@@ -293,12 +338,35 @@
                     </span>
                   </td>
                   <td class="py-3.5 px-4 text-right space-x-1">
-                    <button mat-icon-button (click)="openEditForm(animal)" matTooltip="Düzenle">
-                      <mat-icon class="icon-size-4 text-secondary hover:text-indigo-600" [svgIcon]="'heroicons_outline:pencil'"></mat-icon>
+                    <button mat-icon-button (click)="openDetailModal(animal)" matTooltip="Detay & Analiz">
+                      <mat-icon class="icon-size-4 text-indigo-600">visibility</mat-icon>
                     </button>
-                    <button mat-icon-button (click)="deleteAnimal(animal.id!)" matTooltip="Sil">
-                      <mat-icon class="icon-size-4 text-secondary hover:text-rose-600" [svgIcon]="'heroicons_outline:trash'"></mat-icon>
+                    <button mat-icon-button [matMenuTriggerFor]="tableMenu" matTooltip="İşlemler Menüsü">
+                      <mat-icon class="icon-size-4 text-secondary">more_vert</mat-icon>
                     </button>
+                    <mat-menu #tableMenu="matMenu" class="!rounded-2xl !p-1.5 shadow-xl border border-slate-100 dark:border-slate-800">
+                      <button mat-menu-item (click)="openDetailModal(animal)" class="!rounded-xl !text-xs !font-medium">
+                        <mat-icon class="icon-size-4 text-indigo-600">visibility</mat-icon>
+                        <span>Detay ve Soy Ağacı</span>
+                      </button>
+                      <button mat-menu-item (click)="openEditForm(animal)" class="!rounded-xl !text-xs !font-medium">
+                        <mat-icon class="icon-size-4 text-slate-600">edit</mat-icon>
+                        <span>Düzenle</span>
+                      </button>
+                      <button mat-menu-item (click)="openLocationModal(animal)" class="!rounded-xl !text-xs !font-medium">
+                        <mat-icon class="icon-size-4 text-cyan-600">place</mat-icon>
+                        <span>Konumu Değiştir</span>
+                      </button>
+                      <button mat-menu-item (click)="archiveAnimal(animal)" class="!rounded-xl !text-xs !font-medium">
+                        <mat-icon class="icon-size-4 text-amber-600">archive</mat-icon>
+                        <span>{{ animal.status === 'pasif' ? 'Arşivden Çıkar (Aktif Yap)' : 'Arşivle (Pasife Al)' }}</span>
+                      </button>
+                      <div class="my-1 border-t border-slate-100 dark:border-slate-800"></div>
+                      <button mat-menu-item (click)="deleteAnimal(animal.id!)" class="!rounded-xl !text-xs !font-medium !text-rose-600">
+                        <mat-icon class="icon-size-4 text-rose-600">delete</mat-icon>
+                        <span>Kaydı Sil</span>
+                      </button>
+                    </mat-menu>
                   </td>
                 </tr>
               } @empty {
@@ -403,7 +471,11 @@
                     (click)="updateFormField('gender', 'disi')"
                     class="py-2 px-3 rounded-xl border text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors"
                     [ngClass]="form().gender === 'disi' ? 'bg-rose-50 border-rose-300 text-rose-700 shadow-xs' : 'bg-slate-50 border-slate-200 text-secondary'">
-                    <mat-icon class="icon-size-4" [svgIcon]="'heroicons_solid:heart'"></mat-icon>
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="12" cy="9" r="6"></circle>
+                      <line x1="12" y1="15" x2="12" y2="22"></line>
+                      <line x1="8.5" y1="18.5" x2="15.5" y2="18.5"></line>
+                    </svg>
                     <span>Dişi</span>
                   </button>
                   <button
@@ -411,7 +483,12 @@
                     (click)="updateFormField('gender', 'erkek')"
                     class="py-2 px-3 rounded-xl border text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors"
                     [ngClass]="form().gender === 'erkek' ? 'bg-sky-50 border-sky-300 text-sky-700 shadow-xs' : 'bg-slate-50 border-slate-200 text-secondary'">
-                    <mat-icon class="icon-size-4" [svgIcon]="'heroicons_solid:badge-check'"></mat-icon>
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="9.5" cy="14.5" r="5.5"></circle>
+                      <line x1="13.5" y1="10.5" x2="20" y2="4"></line>
+                      <line x1="15" y1="4" x2="20" y2="4"></line>
+                      <line x1="20" y1="4" x2="20" y2="9"></line>
+                    </svg>
                     <span>Erkek</span>
                   </button>
                 </div>
@@ -552,5 +629,30 @@
       </div>
     </div>
   }
+
+  <!-- MODAL: DETAY & SOY AĞACI & ANALİZ -->
+  <app-animal-detail-modal
+    [isOpen]="isDetailModalOpen()"
+    [animal]="selectedAnimalForDetail()"
+    [allAnimals]="animals()"
+    [breeds]="breeds()"
+    [herds]="herds()"
+    [paddocks]="paddocks()"
+    [animalTypes]="animalTypes()"
+    (closed)="closeDetailModal()"
+    (editRequested)="openEditForm($event)"
+    (locationChangeRequested)="openLocationModal($event)"
+    (selectAnimal)="onSelectRelativeAnimal($event)">
+  </app-animal-detail-modal>
+
+  <!-- MODAL: HIZLI KONUM / PADOK DEĞİŞTİR -->
+  <app-animal-location-modal
+    [isOpen]="isLocationModalOpen()"
+    [animal]="selectedAnimalForLocation()"
+    [herds]="herds()"
+    [paddocks]="paddocks()"
+    (closed)="closeLocationModal()"
+    (locationUpdated)="onLocationUpdated()">
+  </app-animal-location-modal>
 
 </div>

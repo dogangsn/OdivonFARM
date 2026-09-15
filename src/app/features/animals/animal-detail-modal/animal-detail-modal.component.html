@@ -1,0 +1,1467 @@
+@if (isOpen && animal) {
+  <div
+    class="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-3 sm:p-6"
+    role="dialog"
+    aria-modal="true"
+  >
+    <!-- Backdrop with blur -->
+    <div
+      (click)="close()"
+      class="fixed inset-0 bg-slate-950/70 backdrop-blur-xs transition-opacity animate-in fade-in duration-200"
+    ></div>
+
+    <!-- Modal Dialog Window -->
+    <div
+      class="relative w-full max-w-5xl bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200/80 dark:border-slate-800 overflow-hidden z-10 animate-in fade-in zoom-in-95 duration-200 flex flex-col max-h-[92vh] my-auto"
+      (click)="$event.stopPropagation()"
+    >
+      <!-- MODAL HEADER -->
+      <div class="relative p-5 sm:p-6 border-b border-slate-100 dark:border-slate-800 bg-gradient-to-r from-slate-50 via-white to-indigo-50/40 dark:from-slate-900 dark:via-slate-900 dark:to-indigo-950/30">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <!-- Left: Animal Identity -->
+          <div class="flex items-center gap-3.5 sm:gap-4">
+            <!-- Avatar with Gender Icon -->
+            <div
+              class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl sm:rounded-3xl flex items-center justify-center font-bold text-xl shadow-md shrink-0 relative overflow-hidden"
+              [ngClass]="
+                animal.gender === 'disi'
+                  ? 'bg-rose-50 text-rose-600 dark:bg-rose-950/50 dark:text-rose-400 border-2 border-rose-200/80 dark:border-rose-800/60 shadow-rose-500/10'
+                  : 'bg-sky-50 text-sky-600 dark:bg-sky-950/50 dark:text-sky-400 border-2 border-sky-200/80 dark:border-sky-800/60 shadow-sky-500/10'
+              "
+            >
+              @if (animal.photoUrl) {
+                <img [src]="animal.photoUrl" alt="Hayvan" class="w-full h-full object-cover" />
+              } @else {
+                @if (animal.gender === 'disi') {
+                  <!-- Kadın / Dişi Cinsiyet Sembolü (♀) -->
+                  <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="9" r="6"></circle>
+                    <line x1="12" y1="15" x2="12" y2="22"></line>
+                    <line x1="8.5" y1="18.5" x2="15.5" y2="18.5"></line>
+                  </svg>
+                } @else {
+                  <!-- Erkek Cinsiyet Sembolü (♂) -->
+                  <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="9.5" cy="14.5" r="5.5"></circle>
+                    <line x1="13.5" y1="10.5" x2="20" y2="4"></line>
+                    <line x1="15" y1="4" x2="20" y2="4"></line>
+                    <line x1="20" y1="4" x2="20" y2="9"></line>
+                  </svg>
+                }
+              }
+            </div>
+
+            <!-- Identifiers & Tags -->
+            <div>
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="text-xl sm:text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white font-mono">
+                  {{ animal.farmTagNo }}
+                </span>
+
+                @if (animal.name) {
+                  <span class="text-sm font-semibold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-2.5 py-0.5 rounded-lg">
+                    {{ animal.name }}
+                  </span>
+                }
+
+                <!-- Status Pill -->
+                <span
+                  class="px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider border shadow-xs"
+                  [ngClass]="{
+                    'bg-emerald-50 text-emerald-700 border-emerald-200/70 dark:bg-emerald-950/50 dark:text-emerald-400 dark:border-emerald-800/60': animal.status === 'aktif',
+                    'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-400': animal.status === 'pasif',
+                    'bg-amber-50 text-amber-700 border-amber-200/70 dark:bg-amber-950/50 dark:text-amber-400': animal.status === 'satildi',
+                    'bg-rose-50 text-rose-700 border-rose-200/70 dark:bg-rose-950/50 dark:text-rose-400': animal.status === 'oldu' || animal.status === 'kesildi'
+                  }"
+                >
+                  ● {{ animal.status }}
+                </span>
+              </div>
+
+              <!-- Secondary badges row -->
+              <div class="flex items-center gap-2.5 mt-1.5 text-xs text-slate-500 dark:text-slate-400 flex-wrap">
+                <span class="font-medium text-slate-700 dark:text-slate-300 flex items-center gap-1">
+                  <mat-icon class="icon-size-3.5 text-indigo-500">pets</mat-icon>
+                  {{ getBreedName(animal.breedId) }}
+                </span>
+                <span>•</span>
+                <span class="flex items-center gap-1">
+                  <mat-icon class="icon-size-3.5 text-slate-400">category</mat-icon>
+                  {{ getAnimalTypeName(animal.animalTypeId) }}
+                </span>
+                @if (animal.rfid) {
+                  <span>•</span>
+                  <span class="font-mono text-indigo-600 dark:text-indigo-400 bg-indigo-50/70 dark:bg-indigo-950/40 px-2 py-0.5 rounded-md border border-indigo-200/40">
+                    RFID: {{ animal.rfid }}
+                  </span>
+                }
+                @if (animal.nationalTagNo) {
+                  <span>•</span>
+                  <span class="font-mono text-slate-600 dark:text-slate-400">
+                    DKN: {{ animal.nationalTagNo }}
+                  </span>
+                }
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: Actions & Close -->
+          <div class="flex items-center gap-2 self-end sm:self-center shrink-0">
+            <button
+              mat-button
+              type="button"
+              class="!text-xs !font-bold !text-cyan-600 dark:!text-cyan-400 !bg-cyan-50 dark:!bg-cyan-950/40 !rounded-xl !px-3 !py-1.5 border border-cyan-200/60 dark:border-cyan-800/40"
+              (click)="onLocationChange()"
+              matTooltip="Padok / Sürü Değiştir"
+            >
+              <mat-icon class="icon-size-4 mr-1 text-cyan-600 dark:text-cyan-400">place</mat-icon>
+              <span>Konumu</span>
+            </button>
+
+            <button
+              mat-button
+              type="button"
+              class="!text-xs !font-bold !text-indigo-600 dark:!text-indigo-400 !bg-indigo-50 dark:!bg-indigo-950/40 !rounded-xl !px-3 !py-1.5 border border-indigo-200/60 dark:border-indigo-800/40"
+              (click)="onEdit()"
+              matTooltip="Bilgileri Düzenle"
+            >
+              <mat-icon class="icon-size-4 mr-1 text-indigo-600 dark:text-indigo-400">edit</mat-icon>
+              <span>Düzenle</span>
+            </button>
+
+            <button
+              type="button"
+              (click)="close()"
+              class="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+              matTooltip="Kapat"
+            >
+              <mat-icon class="icon-size-5">close</mat-icon>
+            </button>
+          </div>
+        </div>
+
+        <!-- NAVIGATION TABS -->
+        <div class="flex items-center gap-1.5 sm:gap-2 mt-5 -mb-2 overflow-x-auto custom-scrollbar pb-1">
+          <button
+            type="button"
+            (click)="activeTab.set('overview')"
+            class="px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shrink-0"
+            [ngClass]="
+              activeTab() === 'overview'
+                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/20'
+                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+            "
+          >
+            <mat-icon class="icon-size-4">analytics</mat-icon>
+            <span>Genel Bakış & Analiz</span>
+          </button>
+
+          <button
+            type="button"
+            (click)="activeTab.set('pedigree')"
+            class="px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shrink-0"
+            [ngClass]="
+              activeTab() === 'pedigree'
+                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/20'
+                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+            "
+          >
+            <mat-icon class="icon-size-4">account_tree</mat-icon>
+            <span>Soy Ağacı & Aile</span>
+            @if (offspring().length > 0) {
+              <span
+                class="px-1.5 py-0.2 rounded-full text-[10px] font-extrabold"
+                [ngClass]="activeTab() === 'pedigree' ? 'bg-white/20 text-white' : 'bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300'"
+              >
+                {{ offspring().length }} Yavru
+              </span>
+            }
+          </button>
+
+          <button
+            type="button"
+            (click)="activeTab.set('health')"
+            class="px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shrink-0"
+            [ngClass]="
+              activeTab() === 'health'
+                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/20'
+                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+            "
+          >
+            <mat-icon class="icon-size-4">medical_services</mat-icon>
+            <span>Sağlık & Müdahaleler</span>
+            @if (treatments().length > 0) {
+              <span
+                class="px-1.5 py-0.2 rounded-full text-[10px] font-extrabold"
+                [ngClass]="activeTab() === 'health' ? 'bg-white/20 text-white' : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300'"
+              >
+                {{ treatments().length }}
+              </span>
+            }
+          </button>
+
+          <button
+            type="button"
+            (click)="activeTab.set('weights')"
+            class="px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shrink-0"
+            [ngClass]="
+              activeTab() === 'weights'
+                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/20'
+                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+            "
+          >
+            <mat-icon class="icon-size-4">monitor_weight</mat-icon>
+            <span>Ağırlık & Gelişim</span>
+            @if (weightRecords().length > 0) {
+              <span
+                class="px-1.5 py-0.2 rounded-full text-[10px] font-extrabold"
+                [ngClass]="activeTab() === 'weights' ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-300'"
+              >
+                {{ weightRecords().length }}
+              </span>
+            }
+          </button>
+
+          <button
+            type="button"
+            (click)="activeTab.set('movements')"
+            class="px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shrink-0"
+            [ngClass]="
+              activeTab() === 'movements'
+                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/20'
+                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+            "
+          >
+            <mat-icon class="icon-size-4">route</mat-icon>
+            <span>Konum & Hareketler</span>
+            @if (movements().length > 0) {
+              <span
+                class="px-1.5 py-0.2 rounded-full text-[10px] font-extrabold"
+                [ngClass]="activeTab() === 'movements' ? 'bg-white/20 text-white' : 'bg-cyan-100 text-cyan-700 dark:bg-cyan-950 dark:text-cyan-300'"
+              >
+                {{ movements().length }}
+              </span>
+            }
+          </button>
+        </div>
+      </div>
+
+      <!-- MODAL BODY CONTAINER (Scrollable) -->
+      <div class="p-5 sm:p-6 overflow-y-auto flex-1 custom-scrollbar space-y-6">
+
+        <!-- ============================================== -->
+        <!-- TAB 1: GENEL BAKIŞ & ANALİZ -->
+        <!-- ============================================== -->
+        @if (activeTab() === 'overview') {
+          <div class="space-y-6 animate-in fade-in duration-200">
+            <!-- 5 KPI ANALYTICS CARDS -->
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5">
+              <!-- KPI 1: Yaş -->
+              <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200/70 dark:border-slate-700/60 flex flex-col justify-between">
+                <div class="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs font-semibold mb-1">
+                  <span>Yaş & Doğum</span>
+                  <mat-icon class="icon-size-4 text-indigo-500">cake</mat-icon>
+                </div>
+                <div class="text-base sm:text-lg font-extrabold text-slate-800 dark:text-slate-100">
+                  {{ ageText() }}
+                </div>
+                <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
+                  D: {{ formatDate(animal.birthDate) }}
+                </div>
+              </div>
+
+              <!-- KPI 2: Canlı Ağırlık -->
+              <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200/70 dark:border-slate-700/60 flex flex-col justify-between">
+                <div class="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs font-semibold mb-1">
+                  <span>Son Ağırlık</span>
+                  <mat-icon class="icon-size-4 text-emerald-500">scale</mat-icon>
+                </div>
+                <div class="text-base sm:text-lg font-extrabold text-slate-800 dark:text-slate-100">
+                  {{ latestWeight() ? latestWeight()!.weightKg + ' kg' : 'Ölçülmedi' }}
+                </div>
+                <div class="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold mt-1">
+                  @if (totalWeightGain() > 0) {
+                    <span>+{{ totalWeightGain() }} kg net artış</span>
+                  } @else if (latestWeight()) {
+                    <span>{{ formatDate(latestWeight()!.date) }}</span>
+                  } @else {
+                    <span>Kayıt yok</span>
+                  }
+                </div>
+              </div>
+
+              <!-- KPI 3: Konum / Barınak -->
+              <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200/70 dark:border-slate-700/60 flex flex-col justify-between">
+                <div class="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs font-semibold mb-1">
+                  <span>Padok / Sürü</span>
+                  <mat-icon class="icon-size-4 text-cyan-500">holiday_village</mat-icon>
+                </div>
+                <div class="text-base sm:text-lg font-extrabold text-slate-800 dark:text-slate-100 truncate">
+                  {{ getPaddockName(animal.paddockId) }}
+                </div>
+                <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-1 truncate">
+                  Sürü: {{ getHerdName(animal.herdId) }}
+                </div>
+              </div>
+
+              <!-- KPI 4: Sağlık Durumu -->
+              <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200/70 dark:border-slate-700/60 flex flex-col justify-between">
+                <div class="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs font-semibold mb-1">
+                  <span>Sağlık Geçmişi</span>
+                  <mat-icon class="icon-size-4 text-rose-500">healing</mat-icon>
+                </div>
+                <div class="text-base sm:text-lg font-extrabold text-slate-800 dark:text-slate-100">
+                  {{ treatments().length }} Kayıt
+                </div>
+                <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-1 truncate">
+                  {{ lastTreatment() ? 'Son: ' + formatDate(lastTreatment()!.date) : 'Kayıtlı hastalık yok' }}
+                </div>
+              </div>
+
+              <!-- KPI 5: Yavrular & Soy -->
+              <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200/70 dark:border-slate-700/60 flex flex-col justify-between col-span-2 sm:col-span-1">
+                <div class="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs font-semibold mb-1">
+                  <span>Kayıtlı Yavru</span>
+                  <mat-icon class="icon-size-4 text-purple-500">child_care</mat-icon>
+                </div>
+                <div class="text-base sm:text-lg font-extrabold text-slate-800 dark:text-slate-100">
+                  {{ offspring().length }} Baş
+                </div>
+                <div class="text-[11px] text-purple-600 dark:text-purple-400 font-semibold mt-1">
+                  {{ animal.gender === 'disi' ? 'Anne' : 'Baba' }} olarak
+                </div>
+              </div>
+            </div>
+
+            <!-- DETAILED INFO GRID -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <!-- Left Card: Temel Kimlik & Barınak Bilgisi -->
+              <div class="p-5 rounded-2xl bg-white dark:bg-slate-850 border border-slate-200/80 dark:border-slate-750 shadow-xs space-y-3.5">
+                <div class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 pb-2 border-b border-slate-100 dark:border-slate-800">
+                  <mat-icon class="icon-size-4">badge</mat-icon>
+                  <span>Kimlik ve Nitelik Bilgileri</span>
+                </div>
+
+                <div class="grid grid-cols-2 gap-y-3 gap-x-4 text-xs">
+                  <div>
+                    <span class="text-slate-400 dark:text-slate-500 block">Çiftlik Küpe No</span>
+                    <span class="font-extrabold text-slate-800 dark:text-slate-200 font-mono text-sm">{{ animal.farmTagNo }}</span>
+                  </div>
+
+                  <div>
+                    <span class="text-slate-400 dark:text-slate-500 block">İsim / Lakap</span>
+                    <span class="font-semibold text-slate-800 dark:text-slate-200">{{ animal.name || '—' }}</span>
+                  </div>
+
+                  <div>
+                    <span class="text-slate-400 dark:text-slate-500 block">Ulusal Küpe (DKN)</span>
+                    <span class="font-semibold text-slate-800 dark:text-slate-200 font-mono">{{ animal.nationalTagNo || '—' }}</span>
+                  </div>
+
+                  <div>
+                    <span class="text-slate-400 dark:text-slate-500 block">RFID Çip Kodu</span>
+                    <span class="font-semibold text-indigo-600 dark:text-indigo-400 font-mono">{{ animal.rfid || '—' }}</span>
+                  </div>
+
+                  <div>
+                    <span class="text-slate-400 dark:text-slate-500 block">Cinsiyet</span>
+                    <span class="font-semibold" [ngClass]="animal.gender === 'disi' ? 'text-rose-600' : 'text-sky-600'">
+                      {{ animal.gender === 'disi' ? 'Dişi' : 'Erkek' }}
+                    </span>
+                  </div>
+
+                  <div>
+                    <span class="text-slate-400 dark:text-slate-500 block">Irk</span>
+                    <span class="font-semibold text-slate-800 dark:text-slate-200">{{ getBreedName(animal.breedId) }}</span>
+                  </div>
+
+                  <div>
+                    <span class="text-slate-400 dark:text-slate-500 block">Hayvan Türü / Kategori</span>
+                    <span class="font-semibold text-slate-800 dark:text-slate-200">{{ getAnimalTypeName(animal.animalTypeId) }}</span>
+                  </div>
+
+                  <div>
+                    <span class="text-slate-400 dark:text-slate-500 block">Doğum Tarihi</span>
+                    <span class="font-semibold text-slate-800 dark:text-slate-200">{{ formatDate(animal.birthDate) }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Right Card: Barınak & Soykütüğü Özeti -->
+              <div class="p-5 rounded-2xl bg-white dark:bg-slate-850 border border-slate-200/80 dark:border-slate-750 shadow-xs space-y-3.5">
+                <div class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-cyan-600 dark:text-cyan-400 pb-2 border-b border-slate-100 dark:border-slate-800">
+                  <mat-icon class="icon-size-4">share</mat-icon>
+                  <span>Sürü & Soykütüğü Eşleşmesi</span>
+                </div>
+
+                <div class="grid grid-cols-2 gap-y-3 gap-x-4 text-xs">
+                  <div>
+                    <span class="text-slate-400 dark:text-slate-500 block">Bulunduğu Padok</span>
+                    <span class="font-bold text-slate-800 dark:text-slate-200">{{ getPaddockName(animal.paddockId) }}</span>
+                  </div>
+
+                  <div>
+                    <span class="text-slate-400 dark:text-slate-500 block">Dahil Olduğu Sürü</span>
+                    <span class="font-bold text-slate-800 dark:text-slate-200">{{ getHerdName(animal.herdId) }}</span>
+                  </div>
+
+                  <div>
+                    <span class="text-slate-400 dark:text-slate-500 block">Anne Küpe No</span>
+                    @if (mother()) {
+                      <button
+                        (click)="navigateToAnimal(mother()!)"
+                        class="font-bold text-rose-600 dark:text-rose-400 font-mono hover:underline flex items-center gap-1"
+                      >
+                        {{ mother()!.farmTagNo }}
+                        <mat-icon class="icon-size-3">open_in_new</mat-icon>
+                      </button>
+                    } @else {
+                      <span class="font-semibold text-slate-700 dark:text-slate-300 font-mono">
+                        {{ animal.motherId || 'Kayıtlı Değil' }}
+                      </span>
+                    }
+                  </div>
+
+                  <div>
+                    <span class="text-slate-400 dark:text-slate-500 block">Baba Küpe No</span>
+                    @if (father()) {
+                      <button
+                        (click)="navigateToAnimal(father()!)"
+                        class="font-bold text-sky-600 dark:text-sky-400 font-mono hover:underline flex items-center gap-1"
+                      >
+                        {{ father()!.farmTagNo }}
+                        <mat-icon class="icon-size-3">open_in_new</mat-icon>
+                      </button>
+                    } @else {
+                      <span class="font-semibold text-slate-700 dark:text-slate-300 font-mono">
+                        {{ animal.fatherId || 'Kayıtlı Değil' }}
+                      </span>
+                    }
+                  </div>
+                </div>
+
+                <!-- Özel Notlar -->
+                <div class="pt-3 border-t border-slate-100 dark:border-slate-800">
+                  <span class="text-slate-400 dark:text-slate-500 text-xs block mb-1">Özel Notlar / Açıklama</span>
+                  <p class="text-xs text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/60 p-3 rounded-xl border border-slate-200/50 dark:border-slate-700/50 italic">
+                    {{ animal.notes || 'Bu hayvan için henüz özel bir not girilmemiş.' }}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        }
+
+        <!-- ============================================== -->
+        <!-- TAB 2: SOY AĞACI & AİLE (PEDIGREE) -->
+        <!-- ============================================== -->
+        @if (activeTab() === 'pedigree') {
+          <div class="space-y-6 animate-in fade-in duration-200">
+            <!-- HEADER BANNER & ACTIONS -->
+            <div class="bg-gradient-to-r from-purple-50 via-indigo-50 to-emerald-50/40 dark:from-purple-950/20 dark:via-indigo-950/20 dark:to-emerald-950/20 p-4 sm:p-5 rounded-2xl border border-purple-200/60 dark:border-purple-800/40 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div class="flex items-center gap-3.5">
+                <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-purple-600 to-indigo-600 text-white flex items-center justify-center shadow-md shadow-purple-500/20 shrink-0">
+                  <mat-icon class="icon-size-6">account_tree</mat-icon>
+                </div>
+                <div>
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <h3 class="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
+                      Soykütüğü ve Akrabalık Haritası
+                    </h3>
+                    @if (hasAncestors()) {
+                      <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200/60">
+                        Soy Ağacı Aktif
+                      </span>
+                    } @else {
+                      <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200/60">
+                        Kök Damızlık (Ebeveynsiz)
+                      </span>
+                    }
+                  </div>
+                  <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                    Çiftlik kayıtları taranarak 3 nesil soy geçmişi ve yavru kayıtları haritalandırılmıştır.
+                  </p>
+                </div>
+              </div>
+
+              <!-- Top-Right Actions -->
+              <div class="flex items-center gap-2.5 shrink-0 flex-wrap">
+                <!-- DETAYLI ŞECERE KARTINI ÇIKART (PDF) BUTTON -->
+                <button
+                  type="button"
+                  (click)="openPedigreeCertificate()"
+                  class="px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold text-xs shadow-md shadow-emerald-600/25 transition-all flex items-center gap-2 cursor-pointer group"
+                >
+                  <mat-icon class="icon-size-4 group-hover:scale-110 transition-transform">picture_as_pdf</mat-icon>
+                  <span>Detaylı Şecere Kartını Çıkart (PDF)</span>
+                </button>
+
+                <!-- Offspring Counter Badge -->
+                @if (offspring().length > 0) {
+                  <span class="text-xs font-bold px-3 py-2 rounded-xl bg-white dark:bg-slate-800 text-purple-700 dark:text-purple-300 shadow-xs border border-purple-100 dark:border-purple-800/50 flex items-center gap-1.5">
+                    <mat-icon class="icon-size-4 text-purple-600">child_care</mat-icon>
+                    <span>{{ offspring().length }} Yavru</span>
+                  </span>
+                }
+              </div>
+            </div>
+
+            <!-- SCENARIO 1: ANIMAL HAS NO MOTHER AND NO FATHER (Ebeveyn Kaydı Olmayan Hayvan) -->
+            @if (!hasAncestors()) {
+              <div class="p-8 sm:p-10 rounded-3xl bg-slate-50/80 dark:bg-slate-850/60 border border-dashed border-slate-300 dark:border-slate-700 text-center relative overflow-hidden">
+                <div class="max-w-xl mx-auto space-y-4">
+                  <div class="w-16 h-16 rounded-2xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 border border-amber-200/80 dark:border-amber-800/60 mx-auto flex items-center justify-center shadow-xs">
+                    <mat-icon class="icon-size-8">family_restroom</mat-icon>
+                  </div>
+
+                  <div>
+                    <h4 class="text-base font-extrabold text-slate-900 dark:text-white">
+                      Ebeveyn (Anne / Baba) Kaydı Bulunmuyor
+                    </h4>
+                    <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1.5 leading-relaxed">
+                      Bu hayvan için sisteme kayıtlı anne veya baba bilgisi girilmemiştir. Sürüye dışarıdan satın alma yoluyla dahil edilmiş veya çiftliğin kurucu / kök damızlık hayvanlarından biri olabilir.
+                    </p>
+                  </div>
+
+                  <!-- Quick Action Buttons -->
+                  <div class="pt-2 flex items-center justify-center gap-3 flex-wrap">
+                    <button
+                      type="button"
+                      (click)="onEdit()"
+                      class="px-4 py-2 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 hover:bg-indigo-100 text-indigo-600 dark:text-indigo-400 font-bold text-xs border border-indigo-200 dark:border-indigo-800/60 transition-colors flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <mat-icon class="icon-size-4">edit</mat-icon>
+                      <span>Anne / Baba Bilgisi Ekle</span>
+                    </button>
+
+                    @if (offspring().length > 0) {
+                      <div class="px-3.5 py-2 rounded-xl bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 font-medium text-xs border border-purple-200/60 dark:border-purple-800/40 flex items-center gap-1.5">
+                        <mat-icon class="icon-size-4 text-purple-500">verified</mat-icon>
+                        <span>Bu hayvana ait <strong>{{ offspring().length }} kayıtlı yavru</strong> bulunmaktadır.</span>
+                      </div>
+                    }
+                  </div>
+                </div>
+              </div>
+            }
+
+            <!-- SCENARIO 2: ANIMAL HAS ANCESTORS (YATAY MODERN ŞECERE AĞACI) -->
+            @if (hasAncestors()) {
+              <div class="p-6 sm:p-7 rounded-3xl bg-slate-50/70 dark:bg-slate-850/60 border border-slate-200/80 dark:border-slate-750 shadow-inner overflow-x-auto custom-scrollbar">
+                
+                <!-- Tree Sub-header / Legend -->
+                <div class="flex items-center justify-between gap-4 mb-6 pb-3 border-b border-slate-200/70 dark:border-slate-750">
+                  <div class="flex items-center gap-2 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                    <mat-icon class="icon-size-4 text-indigo-500">alt_route</mat-icon>
+                    <span>Yatay Damızlık Soy Kütüğü Akışı (3 Nesil)</span>
+                  </div>
+
+                  <div class="flex items-center gap-4 text-xs">
+                    <div class="flex items-center gap-1.5 text-sky-600 dark:text-sky-400 font-semibold">
+                      <span class="w-2.5 h-2.5 rounded-full bg-sky-500"></span>
+                      <span>Erkek Soyu (Baba)</span>
+                    </div>
+                    <div class="flex items-center gap-1.5 text-rose-600 dark:text-rose-400 font-semibold">
+                      <span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
+                      <span>Dişi Soyu (Anne)</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- HORIZONTAL TREE GRAPH CONTAINER -->
+                <div class="min-w-[860px] flex items-center justify-start gap-4 sm:gap-6 py-2">
+
+                  <!-- 1. ROOT COLUMN: İNCELENEN SEÇİLİ HAYVAN -->
+                  <div class="w-64 shrink-0 flex flex-col justify-center">
+                    <div class="text-[11px] font-bold uppercase tracking-widest text-indigo-600 dark:text-indigo-400 mb-2 flex items-center gap-1">
+                      <span class="w-2 h-2 rounded-full bg-indigo-600 animate-pulse"></span>
+                      <span>İNCELENEN HAYVAN</span>
+                    </div>
+
+                    <div class="p-5 rounded-2xl bg-white dark:bg-slate-800 border-2 border-indigo-500 shadow-xl shadow-indigo-500/10 relative pedigree-node">
+                      <!-- Badge -->
+                      <div class="flex items-center justify-between mb-3">
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300 border border-indigo-200/60">
+                          Hedef Birey
+                        </span>
+
+                        <span
+                          class="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold"
+                          [ngClass]="animal.gender === 'disi' ? 'bg-rose-50 text-rose-600' : 'bg-sky-50 text-sky-600'"
+                        >
+                          {{ animal.gender === 'disi' ? '♀' : '♂' }}
+                        </span>
+                      </div>
+
+                      <div class="text-lg font-black font-mono text-slate-900 dark:text-white tracking-tight">
+                        {{ animal.farmTagNo }}
+                      </div>
+
+                      <div class="text-xs font-medium text-slate-600 dark:text-slate-300 mt-0.5 truncate">
+                        {{ animal.name || 'İsimsiz' }} • {{ getBreedName(animal.breedId) }}
+                      </div>
+
+                      <div class="mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-700/60 flex items-center justify-between text-[11px] text-slate-500">
+                        <span>{{ ageText() }}</span>
+                        <span>{{ animal.gender === 'disi' ? 'Dişi' : 'Erkek' }}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- CONNECTOR 1: FROM ROOT TO PARENTS (SVG BEZIER CURVES) -->
+                  <div class="w-12 shrink-0 flex flex-col justify-center items-center self-stretch py-10">
+                    <svg class="w-12 h-full min-h-[220px]" viewBox="0 0 48 240" fill="none" preserveAspectRatio="none">
+                      <!-- Curve to Father (Top) -->
+                      <path d="M 0 120 C 24 120, 24 50, 48 50" stroke="#38bdf8" stroke-width="2.5" stroke-linecap="round" />
+                      <!-- Curve to Mother (Bottom) -->
+                      <path d="M 0 120 C 24 120, 24 190, 48 190" stroke="#f43f5e" stroke-width="2.5" stroke-linecap="round" />
+                      <!-- Node points -->
+                      <circle cx="0" cy="120" r="4.5" fill="#6366f1" />
+                      <circle cx="48" cy="50" r="4" fill="#0284c7" />
+                      <circle cx="48" cy="190" r="4" fill="#e11d48" />
+                    </svg>
+                  </div>
+
+                  <!-- 2. PARENTS COLUMN: BABA & ANNE (2. NESİL) -->
+                  <div class="w-64 shrink-0 flex flex-col justify-between gap-10">
+
+                    <!-- BABA (FATHER) NODE -->
+                    <div class="flex flex-col justify-center">
+                      <div class="text-[10px] font-bold uppercase tracking-wider text-sky-600 dark:text-sky-400 mb-1 flex items-center gap-1">
+                        <mat-icon class="icon-size-3.5">male</mat-icon>
+                        <span>2. Nesil: Baba</span>
+                      </div>
+
+                      @if (hasFather()) {
+                        <div
+                          class="p-4 rounded-2xl border transition-all relative pedigree-node"
+                          [ngClass]="
+                            father()
+                              ? 'bg-sky-50/60 dark:bg-sky-950/25 border-sky-200 dark:border-sky-800/70 hover:shadow-md cursor-pointer hover:border-sky-400'
+                              : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700'
+                          "
+                          (click)="father() && navigateToAnimal(father()!)"
+                          [matTooltip]="father() ? 'Babanın detay sayfasına git' : ''"
+                        >
+                          <div class="flex items-center justify-between mb-1.5">
+                            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-sky-100 text-sky-800 dark:bg-sky-900/60 dark:text-sky-300">
+                              {{ father() ? 'Çiftlikte Kayıtlı ↗' : 'Dış Kayıt' }}
+                            </span>
+                            <span class="text-xs font-bold text-sky-600 font-mono">♂ Baba</span>
+                          </div>
+
+                          <div class="text-sm font-extrabold font-mono text-slate-900 dark:text-white truncate">
+                            {{ father()?.farmTagNo || animal.fatherId }}
+                          </div>
+
+                          <div class="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">
+                            {{ father()?.name || 'İsimsiz' }} • {{ getBreedName(father()?.breedId) }}
+                          </div>
+                        </div>
+                      } @else {
+                        <div class="p-3.5 rounded-2xl bg-slate-100/60 dark:bg-slate-800/40 border border-dashed border-slate-200 dark:border-slate-700 text-center">
+                          <span class="text-xs font-semibold text-slate-400 dark:text-slate-500">
+                            Baba Kaydı Bulunmuyor
+                          </span>
+                        </div>
+                      }
+                    </div>
+
+                    <!-- ANNE (MOTHER) NODE -->
+                    <div class="flex flex-col justify-center">
+                      <div class="text-[10px] font-bold uppercase tracking-wider text-rose-600 dark:text-rose-400 mb-1 flex items-center gap-1">
+                        <mat-icon class="icon-size-3.5">female</mat-icon>
+                        <span>2. Nesil: Anne</span>
+                      </div>
+
+                      @if (hasMother()) {
+                        <div
+                          class="p-4 rounded-2xl border transition-all relative pedigree-node"
+                          [ngClass]="
+                            mother()
+                              ? 'bg-rose-50/60 dark:bg-rose-950/25 border-rose-200 dark:border-rose-800/70 hover:shadow-md cursor-pointer hover:border-rose-400'
+                              : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700'
+                          "
+                          (click)="mother() && navigateToAnimal(mother()!)"
+                          [matTooltip]="mother() ? 'Annenin detay sayfasına git' : ''"
+                        >
+                          <div class="flex items-center justify-between mb-1.5">
+                            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-100 text-rose-800 dark:bg-rose-900/60 dark:text-rose-300">
+                              {{ mother() ? 'Çiftlikte Kayıtlı ↗' : 'Dış Kayıt' }}
+                            </span>
+                            <span class="text-xs font-bold text-rose-600 font-mono">♀ Anne</span>
+                          </div>
+
+                          <div class="text-sm font-extrabold font-mono text-slate-900 dark:text-white truncate">
+                            {{ mother()?.farmTagNo || animal.motherId }}
+                          </div>
+
+                          <div class="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">
+                            {{ mother()?.name || 'İsimsiz' }} • {{ getBreedName(mother()?.breedId) }}
+                          </div>
+                        </div>
+                      } @else {
+                        <div class="p-3.5 rounded-2xl bg-slate-100/60 dark:bg-slate-800/40 border border-dashed border-slate-200 dark:border-slate-700 text-center">
+                          <span class="text-xs font-semibold text-slate-400 dark:text-slate-500">
+                            Anne Kaydı Bulunmuyor
+                          </span>
+                        </div>
+                      }
+                    </div>
+
+                  </div>
+
+                  <!-- CONNECTOR 2: FROM PARENTS TO GRANDPARENTS (SVG BEZIER CURVES) -->
+                  @if (hasAnyGrandparent()) {
+                    <div class="w-12 shrink-0 flex flex-col justify-between self-stretch py-3">
+                      <!-- Baba -> Baba Dede & Babaanne -->
+                      @if (hasFather()) {
+                        <div class="h-32 flex items-center">
+                          <svg class="w-12 h-full" viewBox="0 0 48 120" fill="none" preserveAspectRatio="none">
+                            <path d="M 0 60 C 24 60, 24 25, 48 25" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" />
+                            <path d="M 0 60 C 24 60, 24 95, 48 95" stroke="#f43f5e" stroke-width="2" stroke-linecap="round" />
+                            <circle cx="0" cy="60" r="3.5" fill="#0284c7" />
+                            <circle cx="48" cy="25" r="3" fill="#0284c7" />
+                            <circle cx="48" cy="95" r="3" fill="#e11d48" />
+                          </svg>
+                        </div>
+                      } @else {
+                        <div class="h-32"></div>
+                      }
+
+                      <!-- Anne -> Anne Dede & Anneanne -->
+                      @if (hasMother()) {
+                        <div class="h-32 flex items-center">
+                          <svg class="w-12 h-full" viewBox="0 0 48 120" fill="none" preserveAspectRatio="none">
+                            <path d="M 0 60 C 24 60, 24 25, 48 25" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" />
+                            <path d="M 0 60 C 24 60, 24 95, 48 95" stroke="#f43f5e" stroke-width="2" stroke-linecap="round" />
+                            <circle cx="0" cy="60" r="3.5" fill="#e11d48" />
+                            <circle cx="48" cy="25" r="3" fill="#0284c7" />
+                            <circle cx="48" cy="95" r="3" fill="#e11d48" />
+                          </svg>
+                        </div>
+                      } @else {
+                        <div class="h-32"></div>
+                      }
+                    </div>
+                  }
+
+                  <!-- 3. GRANDPARENTS COLUMN: BÜYÜK EBEVEYNLER (1. NESİL) -->
+                  @if (hasAnyGrandparent()) {
+                    <div class="w-60 shrink-0 flex flex-col justify-between gap-6">
+
+                      <!-- BABA TARAFINDAN BÜYÜKEBEVEYNLER -->
+                      <div class="space-y-2.5">
+                        @if (hasFather()) {
+                          <!-- Baba Tarafı Dede -->
+                          <div
+                            class="p-2.5 rounded-xl border text-xs pedigree-node"
+                            [ngClass]="
+                              fatherFather()
+                                ? 'bg-sky-50/50 dark:bg-sky-950/20 border-sky-200 dark:border-sky-800/60 cursor-pointer hover:border-sky-400 shadow-2xs'
+                                : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700'
+                            "
+                            (click)="fatherFather() && navigateToAnimal(fatherFather()!)"
+                          >
+                            <div class="text-[10px] font-bold text-sky-600 flex items-center justify-between">
+                              <span>Dede (Baba Tarafı)</span>
+                              @if (fatherFather()) { <span class="text-[9px] text-sky-700 dark:text-sky-300 font-mono">Kayıtlı ↗</span> }
+                            </div>
+                            <div class="font-bold font-mono text-slate-800 dark:text-slate-200 truncate mt-0.5">
+                              {{ fatherFather()?.farmTagNo || father()?.fatherId || 'Bilinmiyor' }}
+                            </div>
+                            <div class="text-[10px] text-slate-400 truncate">
+                              {{ fatherFather()?.name || getBreedName(fatherFather()?.breedId) || '—' }}
+                            </div>
+                          </div>
+
+                          <!-- Babaanne -->
+                          <div
+                            class="p-2.5 rounded-xl border text-xs pedigree-node"
+                            [ngClass]="
+                              fatherMother()
+                                ? 'bg-rose-50/50 dark:bg-rose-950/20 border-rose-200 dark:border-rose-800/60 cursor-pointer hover:border-rose-400 shadow-2xs'
+                                : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700'
+                            "
+                            (click)="fatherMother() && navigateToAnimal(fatherMother()!)"
+                          >
+                            <div class="text-[10px] font-bold text-rose-600 flex items-center justify-between">
+                              <span>Babaanne</span>
+                              @if (fatherMother()) { <span class="text-[9px] text-rose-700 dark:text-rose-300 font-mono">Kayıtlı ↗</span> }
+                            </div>
+                            <div class="font-bold font-mono text-slate-800 dark:text-slate-200 truncate mt-0.5">
+                              {{ fatherMother()?.farmTagNo || father()?.motherId || 'Bilinmiyor' }}
+                            </div>
+                            <div class="text-[10px] text-slate-400 truncate">
+                              {{ fatherMother()?.name || getBreedName(fatherMother()?.breedId) || '—' }}
+                            </div>
+                          </div>
+                        }
+                      </div>
+
+                      <!-- ANNE TARAFINDAN BÜYÜKEBEVEYNLER -->
+                      <div class="space-y-2.5">
+                        @if (hasMother()) {
+                          <!-- Anne Tarafı Dede -->
+                          <div
+                            class="p-2.5 rounded-xl border text-xs pedigree-node"
+                            [ngClass]="
+                              motherFather()
+                                ? 'bg-sky-50/50 dark:bg-sky-950/20 border-sky-200 dark:border-sky-800/60 cursor-pointer hover:border-sky-400 shadow-2xs'
+                                : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700'
+                            "
+                            (click)="motherFather() && navigateToAnimal(motherFather()!)"
+                          >
+                            <div class="text-[10px] font-bold text-sky-600 flex items-center justify-between">
+                              <span>Dede (Anne Tarafı)</span>
+                              @if (motherFather()) { <span class="text-[9px] text-sky-700 dark:text-sky-300 font-mono">Kayıtlı ↗</span> }
+                            </div>
+                            <div class="font-bold font-mono text-slate-800 dark:text-slate-200 truncate mt-0.5">
+                              {{ motherFather()?.farmTagNo || mother()?.fatherId || 'Bilinmiyor' }}
+                            </div>
+                            <div class="text-[10px] text-slate-400 truncate">
+                              {{ motherFather()?.name || getBreedName(motherFather()?.breedId) || '—' }}
+                            </div>
+                          </div>
+
+                          <!-- Anneanne -->
+                          <div
+                            class="p-2.5 rounded-xl border text-xs pedigree-node"
+                            [ngClass]="
+                              motherMother()
+                                ? 'bg-rose-50/50 dark:bg-rose-950/20 border-rose-200 dark:border-rose-800/60 cursor-pointer hover:border-rose-400 shadow-2xs'
+                                : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700'
+                            "
+                            (click)="motherMother() && navigateToAnimal(motherMother()!)"
+                          >
+                            <div class="text-[10px] font-bold text-rose-600 flex items-center justify-between">
+                              <span>Anneanne</span>
+                              @if (motherMother()) { <span class="text-[9px] text-rose-700 dark:text-rose-300 font-mono">Kayıtlı ↗</span> }
+                            </div>
+                            <div class="font-bold font-mono text-slate-800 dark:text-slate-200 truncate mt-0.5">
+                              {{ motherMother()?.farmTagNo || mother()?.motherId || 'Bilinmiyor' }}
+                            </div>
+                            <div class="text-[10px] text-slate-400 truncate">
+                              {{ motherMother()?.name || getBreedName(motherMother()?.breedId) || '—' }}
+                            </div>
+                          </div>
+                        }
+                      </div>
+
+                    </div>
+                  }
+
+                </div>
+              </div>
+            }
+
+            <!-- 4. YAVRULAR & SOY DEVAMI (OFFSPRING) -->
+            <div class="space-y-3">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <h4 class="text-sm font-bold text-slate-900 dark:text-white">Yavrular (Soy Devamı)</h4>
+                  <span class="text-xs px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300 font-bold">
+                    {{ offspring().length }} Baş
+                  </span>
+                </div>
+              </div>
+
+              @if (offspring().length > 0) {
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5">
+                  @for (child of offspring(); track child.id) {
+                    <div
+                      class="p-3.5 rounded-2xl bg-white dark:bg-slate-850 border border-slate-200/80 dark:border-slate-750 hover:border-indigo-400 dark:hover:border-indigo-600 transition-all shadow-xs hover:shadow-md cursor-pointer group flex items-center justify-between"
+                      (click)="navigateToAnimal(child)"
+                      matTooltip="Bu yavrunun detay analizini aç"
+                    >
+                      <div class="flex items-center gap-3">
+                        <div
+                          class="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm shrink-0"
+                          [ngClass]="child.gender === 'disi' ? 'bg-rose-50 text-rose-600' : 'bg-sky-50 text-sky-600'"
+                        >
+                          @if (child.gender === 'disi') {
+                            <!-- Kadın / Dişi (♀) -->
+                            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                              <circle cx="12" cy="9" r="6"></circle>
+                              <line x1="12" y1="15" x2="12" y2="22"></line>
+                              <line x1="8.5" y1="18.5" x2="15.5" y2="18.5"></line>
+                            </svg>
+                          } @else {
+                            <!-- Erkek (♂) -->
+                            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                              <circle cx="9.5" cy="14.5" r="5.5"></circle>
+                              <line x1="13.5" y1="10.5" x2="20" y2="4"></line>
+                              <line x1="15" y1="4" x2="20" y2="4"></line>
+                              <line x1="20" y1="4" x2="20" y2="9"></line>
+                            </svg>
+                          }
+                        </div>
+
+                        <div>
+                          <div class="font-extrabold font-mono text-sm text-slate-900 dark:text-white group-hover:text-indigo-600 transition-colors">
+                            {{ child.farmTagNo }}
+                          </div>
+                          <div class="text-[11px] text-slate-500 dark:text-slate-400">
+                            {{ child.name || 'İsimsiz' }} • D: {{ formatDate(child.birthDate) }}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="text-right">
+                        <span
+                          class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase"
+                          [ngClass]="child.status === 'aktif' ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-600'"
+                        >
+                          {{ child.status }}
+                        </span>
+                      </div>
+                    </div>
+                  }
+                </div>
+              } @else {
+                <div class="p-8 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-dashed border-slate-200 dark:border-slate-700 text-center">
+                  <mat-icon class="icon-size-8 text-slate-400 mb-2">child_friendly</mat-icon>
+                  <p class="text-xs font-semibold text-slate-600 dark:text-slate-300">
+                    Henüz bu hayvana ait kayıtlı yavru bulunmuyor.
+                  </p>
+                  <p class="text-[11px] text-slate-400 mt-0.5">
+                    Yeni doğan hayvan eklenirken Anne veya Baba küpe no olarak bu hayvan seçildiğinde otomatik soy bağı kurulacaktır.
+                  </p>
+                </div>
+              }
+            </div>
+
+          </div>
+        }
+
+        <!-- ============================================== -->
+        <!-- TAB 3: SAĞLIK & MÜDAHALE GEÇMİŞİ -->
+        <!-- ============================================== -->
+        @if (activeTab() === 'health') {
+          <div class="space-y-4 animate-in fade-in duration-200">
+            <!-- Health Stats Header -->
+            <div class="p-4 rounded-2xl bg-gradient-to-r from-rose-50 to-pink-50 dark:from-rose-950/20 dark:to-pink-950/20 border border-rose-200/60 dark:border-rose-800/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-rose-600 text-white flex items-center justify-center shadow-md shadow-rose-500/20">
+                  <mat-icon class="icon-size-5">medical_services</mat-icon>
+                </div>
+                <div>
+                  <h3 class="text-sm font-bold text-slate-900 dark:text-white">Sağlık, Aşı ve Tedavi Kayıtları</h3>
+                  <p class="text-xs text-slate-500 dark:text-slate-400">
+                    Veteriner müdahaleleri, uygulanan aşılar ve ilaç protokolleri.
+                  </p>
+                </div>
+              </div>
+
+              <div class="flex items-center gap-2">
+                <span class="text-xs px-2.5 py-1 rounded-lg bg-white dark:bg-slate-800 font-semibold text-rose-700 dark:text-rose-400 border border-rose-100 dark:border-rose-800/40 shadow-xs">
+                  Toplam Müdahale: <strong>{{ treatments().length }}</strong>
+                </span>
+                @if (totalTreatmentCost() > 0) {
+                  <span class="text-xs px-2.5 py-1 rounded-lg bg-white dark:bg-slate-800 font-semibold text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 shadow-xs">
+                    Maliyet: <strong>{{ totalTreatmentCost() | currency:'TRY':'symbol-narrow':'1.0-2' }}</strong>
+                  </span>
+                }
+              </div>
+            </div>
+
+            <!-- Treatments List -->
+            @if (treatments().length > 0) {
+              <div class="space-y-3">
+                @for (item of treatments(); track item.id) {
+                  <div class="p-4 rounded-2xl bg-white dark:bg-slate-850 border border-slate-200/80 dark:border-slate-750 shadow-xs hover:shadow-sm transition-shadow">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
+                      <div class="flex items-center gap-2">
+                        <span class="px-2.5 py-1 rounded-lg text-xs font-bold bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-400 border border-rose-200/60 dark:border-rose-800/60">
+                          {{ getTreatmentTypeName(item.treatmentTypeId) }}
+                        </span>
+                        <span class="font-extrabold text-sm text-slate-900 dark:text-white">
+                          {{ getDiseaseName(item.diseaseId) }}
+                        </span>
+                      </div>
+
+                      <div class="text-xs font-semibold text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                        <mat-icon class="icon-size-3.5 text-slate-400">calendar_today</mat-icon>
+                        <span>{{ formatDate(item.date) }}</span>
+                      </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-3 text-xs">
+                      <div>
+                        <span class="text-slate-400 block text-[11px]">Dozaj / Miktar</span>
+                        <span class="font-semibold text-slate-800 dark:text-slate-200">{{ item.dosage || '—' }}</span>
+                      </div>
+
+                      <div>
+                        <span class="text-slate-400 block text-[11px]">Uygulayan</span>
+                        <span class="font-semibold text-slate-800 dark:text-slate-200">{{ item.performedBy || 'Veteriner / Bakıcı' }}</span>
+                      </div>
+
+                      <div>
+                        <span class="text-slate-400 block text-[11px]">Maliyet</span>
+                        <span class="font-semibold text-slate-800 dark:text-slate-200">
+                          {{ item.cost ? (item.cost | currency:'TRY':'symbol-narrow':'1.0-2') : '—' }}
+                        </span>
+                      </div>
+
+                      <div>
+                        <span class="text-slate-400 block text-[11px]">Açıklama / Not</span>
+                        <span class="font-medium text-slate-700 dark:text-slate-300 italic">{{ item.note || '—' }}</span>
+                      </div>
+                    </div>
+                  </div>
+                }
+              </div>
+            } @else {
+              <div class="p-12 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-dashed border-slate-200 dark:border-slate-700 text-center">
+                <mat-icon class="icon-size-10 text-slate-400 mb-2">favorite</mat-icon>
+                <h4 class="text-sm font-bold text-slate-800 dark:text-slate-200">Kayıtlı Tedavi Bulunmuyor</h4>
+                <p class="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
+                  Bu hayvan için henüz bir hastalık, aşı veya medikal müdahale kaydı bulunmamaktadır.
+                </p>
+              </div>
+            }
+          </div>
+        }
+
+        <!-- ============================================== -->
+        <!-- TAB 4: AĞIRLIK & GELİŞİM (WEIGHTS) -->
+        <!-- ============================================== -->
+        @if (activeTab() === 'weights') {
+          <div class="space-y-4 animate-in fade-in duration-200">
+            <!-- Weights Summary Banner -->
+            <div class="p-4 rounded-2xl bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/20 dark:to-teal-950/20 border border-emerald-200/60 dark:border-emerald-800/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-md shadow-emerald-500/20">
+                  <mat-icon class="icon-size-5">monitor_weight</mat-icon>
+                </div>
+                <div>
+                  <h3 class="text-sm font-bold text-slate-900 dark:text-white">Canlı Ağırlık & Gelişim Takibi</h3>
+                  <p class="text-xs text-slate-500 dark:text-slate-400">
+                    Dönemsel tartım ölçümleri ve kilo gelişim ivmesi.
+                  </p>
+                </div>
+              </div>
+
+              <div class="flex items-center gap-2">
+                <span class="text-xs px-2.5 py-1 rounded-lg bg-white dark:bg-slate-800 font-semibold text-emerald-700 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-800/40 shadow-xs">
+                  Net Artış: <strong>{{ totalWeightGain() > 0 ? '+' + totalWeightGain() + ' kg' : totalWeightGain() + ' kg' }}</strong>
+                </span>
+                <span class="text-xs px-2.5 py-1 rounded-lg bg-white dark:bg-slate-800 font-semibold text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 shadow-xs">
+                  Ölçüm Sayısı: <strong>{{ weightRecords().length }}</strong>
+                </span>
+              </div>
+            </div>
+
+            <!-- Weight Records Table / List -->
+            @if (weightRecords().length > 0) {
+              <div class="bg-white dark:bg-slate-850 rounded-2xl border border-slate-200/80 dark:border-slate-750 overflow-hidden shadow-xs">
+                <table class="w-full text-left text-xs">
+                  <thead class="bg-slate-50 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 uppercase font-bold text-[10px] tracking-wider border-b border-slate-200/70 dark:border-slate-700/60">
+                    <tr>
+                      <th class="py-3 px-4">Ölçüm Tarihi</th>
+                      <th class="py-3 px-4">Canlı Ağırlık</th>
+                      <th class="py-3 px-4">Önceki Ölçüme Göre Fark</th>
+                      <th class="py-3 px-4">Not</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                    @for (w of weightRecords(); track w.id; let idx = $index) {
+                      <tr class="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors">
+                        <td class="py-3 px-4 font-semibold text-slate-800 dark:text-slate-200">
+                          {{ formatDate(w.date) }}
+                        </td>
+                        <td class="py-3 px-4 font-mono font-extrabold text-slate-900 dark:text-white text-sm">
+                          {{ w.weightKg }} kg
+                        </td>
+                        <td class="py-3 px-4 font-semibold">
+                          @if (calculateWeightDiff(idx) !== null) {
+                            @if (calculateWeightDiff(idx)! > 0) {
+                              <span class="text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded-md">
+                                +{{ calculateWeightDiff(idx) }} kg
+                              </span>
+                            } @else if (calculateWeightDiff(idx)! < 0) {
+                              <span class="text-rose-600 dark:text-rose-400 font-bold bg-rose-50 dark:bg-rose-950/50 px-2 py-0.5 rounded-md">
+                                {{ calculateWeightDiff(idx) }} kg
+                              </span>
+                            } @else {
+                              <span class="text-slate-400">Değişim Yok (0 kg)</span>
+                            }
+                          } @else {
+                            <span class="text-slate-400 italic">İlk Ölçüm (Baz)</span>
+                          }
+                        </td>
+                        <td class="py-3 px-4 text-slate-500 italic">
+                          {{ w.note || '—' }}
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            } @else {
+              <div class="p-12 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-dashed border-slate-200 dark:border-slate-700 text-center">
+                <mat-icon class="icon-size-10 text-slate-400 mb-2">scale</mat-icon>
+                <h4 class="text-sm font-bold text-slate-800 dark:text-slate-200">Kayıtlı Tartım Bulunmuyor</h4>
+                <p class="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
+                  Bu hayvan için henüz canlı ağırlık ölçümü kaydedilmemiştir.
+                </p>
+              </div>
+            }
+          </div>
+        }
+
+        <!-- ============================================== -->
+        <!-- TAB 5: KONUM & HAREKETLER (MOVEMENTS) -->
+        <!-- ============================================== -->
+        @if (activeTab() === 'movements') {
+          <div class="space-y-4 animate-in fade-in duration-200">
+            <!-- Current Location Card with Quick Action -->
+            <div class="p-5 rounded-2xl bg-gradient-to-r from-cyan-50 to-blue-50 dark:from-cyan-950/20 dark:to-blue-950/20 border border-cyan-200/60 dark:border-cyan-800/40 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <span class="text-[10px] font-bold uppercase tracking-wider text-cyan-700 dark:text-cyan-400 block mb-1">
+                  Mevcut Barınak & Konum
+                </span>
+                <div class="text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+                  <mat-icon class="icon-size-5 text-cyan-600">place</mat-icon>
+                  <span>Padok: {{ getPaddockName(animal.paddockId) }}</span>
+                  <span class="text-slate-300 dark:text-slate-600">/</span>
+                  <span>Sürü: {{ getHerdName(animal.herdId) }}</span>
+                </div>
+              </div>
+
+              <button
+                mat-flat-button
+                type="button"
+                class="!bg-cyan-600 hover:!bg-cyan-700 !text-white !rounded-xl !px-4 !py-2 !font-semibold shadow-md shadow-cyan-500/20 shrink-0"
+                (click)="onLocationChange()"
+              >
+                <mat-icon class="icon-size-4 mr-1 text-white">swap_horiz</mat-icon>
+                <span>Yeni Padoğa Aktar</span>
+              </button>
+            </div>
+
+            <!-- Movements Timeline -->
+            <div class="space-y-2">
+              <h4 class="text-xs font-bold uppercase tracking-wider text-slate-500 px-1">
+                Padok ve Sürü Transfer Geçmişi
+              </h4>
+
+              @if (movements().length > 0) {
+                <div class="space-y-2.5">
+                  @for (m of movements(); track m.id) {
+                    <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-850 border border-slate-200/80 dark:border-slate-750 shadow-xs flex items-center justify-between gap-3">
+                      <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 rounded-xl bg-cyan-50 dark:bg-cyan-950/50 text-cyan-600 dark:text-cyan-400 flex items-center justify-center font-bold text-xs shrink-0">
+                          <mat-icon class="icon-size-4">route</mat-icon>
+                        </div>
+                        <div>
+                          <div class="text-xs font-bold text-slate-800 dark:text-slate-200">
+                            {{ getPaddockName(m.fromId) }} ➔ {{ getPaddockName(m.toId) }}
+                          </div>
+                          <div class="text-[11px] text-slate-500 italic">
+                            {{ m.note || 'Padok transferi' }}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="text-right shrink-0">
+                        <span class="text-xs font-semibold text-slate-600 dark:text-slate-400 block">
+                          {{ formatDate(m.date) }}
+                        </span>
+                        <span class="text-[10px] text-slate-400 uppercase font-bold">
+                          {{ m.type }}
+                        </span>
+                      </div>
+                    </div>
+                  }
+                </div>
+              } @else {
+                <div class="p-8 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-dashed border-slate-200 dark:border-slate-700 text-center">
+                  <mat-icon class="icon-size-8 text-slate-400 mb-1">shuffle</mat-icon>
+                  <p class="text-xs font-semibold text-slate-600 dark:text-slate-300">
+                    Henüz transfer veya padok değişim hareketi kaydedilmedi.
+                  </p>
+                </div>
+              }
+            </div>
+          </div>
+        }
+
+      </div>
+
+      <!-- MODAL FOOTER -->
+      <div class="p-4 sm:p-5 border-t border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/70 flex items-center justify-between">
+        <div class="text-xs text-slate-500 dark:text-slate-400 hidden sm:block">
+          Kayıt No: <span class="font-mono text-slate-700 dark:text-slate-300">{{ animal.id }}</span>
+        </div>
+
+        <div class="flex items-center gap-2.5 ml-auto">
+          <button
+            mat-button
+            type="button"
+            class="!text-xs !font-semibold !rounded-xl !px-4"
+            (click)="close()"
+          >
+            Kapat
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ============================================== -->
+<!-- MODAL: RESMİ DAMIZLIK ŞECERE KARTI & BELGESİ (PDF / YAZDIR) -->
+<!-- ============================================== -->
+@if (isPedigreeCertOpen() && animal) {
+  <div
+    class="fixed inset-0 z-60 overflow-y-auto flex items-center justify-center p-2 sm:p-4 bg-slate-950/80 backdrop-blur-xs animate-in fade-in duration-200"
+    role="dialog"
+    aria-modal="true"
+  >
+    <div
+      class="relative w-full max-w-4xl bg-white text-slate-900 rounded-3xl shadow-2xl overflow-hidden border border-slate-200 my-auto flex flex-col max-h-[96vh]"
+      (click)="$event.stopPropagation()"
+    >
+      <!-- Certificate Modal Header / Actions Toolbar (Hidden on Print) -->
+      <div class="p-4 bg-slate-900 text-white flex items-center justify-between print-hide shrink-0">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
+            <mat-icon class="icon-size-5">verified</mat-icon>
+          </div>
+          <div>
+            <h4 class="text-xs sm:text-sm font-bold">Resmi Damızlık Soy Kütüğü & Şecere Kartı</h4>
+            <p class="text-[11px] text-slate-400">Yazdır butonunu kullanarak doğrudan A4 PDF olarak kaydedebilirsiniz.</p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button
+            type="button"
+            (click)="printPedigreeCertificate()"
+            class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-md shadow-emerald-600/30"
+          >
+            <mat-icon class="icon-size-4">print</mat-icon>
+            <span>Yazdır / PDF Olarak Kaydet</span>
+          </button>
+
+          <button
+            type="button"
+            (click)="closePedigreeCertificate()"
+            class="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+            matTooltip="Kapat"
+          >
+            <mat-icon class="icon-size-5">close</mat-icon>
+          </button>
+        </div>
+      </div>
+
+      <!-- Certificate Printable Document Area -->
+      <div class="p-6 sm:p-10 overflow-y-auto custom-scrollbar flex-1 bg-white text-slate-900" id="pedigreeCertificate">
+        
+        <!-- Official Document Border & Emblem -->
+        <div class="border-2 border-slate-900 p-6 sm:p-8 rounded-2xl relative">
+          <!-- Watermark text -->
+          <div class="absolute inset-0 flex items-center justify-center opacity-5 pointer-events-none select-none">
+            <span class="text-7xl sm:text-9xl font-black tracking-widest text-slate-900 uppercase">ODİVON</span>
+          </div>
+
+          <!-- Document Header -->
+          <div class="border-b-2 border-slate-900 pb-5 mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+              <div class="w-12 h-12 rounded-xl bg-slate-900 text-white flex items-center justify-center font-black text-xl">
+                OF
+              </div>
+              <div>
+                <h1 class="text-base sm:text-lg font-black tracking-tight uppercase text-slate-900">
+                  ODİVON FARM DAMIZLIK ÇİFTLİĞİ
+                </h1>
+                <p class="text-xs text-slate-600 font-medium">
+                  Hayvancılık Bilgi & Soy Kütüğü Kayıt Sistemi
+                </p>
+              </div>
+            </div>
+
+            <div class="text-right">
+              <div class="text-xs font-bold uppercase tracking-wider text-emerald-800 bg-emerald-50 border border-emerald-300 px-3 py-1 rounded-md inline-block">
+                RESMİ ŞECERE BELGESİ
+              </div>
+              <div class="text-xs font-mono text-slate-500 mt-1">
+                Belge No: <strong>{{ getCertificateNo() }}</strong>
+              </div>
+              <div class="text-[11px] text-slate-500">
+                Tanzim Tarihi: {{ getTodayFormatted() }}
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 1: Animal Primary Identity -->
+          <div class="mb-6">
+            <div class="text-xs font-extrabold uppercase tracking-wider bg-slate-100 text-slate-800 px-3 py-1.5 rounded-lg mb-3">
+              1. BİREYSEL KİMLİK VE DAMIZLIK BİLGİLERİ
+            </div>
+
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+              <div class="p-2.5 rounded-xl border border-slate-200 bg-slate-50/50">
+                <span class="text-slate-500 block text-[10px] font-medium">Çiftlik Küpe No</span>
+                <span class="font-extrabold text-sm font-mono text-slate-900">{{ animal.farmTagNo }}</span>
+              </div>
+
+              <div class="p-2.5 rounded-xl border border-slate-200 bg-slate-50/50">
+                <span class="text-slate-500 block text-[10px] font-medium">Ulusal Küpe (DKN)</span>
+                <span class="font-bold font-mono text-slate-900">{{ animal.nationalTagNo || '—' }}</span>
+              </div>
+
+              <div class="p-2.5 rounded-xl border border-slate-200 bg-slate-50/50">
+                <span class="text-slate-500 block text-[10px] font-medium">Cinsiyet & Tür</span>
+                <span class="font-bold text-slate-900">
+                  {{ animal.gender === 'disi' ? 'Dişi' : 'Erkek' }} • {{ getAnimalTypeName(animal.animalTypeId) }}
+                </span>
+              </div>
+
+              <div class="p-2.5 rounded-xl border border-slate-200 bg-slate-50/50">
+                <span class="text-slate-500 block text-[10px] font-medium">Irkı</span>
+                <span class="font-bold text-slate-900">{{ getBreedName(animal.breedId) }}</span>
+              </div>
+
+              <div class="p-2.5 rounded-xl border border-slate-200 bg-slate-50/50">
+                <span class="text-slate-500 block text-[10px] font-medium">Doğum Tarihi</span>
+                <span class="font-bold text-slate-900">{{ formatDate(animal.birthDate) }} ({{ ageText() }})</span>
+              </div>
+
+              <div class="p-2.5 rounded-xl border border-slate-200 bg-slate-50/50">
+                <span class="text-slate-500 block text-[10px] font-medium">RFID Elektronik Çip</span>
+                <span class="font-bold font-mono text-slate-900">{{ animal.rfid || '—' }}</span>
+              </div>
+
+              <div class="p-2.5 rounded-xl border border-slate-200 bg-slate-50/50">
+                <span class="text-slate-500 block text-[10px] font-medium">Bulunduğu Padok</span>
+                <span class="font-bold text-slate-900">{{ getPaddockName(animal.paddockId) }}</span>
+              </div>
+
+              <div class="p-2.5 rounded-xl border border-slate-200 bg-slate-50/50">
+                <span class="text-slate-500 block text-[10px] font-medium">Damızlık Durumu</span>
+                <span class="font-bold text-emerald-700 capitalize">{{ animal.status }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 2: 3-Generation Pedigree Matrix -->
+          <div class="mb-6">
+            <div class="text-xs font-extrabold uppercase tracking-wider bg-slate-100 text-slate-800 px-3 py-1.5 rounded-lg mb-3">
+              2. 3-NESİL SOY KÜTÜĞÜ VE ŞECERE MATRİSİ
+            </div>
+
+            <div class="border border-slate-300 rounded-xl overflow-hidden text-xs">
+              <table class="w-full border-collapse">
+                <thead>
+                  <tr class="bg-slate-200/80 text-slate-800 text-[11px] font-bold border-b border-slate-300">
+                    <th class="p-2.5 text-left border-r border-slate-300 w-1/3">Ebeveyn (2. Nesil)</th>
+                    <th class="p-2.5 text-left w-2/3">Büyük Ebeveynler (1. Nesil)</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-300">
+                  <!-- BABA LINE -->
+                  <tr class="bg-sky-50/30">
+                    <td class="p-3 border-r border-slate-300 align-top">
+                      <div class="font-bold text-sky-700 text-[11px]">BABA (ERKEK HATTI)</div>
+                      <div class="font-black font-mono text-sm mt-0.5">{{ father()?.farmTagNo || animal.fatherId || 'Kayıtlı Değil' }}</div>
+                      <div class="text-slate-500 text-[11px]">{{ father()?.name || 'İsimsiz' }} • {{ getBreedName(father()?.breedId) }}</div>
+                    </td>
+                    <td class="p-3 space-y-2">
+                      <div class="p-2 rounded-lg bg-white border border-slate-200 flex items-center justify-between">
+                        <div>
+                          <span class="text-[10px] font-bold text-sky-600 block">Dede (Baba Tarafı)</span>
+                          <span class="font-mono font-bold">{{ fatherFather()?.farmTagNo || father()?.fatherId || 'Bilinmiyor' }}</span>
+                        </div>
+                        <span class="text-[10px] text-slate-400">{{ fatherFather()?.name || getBreedName(fatherFather()?.breedId) || '—' }}</span>
+                      </div>
+
+                      <div class="p-2 rounded-lg bg-white border border-slate-200 flex items-center justify-between">
+                        <div>
+                          <span class="text-[10px] font-bold text-rose-600 block">Babaanne</span>
+                          <span class="font-mono font-bold">{{ fatherMother()?.farmTagNo || father()?.motherId || 'Bilinmiyor' }}</span>
+                        </div>
+                        <span class="text-[10px] text-slate-400">{{ fatherMother()?.name || getBreedName(fatherMother()?.breedId) || '—' }}</span>
+                      </div>
+                    </td>
+                  </tr>
+
+                  <!-- ANNE LINE -->
+                  <tr class="bg-rose-50/30">
+                    <td class="p-3 border-r border-slate-300 align-top">
+                      <div class="font-bold text-rose-700 text-[11px]">ANNE (DİŞİ HATTI)</div>
+                      <div class="font-black font-mono text-sm mt-0.5">{{ mother()?.farmTagNo || animal.motherId || 'Kayıtlı Değil' }}</div>
+                      <div class="text-slate-500 text-[11px]">{{ mother()?.name || 'İsimsiz' }} • {{ getBreedName(mother()?.breedId) }}</div>
+                    </td>
+                    <td class="p-3 space-y-2">
+                      <div class="p-2 rounded-lg bg-white border border-slate-200 flex items-center justify-between">
+                        <div>
+                          <span class="text-[10px] font-bold text-sky-600 block">Dede (Anne Tarafı)</span>
+                          <span class="font-mono font-bold">{{ motherFather()?.farmTagNo || mother()?.fatherId || 'Bilinmiyor' }}</span>
+                        </div>
+                        <span class="text-[10px] text-slate-400">{{ motherFather()?.name || getBreedName(motherFather()?.breedId) || '—' }}</span>
+                      </div>
+
+                      <div class="p-2 rounded-lg bg-white border border-slate-200 flex items-center justify-between">
+                        <div>
+                          <span class="text-[10px] font-bold text-rose-600 block">Anneanne</span>
+                          <span class="font-mono font-bold">{{ motherMother()?.farmTagNo || mother()?.motherId || 'Bilinmiyor' }}</span>
+                        </div>
+                        <span class="text-[10px] text-slate-400">{{ motherMother()?.name || getBreedName(motherMother()?.breedId) || '—' }}</span>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Section 3: Offspring / Alt Soy Durumu -->
+          <div class="mb-6">
+            <div class="text-xs font-extrabold uppercase tracking-wider bg-slate-100 text-slate-800 px-3 py-1.5 rounded-lg mb-2 flex items-center justify-between">
+              <span>3. DAMIZLIK VERİMİ VE ALT SOY (YAVRULAR)</span>
+              <span class="font-mono">Toplam: {{ offspring().length }} Baş</span>
+            </div>
+
+            @if (offspring().length > 0) {
+              <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
+                @for (child of offspring(); track child.id) {
+                  <div class="p-2 rounded-lg border border-slate-200 bg-slate-50 flex items-center justify-between">
+                    <div>
+                      <span class="font-mono font-bold text-slate-900 block">{{ child.farmTagNo }}</span>
+                      <span class="text-[10px] text-slate-500">D: {{ formatDate(child.birthDate) }}</span>
+                    </div>
+                    <span class="text-[10px] font-bold px-1.5 py-0.5 rounded" [ngClass]="child.gender === 'disi' ? 'bg-rose-100 text-rose-700' : 'bg-sky-100 text-sky-700'">
+                      {{ child.gender === 'disi' ? 'Dişi' : 'Erkek' }}
+                    </span>
+                  </div>
+                }
+              </div>
+            } @else {
+              <p class="text-xs text-slate-500 italic p-3 bg-slate-50 rounded-lg border border-slate-200">
+                Bu hayvan için sistemde henüz kayıtlı yavru bulunmamaktadır.
+              </p>
+            }
+          </div>
+
+          <!-- Section 4: Official Signatures & Approval -->
+          <div class="mt-8 pt-6 border-t-2 border-slate-900 grid grid-cols-2 gap-8 text-center text-xs">
+            <div>
+              <div class="font-bold text-slate-900 mb-10">Sorumlu Veteriner Hekim</div>
+              <div class="border-t border-slate-400 pt-1 text-slate-500 text-[11px]">İmza / Kaşe</div>
+            </div>
+            <div>
+              <div class="font-bold text-slate-900 mb-10">Çiftlik / İşletme Yöneticisi</div>
+              <div class="border-t border-slate-400 pt-1 text-slate-500 text-[11px]">İmza / Mühür</div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+  </div>
+}
+

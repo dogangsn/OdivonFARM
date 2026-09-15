@@ -22,6 +22,9 @@ import { AlertService } from '../../core/services/alert.service';
 import { Router } from '@angular/router';
 import { SubscriptionService } from '../../core/services/subscription.service';
 
+import { AnimalDetailModalComponent } from './animal-detail-modal/animal-detail-modal.component';
+import { AnimalLocationModalComponent } from './animal-location-modal/animal-location-modal.component';
+
 @Component({
   selector: 'app-animals',
   standalone: true,
@@ -36,6 +39,8 @@ import { SubscriptionService } from '../../core/services/subscription.service';
     MatMenuModule,
     MatTooltipModule,
     MatRippleModule,
+    AnimalDetailModalComponent,
+    AnimalLocationModalComponent,
   ],
   templateUrl: './animals.component.html',
   styleUrl: './animals.component.scss',
@@ -210,6 +215,80 @@ export class AnimalsComponent {
       this.alertService.toastSuccess('Hayvan kaydı silindi');
     } catch (err: any) {
       this.alertService.error('Silme Başarısız', err?.message || 'Hayvan silinirken bir hata oluştu.');
+    }
+  }
+
+  // Detail Modal State
+  selectedAnimalForDetail = signal<Animal | null>(null);
+  isDetailModalOpen = signal(false);
+
+  // Location Modal State
+  selectedAnimalForLocation = signal<Animal | null>(null);
+  isLocationModalOpen = signal(false);
+
+  openDetailModal(animal: Animal) {
+    this.selectedAnimalForDetail.set(animal);
+    this.isDetailModalOpen.set(true);
+  }
+
+  closeDetailModal() {
+    this.isDetailModalOpen.set(false);
+    this.selectedAnimalForDetail.set(null);
+  }
+
+  openLocationModal(animal: Animal) {
+    this.selectedAnimalForLocation.set(animal);
+    this.isLocationModalOpen.set(true);
+  }
+
+  closeLocationModal() {
+    this.isLocationModalOpen.set(false);
+    this.selectedAnimalForLocation.set(null);
+  }
+
+  onLocationUpdated() {
+    // If detail modal is open for this animal, refresh the selected reference from live animals signal
+    const cur = this.selectedAnimalForDetail();
+    if (cur?.id) {
+      const refreshed = this.animals().find((a) => a.id === cur.id);
+      if (refreshed) {
+        this.selectedAnimalForDetail.set(refreshed);
+      }
+    }
+  }
+
+  onSelectRelativeAnimal(relative: Animal) {
+    this.selectedAnimalForDetail.set(relative);
+  }
+
+  async archiveAnimal(animal: Animal) {
+    if (!animal.id) return;
+    const isCurrentlyActive = animal.status === 'aktif';
+    const actionLabel = isCurrentlyActive ? 'Arşivle (Pasife Al)' : 'Arşivden Çıkar (Aktif Yap)';
+    const newStatus: AnimalStatus = isCurrentlyActive ? 'pasif' : 'aktif';
+
+    const confirmed = await this.alertService.confirm(
+      isCurrentlyActive ? 'Hayvanı Arşive Al' : 'Arşivden Çıkar',
+      `${animal.farmTagNo} küpeli hayvanı ${isCurrentlyActive ? 'pasif duruma (arşive)' : 'tekrar aktif duruma'} getirmek istediğinize emin misiniz?`,
+      actionLabel,
+      'Vazgeç'
+    );
+
+    if (!confirmed) return;
+
+    try {
+      await this.animalService.update(animal.id, { status: newStatus });
+      this.alertService.toastSuccess(
+        isCurrentlyActive
+          ? 'Hayvan arşive alındı (Pasif duruma geçti).'
+          : 'Hayvan tekrar aktif duruma getirildi.'
+      );
+      if (this.selectedAnimalForDetail()?.id === animal.id) {
+        this.selectedAnimalForDetail.update((curr) => curr ? ({ ...curr, status: newStatus }) : null);
+      }
+    } catch (err: any) {
+      console.error('Archive animal error:', err);
+      this.alertService.error('İşlem Başarısız', err?.message || 'Durum güncellenirken bir hata oluştu.');
     }
   }
 
