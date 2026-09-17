@@ -42,6 +42,9 @@ export class TasksComponent {
   drawerOpen = signal(false);
   isSubmitting = signal(false);
 
+  isEditing = signal(false);
+  editingTaskId = signal<string | null>(null);
+
   taskForm = this.fb.group({
     title: ['', [Validators.required, Validators.minLength(3)]],
     description: [''],
@@ -71,11 +74,29 @@ export class TasksComponent {
   });
 
   openDrawer() {
+    this.isEditing.set(false);
+    this.editingTaskId.set(null);
     this.taskForm.reset({
       title: '',
       description: '',
       status: 'bekliyor',
       dueDate: '',
+    });
+    this.drawerOpen.set(true);
+  }
+
+  openEditDrawer(task: FarmTask) {
+    this.isEditing.set(true);
+    this.editingTaskId.set(task.id || null);
+    let dueStr = '';
+    if (task.dueDate) {
+      dueStr = typeof task.dueDate === 'string' ? task.dueDate.substring(0, 10) : '';
+    }
+    this.taskForm.reset({
+      title: task.title,
+      description: task.description || '',
+      status: task.status,
+      dueDate: dueStr,
     });
     this.drawerOpen.set(true);
   }
@@ -90,15 +111,24 @@ export class TasksComponent {
     this.isSubmitting.set(true);
     try {
       const val = this.taskForm.value;
-      await this.taskService.create({
+      const payload: Partial<FarmTask> = {
         title: val.title!,
         description: val.description || '',
         status: (val.status as TaskStatus) || 'bekliyor',
         dueDate: val.dueDate || null,
-      });
+      };
+
+      if (this.isEditing() && this.editingTaskId()) {
+        await this.taskService.update(this.editingTaskId()!, payload);
+        this.alertService.toastSuccess('Görev başarıyla güncellendi');
+      } else {
+        await this.taskService.create(payload);
+        this.alertService.toastSuccess('Yeni görev oluşturuldu');
+      }
       this.closeDrawer();
     } catch (err: any) {
       console.error('Görev kaydedilemedi:', err);
+      this.alertService.error('Hata', err?.message || 'Görev kaydedilemedi.');
     } finally {
       this.isSubmitting.set(false);
     }

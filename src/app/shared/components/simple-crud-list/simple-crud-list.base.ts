@@ -87,6 +87,7 @@ export abstract class SimpleCrudListBase<T extends NamedEntity> {
 
   // Veri ve filtre sinyalleri
   rawItems = signal<T[]>([]);
+  loading = signal(true);
   searchTerm = signal('');
   viewMode = signal<'grid' | 'table'>('grid');
 
@@ -126,9 +127,17 @@ export abstract class SimpleCrudListBase<T extends NamedEntity> {
 
   /** Alt sınıf constructor'ında service atandıktan hemen sonra çağrılmalı */
   protected init() {
+    this.loading.set(true);
     this.items$ = this.service.list();
-    this.items$.subscribe((list) => {
-      this.rawItems.set(list || []);
+    this.items$.subscribe({
+      next: (list) => {
+        this.rawItems.set(list || []);
+        this.loading.set(false);
+      },
+      error: (err) => {
+        console.error('Veri yükleme hatası:', err);
+        this.loading.set(false);
+      },
     });
   }
 
@@ -158,6 +167,7 @@ export abstract class SimpleCrudListBase<T extends NamedEntity> {
   }
 
   async save() {
+    if (this.isSaving()) return;
     const name = this.formName().trim();
     if (!name) {
       this.errorMessage.set(`Lütfen ${this.title.toLowerCase()} adını belirtiniz.`);
@@ -192,6 +202,7 @@ export abstract class SimpleCrudListBase<T extends NamedEntity> {
   }
 
   async remove(id: string, itemName?: string) {
+    if (this.isSaving()) return;
     const displayName = itemName || this.title.toLowerCase();
     const confirmed = await this.alertService.confirmDelete(
       `${this.title} Sil`,
@@ -224,7 +235,7 @@ export abstract class SimpleCrudListBase<T extends NamedEntity> {
 
     const confirmed = await this.alertService.confirm(
       'Varsayılanları Yükle',
-      'Türkiye hayvancılık standartlarına uygun hazır tanımlar (Hayvan Tipleri, Irklar, Padoklar, Tedavi Türleri, Hastalıklar) çiftliğinize yüklenecektir. Eksik olanlar eklenecek, mükerrer kayıtlar otomatik ayıklanacaktır. Onaylıyor musunuz?',
+      'Türkiye hayvancılık standartlarına uygun hazır tanımlar (Hayvan Tipleri, Irklar, Padoklar, Tedavi Türleri, Hastalıklar, Sürüler, Depolar, Stok Kategorileri, Muhasebe Kalemleri, Ölüm Nedenleri) çiftliğinize yüklenecektir. Eksik olanlar eklenecek, mükerrer kayıtlar otomatik ayıklanacaktır. Onaylıyor musunuz?',
       'Evet, Yükle',
       'Vazgeç'
     );

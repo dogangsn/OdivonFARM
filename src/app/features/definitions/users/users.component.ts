@@ -9,6 +9,7 @@ import { FarmMemberService } from '../../../core/services/farm-member.service';
 import { FarmContextService } from '../../../core/services/farm-context.service';
 import { AlertService } from '../../../core/services/alert.service';
 import { FarmMember, AppRole, ROLE_CATALOG, RoleCatalogItem } from '../../../core/models/farm.model';
+import { AuditService, LoginLogEntry } from '../../../core/services/audit.service';
 
 import { Router } from '@angular/router';
 import { SubscriptionService } from '../../../core/services/subscription.service';
@@ -22,6 +23,7 @@ import { SubscriptionService } from '../../../core/services/subscription.service
 })
 export class UsersComponent implements OnInit, OnDestroy {
   private memberService = inject(FarmMemberService);
+  private auditService = inject(AuditService);
   protected farmContext = inject(FarmContextService);
   protected subService = inject(SubscriptionService);
   private alertService = inject(AlertService);
@@ -39,6 +41,10 @@ export class UsersComponent implements OnInit, OnDestroy {
   // Modal State
   isModalOpen = signal<boolean>(false);
   isRoleChangeModalOpen = signal<boolean>(false);
+  isLogsModalOpen = signal<boolean>(false);
+  activeLogMember = signal<FarmMember | null>(null);
+  selectedMemberLogs = signal<LoginLogEntry[]>([]);
+  loadingMemberLogs = signal<boolean>(false);
   isSubmitting = signal<boolean>(false);
   editingMember = signal<FarmMember | null>(null);
 
@@ -200,6 +206,7 @@ export class UsersComponent implements OnInit, OnDestroy {
   }
 
   async saveMember() {
+    if (this.isSubmitting()) return;
     if (!this.formModel.displayName.trim()) {
       this.alertService.error('Eksik Bilgi', 'Lütfen kullanıcının adını ve soyadını giriniz.');
       return;
@@ -270,6 +277,7 @@ export class UsersComponent implements OnInit, OnDestroy {
   }
 
   async saveRoleChange() {
+    if (this.isSubmitting()) return;
     const member = this.selectedMemberForRoleChange();
     if (!member || !member.id) return;
 
@@ -314,5 +322,61 @@ export class UsersComponent implements OnInit, OnDestroy {
     } catch (err: any) {
       this.alertService.error('Hata', err?.message || 'Kullanıcı çıkarılırken bir hata oluştu.');
     }
+  }
+
+  // --- Login Audit Logs Modal ---
+
+  async openLoginLogsModal(member: FarmMember) {
+    if (!member) return;
+    this.activeLogMember.set(member);
+    this.isLogsModalOpen.set(true);
+    this.loadingMemberLogs.set(true);
+    this.selectedMemberLogs.set([]);
+
+    const uid = member.uid || member.id;
+    if (uid) {
+      try {
+        const logs = await this.auditService.getUserLoginLogs(uid, 20);
+        this.selectedMemberLogs.set(logs);
+      } catch (err) {
+        console.warn('Giriş logları alınırken hata:', err);
+      }
+    }
+    this.loadingMemberLogs.set(false);
+  }
+
+  closeLoginLogsModal() {
+    this.isLogsModalOpen.set(false);
+    this.activeLogMember.set(null);
+  }
+
+  formatLastActive(val: any): string {
+    if (!val) return 'Henüz giriş yapmadı';
+    let d: Date;
+    if (val && typeof val.toDate === 'function') {
+      d = val.toDate();
+    } else if (val && val.seconds) {
+      d = new Date(val.seconds * 1000);
+    } else if (typeof val === 'string' || typeof val === 'number') {
+      d = new Date(val);
+    } else if (val instanceof Date) {
+      d = val;
+    } else {
+      return 'Bilinmiyor';
+    }
+
+    if (isNaN(d.getTime())) return 'Bilinmiyor';
+
+    const now = new Date();
+    const diffMs = now.getTime() - d.getTime();
+    const diffMin = Math.floor(diffMs / 60000);
+    if (diffMin < 2) return 'Şu an aktif (Az önce)';
+    if (diffMin < 60) return `${diffMin} dk önce`;
+    const diffHours = Math.floor(diffMin / 60);
+    if (diffHours < 24 && now.getDate() === d.getDate()) {
+      const time = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      return `Bugün ${time}`;
+    }
+    return d.toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
   }
 }

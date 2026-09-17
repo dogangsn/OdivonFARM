@@ -60,11 +60,19 @@ export class AnimalsComponent {
   private router = inject(Router);
 
   // Live signals
+  loading = signal(true);
   animals = toSignal(this.animalService.list(), { initialValue: [] as Animal[] });
   breeds = toSignal(this.breedService.list(), { initialValue: [] as Breed[] });
   herds = toSignal(this.herdService.list(), { initialValue: [] as Herd[] });
   paddocks = toSignal(this.paddockService.list(), { initialValue: [] as Paddock[] });
   animalTypes = toSignal(this.animalTypeService.list(), { initialValue: [] as AnimalType[] });
+
+  constructor() {
+    this.animalService.list().subscribe({
+      next: () => this.loading.set(false),
+      error: () => this.loading.set(false),
+    });
+  }
 
   // Filter signals - initialized with '' so dropdowns select 'Tüm ...' instead of appearing blank
   searchTerm = signal('');
@@ -326,6 +334,7 @@ export class AnimalsComponent {
   }
 
   async saveAnimal() {
+    if (this.isSaving()) return;
     const data = { ...this.form() };
     if (!data.farmTagNo?.trim()) {
       this.errorMessage.set('Lütfen çiftlik küpe numarasını giriniz.');

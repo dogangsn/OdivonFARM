@@ -26,7 +26,7 @@ import { ActivityLogEntry } from '../../core/models/operations.model';
 export interface UnifiedActivity {
   id: string;
   source: 'log' | 'animal' | 'mating' | 'treatment' | 'weight' | 'count' | 'movement' | 'stock';
-  category: 'hayvan' | 'saglik' | 'ureme' | 'tartim' | 'hareket' | 'sayim' | 'stok' | 'saha' | 'diger';
+  category: 'hayvan' | 'saglik' | 'ureme' | 'tartim' | 'hareket' | 'sayim' | 'stok' | 'saha' | 'guvenlik' | 'diger';
   categoryLabel: string;
   action: string;
   title: string;
@@ -714,6 +714,7 @@ export class ActivityLogComponent {
       case 'sayim': return 'Sayım Operasyonu';
       case 'stok': return 'Yem & Stok';
       case 'saha': return 'Saha & Rutin';
+      case 'guvenlik': return 'Giriş & Güvenlik';
       default: return 'Genel İşlem';
     }
   }
@@ -728,6 +729,7 @@ export class ActivityLogComponent {
       case 'sayim': return 'heroicons_solid:clipboard-check';
       case 'stok': return 'heroicons_solid:cube';
       case 'saha': return 'heroicons_solid:clock';
+      case 'guvenlik': return 'heroicons_solid:shield-check';
       default: return 'heroicons_solid:tag';
     }
   }
@@ -742,6 +744,7 @@ export class ActivityLogComponent {
       case 'sayim': return 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 border-emerald-200/50';
       case 'stok': return 'bg-violet-50 text-violet-700 dark:bg-violet-950/50 dark:text-violet-300 border-violet-200/50';
       case 'saha': return 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border-slate-200/50';
+      case 'guvenlik': return 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 border-emerald-200/50';
       default: return 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300';
     }
   }

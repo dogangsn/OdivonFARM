@@ -1,6 +1,6 @@
-import { Component, computed, inject, signal, ChangeDetectorRef, HostListener } from '@angular/core';
+import { Component, computed, inject, signal, effect, ChangeDetectorRef, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { NavigationCancel, NavigationEnd, NavigationError, NavigationStart, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatButtonModule } from '@angular/material/button';
@@ -57,6 +57,7 @@ export class ShellComponent {
   subService = inject(SubscriptionService);
 
   searchQuery = signal('');
+  isNavigating = signal(false);
 
   async renameCurrentFarm() {
     this.closeAllMenus();
@@ -195,15 +196,33 @@ export class ShellComponent {
 
   constructor() {
     (window as any).odivonShell = this;
-    this.router.events
-      .pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd))
-      .subscribe((e) => {
-        if (this.currentUrl() !== e.urlAfterRedirects) {
+
+    // 14 günlük deneme süresi bittiyse kullanıcıyı doğrudan /abonelik sayfasına yönlendir
+    effect(() => {
+      const isExpired = this.subService.isExpired();
+      const isLoading = this.subService.loading();
+      if (!isLoading && isExpired) {
+        if (!this.currentUrl().startsWith('/abonelik')) {
+          this.router.navigateByUrl('/abonelik');
+        }
+      }
+    });
+
+    this.router.events.subscribe((e) => {
+      if (e instanceof NavigationStart) {
+        this.isNavigating.set(true);
+      } else if (e instanceof NavigationEnd || e instanceof NavigationCancel || e instanceof NavigationError) {
+        this.isNavigating.set(false);
+        if (e instanceof NavigationEnd && this.currentUrl() !== e.urlAfterRedirects) {
           this.currentUrl.set(e.urlAfterRedirects);
           this.mobileMenuOpen.set(false);
           this.closeAllMenus();
+          if (!this.subService.loading() && this.subService.isExpired() && !e.urlAfterRedirects.startsWith('/abonelik')) {
+            this.router.navigateByUrl('/abonelik');
+          }
         }
-      });
+      }
+    });
   }
 
   userDisplayName = computed(() => {
@@ -237,15 +256,16 @@ export class ShellComponent {
       const activeFarm = this.farmContext.activeFarmId();
       if (memberships && activeFarm) {
         const m = memberships.find((x) => x.farmId === activeFarm);
-        if (m?.role === 'admin') return 'Yönetici (Admin)';
-        if (m?.role === 'yonetici') return 'İşletme Müdürü';
-        if (m?.role === 'veteriner') return 'Veteriner Hekim';
-        if (m?.role === 'saha') return 'Saha Personeli';
-        if (m?.role === 'muhasebe') return 'Muhasebe Sorumlusu';
-        if (m?.role === 'okuyucu') return 'Gözlemci';
+        const r = String(m?.role || '');
+        if (r === 'admin') return 'Yönetici';
+        if (r === 'yonetici') return 'İşletme Müdürü';
+        if (r === 'veteriner' || r === 'veterinarian') return 'Veteriner Hekim';
+        if (r === 'saha' || r === 'worker') return 'Saha Personeli';
+        if (r === 'muhasebe') return 'Muhasebe Sorumlusu';
+        if (r === 'okuyucu' || r === 'viewer') return 'Gözlemci';
       }
     } catch {}
-    return 'Yönetici (Admin)';
+    return 'Yönetici';
   });
 
   userInitials = computed(() => {
@@ -313,6 +333,7 @@ export class ShellComponent {
             { label: 'Etiketler', icon: 'heroicons_outline:bookmark', route: '/tanimlamalar/etiketler' },
             { label: 'Ölüm Nedenleri', icon: 'heroicons_outline:ban', route: '/tanimlamalar/olum-nedenleri' },
             { label: 'Depolar', icon: 'heroicons_outline:office-building', route: '/tanimlamalar/depolar' },
+            { label: 'Stok Kategorileri', icon: 'heroicons_outline:view-grid', route: '/tanimlamalar/stok-kategorileri' },
             { label: 'Muhasebe Kalemleri', icon: 'heroicons_outline:receipt-refund', route: '/tanimlamalar/muhasebe-kalemleri' },
           ],
         },
@@ -361,6 +382,12 @@ export class ShellComponent {
     }
     this.definitionsExpanded.update((v) => !v);
     this.cdr.detectChanges();
+  }
+
+  isItemLocked(item: NavItem): boolean {
+    if (!this.subService.isExpired()) return false;
+    if (item.route === '/abonelik') return false;
+    return true;
   }
 
   async logout() {

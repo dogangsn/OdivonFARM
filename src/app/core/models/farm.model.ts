@@ -8,6 +8,13 @@ export interface AppUser {
   email: string;
   displayName?: string;
   photoURL?: string;
+  phone?: string;
+  countryCode?: string;
+  country?: string;
+  language?: string;
+  lastLoginAt?: any;
+  lastLoginPlatform?: string;
+  lastLoginDevice?: string;
   /** Kullanıcının erişebildiği çiftlikler ve o çiftlikteki rolü */
   memberships: FarmMembership[];
   activeFarmId?: string;
@@ -26,6 +33,9 @@ export interface Farm {
   ownerUid: string;
   address?: string;
   phone?: string;
+  countryCode?: string;
+  country?: string;
+  language?: string;
   createdAt?: any;
   updatedAt?: any;
 }
@@ -42,6 +52,7 @@ export interface FarmMember extends BaseDoc {
   notes?: string;
   invitedBy?: string;
   lastActiveAt?: any;
+  lastLoginAt?: any;
 }
 
 /** farms/{farmId}/roles/{roleId} — özel rol tanımı (Tanımlamalar > Roller) */

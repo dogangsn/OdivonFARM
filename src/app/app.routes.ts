@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { authGuard } from './core/guards/auth.guard';
+import { authGuard, roleGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
   {
@@ -46,6 +46,8 @@ export const routes: Routes = [
       },
       {
         path: 'muhasebe',
+        canActivate: [roleGuard],
+        data: { roles: ['admin', 'yonetici', 'muhasebe'] },
         loadComponent: () =>
           import('./features/accounting/accounting.component').then((m) => m.AccountingComponent),
       },
@@ -100,6 +102,8 @@ export const routes: Routes = [
       },
       {
         path: 'geri-donusum',
+        canActivate: [roleGuard],
+        data: { roles: ['admin', 'yonetici'] },
         loadComponent: () =>
           import('./features/recycle-bin/recycle-bin.component').then((m) => m.RecycleBinComponent),
       },
@@ -172,7 +176,16 @@ export const routes: Routes = [
               import('./features/definitions/warehouses/warehouses.component').then((m) => m.WarehousesComponent),
           },
           {
+            path: 'stok-kategorileri',
+            loadComponent: () =>
+              import('./features/definitions/stock-categories/stock-categories.component').then(
+                (m) => m.StockCategoriesComponent
+              ),
+          },
+          {
             path: 'muhasebe-kalemleri',
+            canActivate: [roleGuard],
+            data: { roles: ['admin', 'yonetici', 'muhasebe'] },
             loadComponent: () =>
               import('./features/definitions/accounting-items/accounting-items.component').then(
                 (m) => m.AccountingItemsComponent
@@ -180,11 +193,15 @@ export const routes: Routes = [
           },
           {
             path: 'kullanicilar',
+            canActivate: [roleGuard],
+            data: { roles: ['admin'] },
             loadComponent: () =>
               import('./features/definitions/users/users.component').then((m) => m.UsersComponent),
           },
           {
             path: 'roller',
+            canActivate: [roleGuard],
+            data: { roles: ['admin', 'yonetici'] },
             loadComponent: () =>
               import('./features/definitions/roles/roles.component').then((m) => m.RolesComponent),
           },

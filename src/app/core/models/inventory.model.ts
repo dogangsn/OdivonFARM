@@ -19,7 +19,9 @@ export type StockCategoryKind = 'yem' | 'sarf' | 'ilac' | 'diger';
 /** farms/{farmId}/stockCategories/{id} — Stok Kategorileri */
 export interface StockCategory extends BaseDoc {
   name: string;
-  kind: StockCategoryKind;
+  kind?: StockCategoryKind;
+  description?: string;
+  colorTheme?: string;
 }
 
 /** farms/{farmId}/stockCategories/{categoryId}/items/{itemId} — Stok Kalemleri */

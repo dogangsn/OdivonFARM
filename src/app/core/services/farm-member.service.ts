@@ -10,10 +10,15 @@ import {
 } from 'firebase/firestore';
 import { FirestoreCrudService } from './firestore-crud.service';
 import { FarmMember, AppRole, AppUser } from '../models/farm.model';
+import { EmailService } from './email.service';
+import { AuthService } from '../auth/auth.service';
 import { firstValueFrom } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class FarmMemberService extends FirestoreCrudService<FarmMember> {
+  private emailService = inject(EmailService);
+  private authService = inject(AuthService);
+
   constructor() {
     super('members');
   }
@@ -82,7 +87,25 @@ export class FarmMemberService extends FirestoreCrudService<FarmMember> {
       invitedBy: member.invitedBy || this.farmContext.currentUid() || null as any,
     };
 
-    return await this.create(newMember);
+    const memberId = await this.create(newMember);
+
+    // Davet e-postasını arka planda asenkron olarak kuyruğa ekle
+    const activeFarm = this.farmContext.activeFarm();
+    const currentUser = this.authService.currentUser;
+    const farmName = activeFarm?.name || this.farmContext.cachedFarmName() || 'Çiftlik';
+    const invitedByName = currentUser?.displayName || currentUser?.email || 'Çiftlik Yöneticisi';
+
+    this.emailService
+      .sendInvitationEmail({
+        email: cleanEmail,
+        displayName: member.displayName.trim(),
+        farmName,
+        role: member.role,
+        invitedByName,
+      })
+      .catch((err) => console.warn('[FarmMemberService] Davet e-postası kuyruğa eklenemedi:', err));
+
+    return memberId;
   }
 
   /**

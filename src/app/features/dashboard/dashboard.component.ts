@@ -96,9 +96,28 @@ export class DashboardComponent {
 
   // Yields (Milk)
   milkRecords = computed(() => this.yields().filter((y) => y.type === 'sut'));
-  todayMilkYield = computed(() => {
-    // Sum all milk yields for demonstration / records
+  totalMilkYield = computed(() => {
     return this.milkRecords().reduce((acc, y) => acc + (Number(y.amount) || 0), 0);
+  });
+  todayMilkYield = computed(() => {
+    const today = new Date();
+    const y = today.getFullYear();
+    const m = today.getMonth();
+    const d = today.getDate();
+
+    return this.milkRecords().reduce((acc, record) => {
+      if (!record.date) return acc;
+      const recordDate = typeof record.date?.toDate === 'function' ? record.date.toDate() : new Date(record.date);
+      if (isNaN(recordDate.getTime())) return acc;
+      if (
+        recordDate.getFullYear() === y &&
+        recordDate.getMonth() === m &&
+        recordDate.getDate() === d
+      ) {
+        return acc + (Number(record.amount) || 0);
+      }
+      return acc;
+    }, 0);
   });
 
   // Tasks & Health

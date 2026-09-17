@@ -70,8 +70,8 @@
               {{ userEmail() }}
             </div>
           </div>
-          <span class="px-2 py-0.5 text-[10px] font-bold rounded-lg bg-indigo-500/15 text-indigo-300 border border-indigo-500/30">
-            Admin
+          <span class="px-2 py-0.5 text-[10px] font-bold rounded-lg bg-indigo-500/15 text-indigo-300 border border-indigo-500/30 whitespace-nowrap">
+            {{ userRole() }}
           </span>
         </div>
       </div>
@@ -90,6 +90,27 @@
 
     <!-- Navigation Menu Items -->
     <nav class="flex-1 overflow-y-auto px-2.5 py-1 space-y-4 custom-scroll">
+      <!-- Expired Trial Alert Banner -->
+      @if (!sidebarCollapsed() || mobileMenuOpen()) {
+        @if (subService.isExpired()) {
+          <div class="mx-2 my-2 p-3 rounded-2xl bg-rose-950/70 border border-rose-800/80 text-rose-200 shadow-lg animate-in fade-in duration-200">
+            <div class="flex items-center gap-2 text-xs font-black text-rose-300">
+              <mat-icon class="icon-size-4 text-rose-400 shrink-0" [svgIcon]="'heroicons_solid:lock-closed'"></mat-icon>
+              <span>14 Günlük Süre Doldu</span>
+            </div>
+            <div class="text-[10px] text-rose-300/80 mt-1 leading-tight">
+              Tüm menüler ve işlemler kilitlendi. Devam etmek için bir paket seçiniz.
+            </div>
+            <a
+              routerLink="/abonelik"
+              class="inline-flex items-center justify-center gap-1.5 mt-2.5 w-full py-1.5 px-3 rounded-xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-700 hover:to-red-700 text-white text-[11px] font-black uppercase tracking-wider transition-all shadow-md shadow-rose-900/40 cursor-pointer">
+              <span>Paketleri Seç</span>
+              <mat-icon class="icon-size-3.5 text-white" [svgIcon]="'heroicons_solid:arrow-right'"></mat-icon>
+            </a>
+          </div>
+        }
+      }
+
       @for (group of navGroups; track group.title) {
         <div>
           <!-- Group Title / Divider -->
@@ -112,8 +133,11 @@
                   routerLinkActive="nav-link-active"
                   [routerLinkActiveOptions]="{ exact: item.route === '/anasayfa' }"
                   class="flex items-center gap-3.5 px-3 py-2 rounded-xl text-[13px] font-medium text-slate-300 hover:text-white hover:bg-slate-800/60 transition-colors group cursor-pointer"
-                  [ngClass]="(sidebarCollapsed() && !mobileMenuOpen()) ? 'justify-center px-0' : ''"
-                  [matTooltip]="(sidebarCollapsed() && !mobileMenuOpen()) ? item.label : ''"
+                  [ngClass]="{
+                    'justify-center px-0': sidebarCollapsed() && !mobileMenuOpen(),
+                    'opacity-40 pointer-events-none cursor-not-allowed select-none': isItemLocked(item)
+                  }"
+                  [matTooltip]="isItemLocked(item) ? item.label + ' (Süre Doldu - Kilitli)' : ((sidebarCollapsed() && !mobileMenuOpen()) ? item.label : '')"
                   matTooltipPosition="right"
                 >
                   <mat-icon
@@ -122,7 +146,9 @@
                   </mat-icon>
                   @if (!sidebarCollapsed() || mobileMenuOpen()) {
                     <span class="truncate flex-1 font-medium">{{ item.label }}</span>
-                    @if (item.badge) {
+                    @if (isItemLocked(item)) {
+                      <mat-icon class="icon-size-3.5 text-amber-400/90 shrink-0" [svgIcon]="'heroicons_solid:lock-closed'"></mat-icon>
+                    } @else if (item.badge) {
                       <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full text-white {{ item.badgeColor || 'bg-emerald-500' }} shadow-xs">
                         {{ item.badge }}
                       </span>
@@ -132,7 +158,11 @@
               } @else {
                 <!-- Collapsible Group: Tanımlamalar (Native Details/Summary Accordion) -->
                 @if (!sidebarCollapsed() || mobileMenuOpen()) {
-                  <details class="group/defs select-none" [open]="definitionsExpanded()" (toggle)="onDefinitionsToggle($event)">
+                  <details
+                    class="group/defs select-none"
+                    [open]="definitionsExpanded()"
+                    (toggle)="onDefinitionsToggle($event)"
+                    [ngClass]="subService.isExpired() ? 'opacity-40 pointer-events-none cursor-not-allowed' : ''">
                     <summary
                       id="definitions-toggle-btn"
                       class="list-none w-full flex items-center gap-3.5 px-3 py-2 rounded-xl text-[13px] font-medium transition-colors cursor-pointer text-left select-none outline-none"
@@ -144,7 +174,9 @@
                         [svgIcon]="item.icon">
                       </mat-icon>
                       <span class="truncate flex-1 font-medium pointer-events-none">{{ item.label }}</span>
-                      @if (isDefinitionsActive()) {
+                      @if (subService.isExpired()) {
+                        <mat-icon class="icon-size-3.5 text-amber-400/90 mr-1" [svgIcon]="'heroicons_solid:lock-closed'"></mat-icon>
+                      } @else if (isDefinitionsActive()) {
                         <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1"></span>
                       }
                       <mat-icon
@@ -160,10 +192,14 @@
                           [routerLink]="sub.route"
                           routerLinkActive="sub-link-active"
                           class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/60 transition-colors group"
+                          [ngClass]="subService.isExpired() ? 'pointer-events-none opacity-40 cursor-not-allowed' : ''"
                         >
                           <mat-icon class="icon-size-4 text-slate-400 group-hover:text-white" [svgIcon]="sub.icon">
                           </mat-icon>
-                          <span class="truncate">{{ sub.label }}</span>
+                          <span class="truncate flex-1">{{ sub.label }}</span>
+                          @if (subService.isExpired()) {
+                            <mat-icon class="icon-size-3 text-amber-400/80" [svgIcon]="'heroicons_solid:lock-closed'"></mat-icon>
+                          }
                         </a>
                       }
                     </div>
@@ -173,8 +209,9 @@
                   <button
                     type="button"
                     [matMenuTriggerFor]="definitionsCompactMenu"
-                    class="w-full flex items-center justify-center py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800/60 transition-colors cursor-pointer"
-                    [matTooltip]="item.label"
+                    [disabled]="subService.isExpired()"
+                    class="w-full flex items-center justify-center py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800/60 transition-colors cursor-pointer disabled:opacity-40 disabled:pointer-events-none"
+                    [matTooltip]="subService.isExpired() ? item.label + ' (Kilitli)' : item.label"
                     matTooltipPosition="right"
                   >
                     <mat-icon class="icon-size-5 text-slate-400 hover:text-white" [svgIcon]="item.icon"></mat-icon>
@@ -188,7 +225,8 @@
                       <button
                         mat-menu-item
                         [routerLink]="sub.route"
-                        class="!text-slate-300 hover:!text-white hover:!bg-slate-800/60 !rounded-xl !text-xs !h-9"
+                        [disabled]="subService.isExpired()"
+                        class="!text-slate-300 hover:!text-white hover:!bg-slate-800/60 !rounded-xl !text-xs !h-9 disabled:!opacity-40"
                       >
                         <mat-icon class="icon-size-4 text-slate-400" [svgIcon]="sub.icon"></mat-icon>
                         <span>{{ sub.label }}</span>
@@ -260,6 +298,18 @@
 
       <!-- Right: Action Icons & Menus -->
       <div class="flex items-center gap-2 sm:gap-3">
+        <!-- Trial Expired Warning Badge in Header -->
+        @if (subService.isExpired()) {
+          <a
+            routerLink="/abonelik"
+            class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-300 text-xs font-bold hover:bg-rose-100 dark:hover:bg-rose-900/80 transition-colors shadow-2xs cursor-pointer animate-pulse"
+            matTooltip="14 günlük deneme süresi doldu. Paketleri incelemek için tıklayın.">
+            <mat-icon class="icon-size-4 text-rose-600 dark:text-rose-400" [svgIcon]="'heroicons_solid:lock-closed'"></mat-icon>
+            <span class="hidden sm:inline">14 Günlük Süre Doldu (Menü Kilitli)</span>
+            <span class="sm:hidden">Kilitli</span>
+          </a>
+        }
+
         <!-- Farm Selector Dropdown -->
         <div class="relative">
           <button
@@ -604,6 +654,13 @@
         </div>
       </div>
     </header>
+
+    <!-- Global Top Indeterminate Loader Bar (Navigation & Data Sync) -->
+    @if (isNavigating() || subService.loading()) {
+      <div class="relative w-full h-1 bg-indigo-100/70 dark:bg-indigo-950/50 overflow-hidden z-30">
+        <div class="absolute inset-y-0 h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 animate-indeterminate rounded-full"></div>
+      </div>
+    }
 
     <!-- MAIN ROUTE OUTLET VIEW -->
     <main class="flex-1 overflow-y-auto bg-[#f8fafc] dark:bg-[#0b1120] relative custom-scroll">

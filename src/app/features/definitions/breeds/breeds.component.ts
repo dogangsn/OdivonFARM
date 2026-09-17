@@ -74,9 +74,17 @@ export class BreedsComponent {
   }
 
   // Data streams
+  readonly loading = signal(true);
   readonly breeds = toSignal(this.breedService.list(), { initialValue: [] as Breed[] });
   readonly animals = toSignal(this.animalService.list(), { initialValue: [] as Animal[] });
   readonly animalTypes = toSignal(this.animalTypeService.list(), { initialValue: [] as AnimalType[] });
+
+  constructor() {
+    this.breedService.list().subscribe({
+      next: () => this.loading.set(false),
+      error: () => this.loading.set(false),
+    });
+  }
 
   // Filters & State
   readonly searchTerm = signal('');
@@ -223,6 +231,7 @@ export class BreedsComponent {
   }
 
   async saveBreed() {
+    if (this.isSaving()) return;
     const f = this.form();
     const name = f.name.trim();
 

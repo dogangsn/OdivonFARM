@@ -1,35 +1,98 @@
 rules_version = '2';
 
-// ÖNEMLİ: Bu kurallar iskelet aşaması için başlangıç noktasıdır.
-// Prodüksiyona almadan önce mutlaka test edilmeli ve rol bazlı yazma
-// izinleri (ör. sadece 'muhasebe' rolü muhasebe koleksiyonuna yazabilsin)
-// detaylandırılmalıdır.
-
-function isSignedIn() {
-  return request.auth != null;
-}
-
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isFarmMember(farmId) {
+      return isSignedIn() && (
+        farmId == 'odivon-farm-default' ||
+        exists(/databases/$(database)/documents/farms/$(farmId)/members/$(request.auth.uid)) ||
+        (exists(/databases/$(database)/documents/farms/$(farmId)) &&
+         get(/databases/$(database)/documents/farms/$(farmId)).data.ownerUid == request.auth.uid)
+      );
+    }
+
+    function getFarmMember(farmId) {
+      return get(/databases/$(database)/documents/farms/$(farmId)/members/$(request.auth.uid)).data;
+    }
+
+    function isFarmAdmin(farmId) {
+      return isSignedIn() && (
+        farmId == 'odivon-farm-default' ||
+        (exists(/databases/$(database)/documents/farms/$(farmId)) &&
+         get(/databases/$(database)/documents/farms/$(farmId)).data.ownerUid == request.auth.uid) ||
+        (exists(/databases/$(database)/documents/farms/$(farmId)/members/$(request.auth.uid)) &&
+         getFarmMember(farmId).role == 'admin')
+      );
+    }
+
+    function canWriteFarmData(farmId) {
+      return isFarmMember(farmId) && (
+        isFarmAdmin(farmId) ||
+        (exists(/databases/$(database)/documents/farms/$(farmId)/members/$(request.auth.uid)) &&
+         getFarmMember(farmId).role != 'okuyucu')
+      );
+    }
+
+    // Kullanıcı profilleri
     match /users/{uid} {
       allow read: if isSignedIn();
       allow write: if isSignedIn() && request.auth.uid == uid;
-    }
 
-    match /farms/{farmId} {
-      allow read, write: if isSignedIn();
-
-      // Çiftlik altındaki tüm alt koleksiyonlar (animals, breeds, herds,
-      // paddocks, treatments, matings, weightRecords, stockMovements,
-      // accountingTransactions, tasks, counts, yields, activityLog vb.)
-      match /{collectionPath=**} {
-        allow read, write: if isSignedIn();
+      // Kullanıcı oturum ve giriş logları
+      match /loginLogs/{logId} {
+        allow read, write: if isSignedIn() && request.auth.uid == uid;
       }
     }
 
+    // Çiftlik ana dokümanı ve tüm alt koleksiyonları
+    match /farms/{farmId} {
+      allow create: if isSignedIn() && request.resource.data.ownerUid == request.auth.uid;
+      allow read: if isFarmMember(farmId);
+      allow update, delete: if isFarmAdmin(farmId);
+
+      // Çiftlik aktivite ve denetim günlüğü
+      match /activityLog/{logId} {
+        allow read: if isFarmMember(farmId);
+        allow create, write: if isFarmMember(farmId);
+      }
+
+      // Çiftlik üyeleri
+      match /members/{memberId} {
+        allow read: if isFarmMember(farmId);
+        allow write: if isFarmAdmin(farmId) || (isSignedIn() && request.auth.uid == memberId);
+      }
+
+      // Abonelik bilgisi
+      match /subscription/{subDoc} {
+        allow read: if isFarmMember(farmId);
+        allow write: if isFarmAdmin(farmId);
+      }
+
+      // Muhasebe hareketleri (okuyucu ve saha hariç)
+      match /accounting-tx/{txId} {
+        allow read: if isFarmMember(farmId);
+        allow write: if isFarmMember(farmId) && (
+          isFarmAdmin(farmId) ||
+          getFarmMember(farmId).role in ['yonetici', 'muhasebe']
+        );
+      }
+
+      // Diğer tüm operasyonel koleksiyonlar (animals, treatments, matings, weights, tasks, counts, yields, stock vb.)
+      match /{collectionPath=**} {
+        allow read: if isFarmMember(farmId);
+        allow write: if canWriteFarmData(farmId);
+      }
+    }
+
+    // E-posta kuyruğu (Cloud Functions SMTP tetikleyicisi)
     match /mail/{mailId} {
-      allow create, read: if isSignedIn();
+      allow create: if isSignedIn();
+      allow read, update: if isSignedIn();
     }
   }
 }

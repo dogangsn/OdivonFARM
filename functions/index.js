@@ -5,13 +5,17 @@ const nodemailer = require('nodemailer');
 admin.initializeApp();
 
 // Hostinger SMTP Transporter Yapılandırması
+// Canlı ortamda (Production) kimlik bilgileri ortam değişkenleri (Cloud Secrets / process.env) üzerinden alınır.
+const smtpUser = process.env.SMTP_USER || 'info@odivon.com';
+const smtpPass = process.env.SMTP_PASS || '123654Dg$#';
+
 const transporter = nodemailer.createTransport({
-  host: 'smtp.hostinger.com',
-  port: 465,
+  host: process.env.SMTP_HOST || 'smtp.hostinger.com',
+  port: Number(process.env.SMTP_PORT) || 465,
   secure: true, // SSL port 465
   auth: {
-    user: 'info@odivon.com',
-    pass: '123654Dg$#',
+    user: smtpUser,
+    pass: smtpPass,
   },
 });
 

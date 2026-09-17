@@ -276,6 +276,15 @@
               <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed border border-slate-100 dark:border-slate-800">
                 {{ roleInfo.shortDescription }}
               </div>
+
+              <!-- Last login / active status -->
+              <div class="flex items-center justify-between pt-1 text-[11px] text-slate-500 dark:text-slate-400">
+                <span class="flex items-center gap-1.5">
+                  <span class="w-1.5 h-1.5 rounded-full" [ngClass]="(member.lastLoginAt || member.lastActiveAt) ? 'bg-emerald-500' : 'bg-slate-300'"></span>
+                  <span>Son Giriş:</span>
+                </span>
+                <span class="font-medium text-slate-700 dark:text-slate-300">{{ formatLastActive(member.lastLoginAt || member.lastActiveAt) }}</span>
+              </div>
             </div>
           </div>
 
@@ -292,6 +301,16 @@
             </button>
 
             <div class="flex items-center gap-1">
+              <!-- View Login Logs -->
+              <button
+                type="button"
+                (click)="openLoginLogsModal(member)"
+                class="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 transition-colors cursor-pointer"
+                matTooltip="Giriş / Oturum Logları"
+              >
+                <mat-icon class="icon-size-4">history</mat-icon>
+              </button>
+
               <!-- Edit Details -->
               <button
                 type="button"
@@ -330,6 +349,7 @@
               <th class="py-3 px-4">Telefon</th>
               <th class="py-3 px-4">Unvan</th>
               <th class="py-3 px-4">Rol</th>
+              <th class="py-3 px-4">Son Giriş</th>
               <th class="py-3 px-4 text-right">İşlemler</th>
             </tr>
           </thead>
@@ -379,9 +399,25 @@
                   </span>
                 </td>
 
+                <!-- Last Login -->
+                <td class="py-3 px-4">
+                  <div class="flex items-center gap-1.5 text-[11px] text-slate-600 dark:text-slate-300">
+                    <span class="w-1.5 h-1.5 rounded-full" [ngClass]="(member.lastLoginAt || member.lastActiveAt) ? 'bg-emerald-500' : 'bg-slate-300'"></span>
+                    <span class="truncate">{{ formatLastActive(member.lastLoginAt || member.lastActiveAt) }}</span>
+                  </div>
+                </td>
+
                 <!-- Actions -->
                 <td class="py-3 px-4 text-right">
                   <div class="flex items-center justify-end gap-1">
+                    <button
+                      type="button"
+                      (click)="openLoginLogsModal(member)"
+                      class="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 transition-colors cursor-pointer"
+                      matTooltip="Giriş / Oturum Logları"
+                    >
+                      <mat-icon class="icon-size-4">history</mat-icon>
+                    </button>
                     <button
                       type="button"
                       (click)="openRoleChangeModal(member)"
@@ -691,6 +727,115 @@
             <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
           }
           <span>Rolü Kaydet</span>
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- LOGIN AUDIT LOGS MODAL -->
+@if (isLogsModalOpen()) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-800 w-full max-w-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+      <!-- Modal Header -->
+      <div class="px-6 py-4 bg-slate-50 dark:bg-slate-800/60 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-100 dark:border-indigo-800 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
+            <mat-icon class="icon-size-5">security</mat-icon>
+          </div>
+          <div>
+            <h3 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <span>Giriş ve Oturum Logları</span>
+              @if (activeLogMember()?.displayName) {
+                <span class="text-xs px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 font-normal text-slate-500">
+                  {{ activeLogMember()?.displayName }}
+                </span>
+              }
+            </h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400">
+              {{ activeLogMember()?.email }} · Cihaz, IP ve oturum geçmişi
+            </p>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          (click)="closeLoginLogsModal()"
+          class="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+        >
+          <mat-icon class="icon-size-5">close</mat-icon>
+        </button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="p-6 max-h-[60vh] overflow-y-auto">
+        @if (loadingMemberLogs()) {
+          <div class="flex flex-col items-center justify-center py-12 gap-3">
+            <div class="w-8 h-8 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+            <p class="text-xs font-medium text-slate-500">Giriş logları yükleniyor...</p>
+          </div>
+        } @else if (selectedMemberLogs().length === 0) {
+          <div class="text-center py-12">
+            <div class="w-12 h-12 mx-auto mb-3 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400">
+              <mat-icon class="icon-size-6">history_toggle_off</mat-icon>
+            </div>
+            <h4 class="text-sm font-bold text-slate-800 dark:text-slate-200">Henüz Kayıtlı Giriş Bulunmuyor</h4>
+            <p class="text-xs text-slate-400 mt-1 max-w-sm mx-auto">
+              Bu kullanıcı için sisteme kayıtlı bir oturum açma geçmişi henüz mevcut değil. Yeni girişler anlık olarak buraya kaydedilir.
+            </p>
+          </div>
+        } @else {
+          <div class="space-y-3">
+            <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">
+              Son {{ selectedMemberLogs().length }} Oturum
+            </div>
+            @for (log of selectedMemberLogs(); track log.id || $index) {
+              <div class="p-3.5 rounded-xl border border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-800/30 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors flex items-start justify-between gap-3">
+                <div class="flex items-start gap-3">
+                  <div class="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5"
+                    [ngClass]="log.status === 'success' ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-800' : 'bg-rose-50 text-rose-600'">
+                    <mat-icon class="icon-size-5">
+                      {{ log.device === 'mobile' ? 'smartphone' : (log.device === 'tablet' ? 'tablet_mac' : 'computer') }}
+                    </mat-icon>
+                  </div>
+                  <div>
+                    <div class="flex items-center gap-2">
+                      <span class="text-xs font-bold text-slate-900 dark:text-white">
+                        {{ log.browser || 'Tarayıcı' }} · {{ log.os || 'İşletim Sistemi' }}
+                      </span>
+                      <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold uppercase"
+                        [ngClass]="log.status === 'success' ? 'bg-emerald-100/80 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300' : 'bg-rose-100 text-rose-700'">
+                        {{ log.status === 'success' ? 'Başarılı' : 'Başarısız' }}
+                      </span>
+                    </div>
+                    <div class="text-[11px] text-slate-400 mt-0.5 font-mono truncate max-w-md">
+                      {{ log.userAgent || 'Web Tarayıcısı' }}
+                    </div>
+                  </div>
+                </div>
+
+                <div class="text-right flex-shrink-0 text-[11px] text-slate-500 dark:text-slate-400">
+                  <div class="font-medium text-slate-700 dark:text-slate-300">
+                    {{ formatLastActive(log.timestamp) }}
+                  </div>
+                  <div class="text-[10px] text-slate-400 font-mono">
+                    {{ log.platform || 'web' }}
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="px-6 py-3.5 bg-slate-50 dark:bg-slate-800/60 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end">
+        <button
+          type="button"
+          (click)="closeLoginLogsModal()"
+          class="px-4 py-2 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-700/60 rounded-xl transition-colors cursor-pointer"
+        >
+          Kapat
         </button>
       </div>
     </div>

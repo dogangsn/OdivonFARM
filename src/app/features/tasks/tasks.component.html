@@ -163,14 +163,22 @@
             </div>
 
             <!-- Right: Actions -->
-            <div class="flex items-center gap-2 flex-shrink-0">
+            <div class="flex items-center gap-1 flex-shrink-0">
+              <button
+                type="button"
+                (click)="openEditDrawer(task)"
+                class="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 rounded-xl transition-colors cursor-pointer"
+                matTooltip="Görevi Düzenle"
+              >
+                <mat-icon class="icon-size-4" [svgIcon]="'heroicons_outline:pencil'"></mat-icon>
+              </button>
               <button
                 type="button"
                 (click)="deleteTask(task)"
-                class="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-xl transition-colors opacity-0 group-hover:opacity-100"
+                class="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-xl transition-colors cursor-pointer"
                 matTooltip="Görevi Sil"
               >
-                <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:trash'"></mat-icon>
+                <mat-icon class="icon-size-4" [svgIcon]="'heroicons_outline:trash'"></mat-icon>
               </button>
             </div>
           </div>
@@ -210,8 +218,8 @@
       <!-- Drawer Header -->
       <div class="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-800">
         <div>
-          <h2 class="text-lg font-bold text-default">Yeni Görev Tanımla</h2>
-          <p class="text-xs text-secondary mt-0.5">Çiftlik iş emri detaylarını girin</p>
+          <h2 class="text-lg font-bold text-default">{{ isEditing() ? 'Görevi Düzenle' : 'Yeni Görev Tanımla' }}</h2>
+          <p class="text-xs text-secondary mt-0.5">{{ isEditing() ? 'Görev detaylarını güncelleyin' : 'Çiftlik iş emri detaylarını girin' }}</p>
         </div>
         <button
           type="button"
@@ -245,7 +253,7 @@
         </div>
 
         <div>
-          <label class="block text-xs font-semibold text-default mb-1">Başlangıç Durumu</label>
+          <label class="block text-xs font-semibold text-default mb-1">Durum</label>
           <select
             formControlName="status"
             class="w-full px-3.5 py-2.5 text-xs rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-default focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
@@ -287,7 +295,7 @@
           @if (isSubmitting()) {
             <span>Kaydediliyor...</span>
           } @else {
-            <span>Görevi Kaydet</span>
+            <span>{{ isEditing() ? 'Değişiklikleri Kaydet' : 'Görevi Oluştur' }}</span>
           }
         </button>
       </div>

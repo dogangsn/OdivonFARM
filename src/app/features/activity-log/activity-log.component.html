@@ -178,6 +178,13 @@
           [ngClass]="selectedCategory() === 'saha' ? 'bg-slate-700 text-white shadow-xs' : 'bg-slate-100 dark:bg-slate-800 text-secondary hover:text-default'">
           <span>Saha & Rutin</span>
         </button>
+        <button
+          (click)="selectedCategory.set('guvenlik')"
+          class="px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1"
+          [ngClass]="selectedCategory() === 'guvenlik' ? 'bg-emerald-600 text-white shadow-xs' : 'bg-slate-100 dark:bg-slate-800 text-secondary hover:text-default'">
+          <mat-icon class="icon-size-3.5" [svgIcon]="'heroicons_solid:shield-check'"></mat-icon>
+          <span>Giriş & Güvenlik</span>
+        </button>
       </div>
 
     </div>

@@ -43,7 +43,15 @@ export class AccountsComponent {
   private service = inject(AccountService);
   private alertService = inject(AlertService);
 
+  readonly loading = signal(true);
   readonly accounts = toSignal(this.service.list(), { initialValue: [] as Account[] });
+
+  constructor() {
+    this.service.list().subscribe({
+      next: () => this.loading.set(false),
+      error: () => this.loading.set(false),
+    });
+  }
 
   // Filters & View state
   readonly searchTerm = signal('');
@@ -134,6 +142,7 @@ export class AccountsComponent {
   }
 
   async saveAccount() {
+    if (this.isSaving()) return;
     const f = this.form();
     const title = f.title.trim();
     if (!title) {
