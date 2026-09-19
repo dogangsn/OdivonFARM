@@ -35,10 +35,20 @@
     </div>
 
     <!-- Actions -->
-    <div class="flex shrink-0 items-center mt-6 sm:mt-0 sm:ml-4 gap-3">
+    <div class="flex shrink-0 items-center mt-6 sm:mt-0 sm:ml-4 gap-3 flex-wrap">
+      <button
+        type="button"
+        (click)="openVetAssistant()"
+        class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-indigo-600 hover:from-rose-500 hover:to-indigo-500 active:from-rose-700 text-white text-xs sm:text-sm font-bold shadow-lg shadow-rose-600/25 flex items-center gap-2 transition-all active:scale-95 cursor-pointer"
+        matTooltip="Semptom analizi ve acil klinik ilk yardım triyajı başlat"
+      >
+        <mat-icon class="icon-size-4.5" [svgIcon]="'heroicons_outline:sparkles'"></mat-icon>
+        <span>AI Veteriner Asistanı & Triyaj</span>
+      </button>
+
       <button
         mat-flat-button
-        class="!bg-amber-600 !text-white !rounded-xl !px-4 !py-2.5 !font-medium flex items-center shadow-md shadow-amber-500/20"
+        class="!bg-amber-600 !text-white !rounded-xl !px-4 !py-2.5 !font-bold flex items-center shadow-md shadow-amber-500/20"
         (click)="openAddDrawer()">
         <mat-icon class="icon-size-5 mr-1.5" [svgIcon]="'heroicons_solid:plus'"></mat-icon>
         <span>Yeni Tedavi / Aşı</span>
@@ -358,6 +368,15 @@
 
       </div>
     </div>
+  }
+
+  <!-- AI Vet Assistant Modal -->
+  @if (isVetAssistantOpen()) {
+    <app-vet-assistant-modal
+      [animals]="animals()"
+      (close)="closeVetAssistant()"
+      (startTreatment)="onTriageStartTreatment($event)"
+    ></app-vet-assistant-modal>
   }
 
 </div>

@@ -1,0 +1,290 @@
+<!-- AI VETERINARY ASSISTANT & CLINICAL TRIAGE MODAL -->
+<div class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 md:p-6 bg-slate-950/85 backdrop-blur-md animate-in fade-in duration-200">
+  <div class="fixed inset-0" (click)="close.emit()"></div>
+
+  <div
+    class="relative z-10 w-full max-w-3xl max-h-[92vh] flex flex-col rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden text-slate-900 dark:text-slate-100"
+    (click)="$event.stopPropagation()"
+  >
+    <!-- Modal Header -->
+    <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800 bg-gradient-to-r from-rose-500/10 via-amber-500/10 to-indigo-500/10">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-rose-500 to-indigo-600 text-white flex items-center justify-center shadow-lg shadow-rose-500/20">
+          <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:sparkles'"></mat-icon>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h2 class="text-base font-bold text-slate-900 dark:text-white tracking-tight">
+              AI Veteriner Asistanı & Klinik Triyaj
+            </h2>
+            <span class="px-2 py-0.5 text-[10px] font-black rounded-full bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300 border border-rose-300 dark:border-rose-800">
+              Canlı Teşhis Desteği
+            </span>
+          </div>
+          <p class="text-xs text-slate-500 dark:text-slate-400">
+            Semptomları seçin; aciliyet seviyesi, ilk yardım protokolü ve hayati uyarılar anında analiz edilsin.
+          </p>
+        </div>
+      </div>
+
+      <button
+        type="button"
+        (click)="close.emit()"
+        class="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+      >
+        <mat-icon class="icon-size-5" [svgIcon]="'heroicons_solid:x'"></mat-icon>
+      </button>
+    </div>
+
+    <!-- Scrollable Modal Body -->
+    <div class="flex-1 overflow-y-auto p-6 space-y-5 custom-scroll text-xs">
+      <!-- Animal & Species Quick Picker -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 p-4 rounded-2xl bg-slate-50 dark:bg-slate-850/60 border border-slate-200/80 dark:border-slate-800">
+        <!-- Optional Animal Selector -->
+        <div>
+          <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">
+            Hasta Hayvan (Opsiyonel)
+          </label>
+          <select
+            [ngModel]="selectedAnimalId()"
+            (ngModelChange)="onAnimalSelected($event)"
+            class="w-full px-3 py-2 text-xs rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-rose-500/20 font-medium">
+            <option value="">Hayvan Seçilmedi (Genel Analiz)</option>
+            @for (a of animals; track a.id) {
+              <option [value]="a.id">
+                {{ a.farmTagNo || a.nationalTagNo }} {{ a.name ? '(' + a.name + ')' : '' }}
+              </option>
+            }
+          </select>
+        </div>
+
+        <!-- Species Filter -->
+        <div>
+          <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">
+            Hayvan Türü
+          </label>
+          <select
+            [ngModel]="selectedSpecies()"
+            (ngModelChange)="selectedSpecies.set($event)"
+            class="w-full px-3 py-2 text-xs rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-rose-500/20 font-medium">
+            <option value="all">Tüm Türler</option>
+            <option value="cattle">Büyükbaş (İnek / Boğa / Düve / Dana)</option>
+            <option value="sheep_goat">Küçükbaş (Koyun / Koç / Keçi / Kuzu)</option>
+          </select>
+        </div>
+
+        <!-- Life Stage -->
+        <div>
+          <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">
+            Yaşam Evresi / Durum
+          </label>
+          <select
+            [ngModel]="selectedLifeStage()"
+            (ngModelChange)="selectedLifeStage.set($event)"
+            class="w-full px-3 py-2 text-xs rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-rose-500/20 font-medium">
+            <option value="all">Tümü (Genel)</option>
+            <option value="yeni_dogum">Yeni Doğum Yaptı (İlk 72 Saat)</option>
+            <option value="laktasyon">Laktasyonda (Sağmal Dönem)</option>
+            <option value="gebe">Gebe (İleri Dönem)</option>
+            <option value="besi">Besi Dönemi</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Symptom Selector (Categorized interactive pills) -->
+      <div class="space-y-3">
+        <div class="flex items-center justify-between">
+          <div>
+            <div class="text-xs font-bold text-slate-800 dark:text-slate-200">
+              Gözlemlenen Semptom ve Belirtileri Seçin
+            </div>
+            <div class="text-[11px] text-slate-500 dark:text-slate-400">
+              Birden fazla belirtiyi tıklayarak teşhis hassasiyetini artırabilirsiniz.
+            </div>
+          </div>
+
+          @if (selectedSymptoms().length > 0) {
+            <button
+              type="button"
+              (click)="clearSymptoms()"
+              class="text-[11px] font-bold text-rose-500 hover:underline cursor-pointer"
+            >
+              Seçimleri Temizle ({{ selectedSymptoms().length }})
+            </button>
+          }
+        </div>
+
+        <!-- Symptom Groups -->
+        <div class="space-y-3">
+          @for (cat of symptomCategories(); track cat) {
+            <div>
+              <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+                {{ cat }}
+              </div>
+              <div class="flex flex-wrap gap-2">
+                @for (sym of getSymptomsByCategory(cat); track sym.id) {
+                  <button
+                    type="button"
+                    (click)="toggleSymptom(sym.id)"
+                    class="px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer border select-none active:scale-95"
+                    [ngClass]="isSymptomSelected(sym.id)
+                      ? 'bg-rose-600 text-white border-rose-500 shadow-md shadow-rose-600/20'
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700'"
+                  >
+                    <mat-icon class="icon-size-3.5" [svgIcon]="sym.icon"></mat-icon>
+                    <span>{{ sym.label }}</span>
+                  </button>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- TRIAGE RESULTS DISPLAY -->
+      <div class="border-t border-slate-200 dark:border-slate-800 pt-4">
+        @if (selectedSymptoms().length === 0) {
+          <!-- Empty prompt state -->
+          <div class="p-8 text-center rounded-2xl bg-slate-50 dark:bg-slate-850/40 border border-dashed border-slate-300 dark:border-slate-700 text-slate-400 space-y-2">
+            <mat-icon class="icon-size-8 text-slate-400 mx-auto" [svgIcon]="'heroicons_outline:search'"></mat-icon>
+            <div class="text-xs font-bold text-slate-600 dark:text-slate-300">
+              Analiz Başlatmak İçin Yukarıdaki Belirtileri Seçiniz
+            </div>
+            <div class="text-[11px] text-slate-400 max-w-sm mx-auto">
+              Örnek: "Yatıp Kalkamama" ve "Kulaklarda Soğukluk" seçildiğinde doğum felci (hipokalsemi) protokolü otomatik devreye girer.
+            </div>
+          </div>
+        } @else if (triageResults().length === 0) {
+          <!-- No match found -->
+          <div class="p-6 text-center rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-300">
+            <div class="font-bold text-xs">Belirtilen semptom kombinasyonuna tam uyan kritik vaka bulunamadı.</div>
+            <div class="text-[11px] mt-1 text-amber-700 dark:text-amber-400">
+              Lütfen şüpheli durumlarda vakit kaybetmeden yetkili veteriner hekiminize danışınız.
+            </div>
+          </div>
+        } @else {
+          <!-- MATCHED SCENARIOS -->
+          <div class="space-y-4">
+            <div class="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center justify-between">
+              <span>Tespit Edilen Klinik Tablolar ({{ triageResults().length }})</span>
+              <span class="text-[11px] font-normal text-slate-400">Eşleşme oranına göre sıralandı</span>
+            </div>
+
+            @for (res of triageResults(); track res.scenario.id) {
+              <div
+                class="p-5 rounded-2xl border transition-all space-y-3.5 shadow-sm"
+                [ngClass]="res.scenario.urgency === 'critical'
+                  ? 'bg-rose-950/20 border-rose-500/50 shadow-rose-950/20 ring-1 ring-rose-500/30'
+                  : res.scenario.urgency === 'high'
+                  ? 'bg-amber-950/20 border-amber-500/40'
+                  : 'bg-slate-50 dark:bg-slate-850/60 border-slate-200 dark:border-slate-700'"
+              >
+                <!-- Scenario Title & Urgency Badge -->
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-slate-200/60 dark:border-slate-800 pb-3">
+                  <div>
+                    <div class="flex items-center gap-2">
+                      <h4 class="text-sm font-black text-slate-900 dark:text-white">
+                        {{ res.scenario.name }}
+                      </h4>
+                      <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-indigo-500/20 text-indigo-400 border border-indigo-500/30">
+                        %{{ res.matchScore }} Eşleşme
+                      </span>
+                    </div>
+                    <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                      {{ res.scenario.description }}
+                    </p>
+                  </div>
+
+                  <!-- Urgency Badge -->
+                  <div class="flex-shrink-0">
+                    @if (res.scenario.urgency === 'critical') {
+                      <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-rose-600 text-white font-black text-xs shadow-md shadow-rose-600/30 animate-pulse">
+                        <mat-icon class="icon-size-4" [svgIcon]="'heroicons_solid:exclamation'"></mat-icon>
+                        <span>🔴 KRİTİK ACİL (DAKİKALAR ÖNEMLİ)</span>
+                      </span>
+                    } @else if (res.scenario.urgency === 'high') {
+                      <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-amber-600 text-white font-bold text-xs shadow-md shadow-amber-600/30">
+                        <mat-icon class="icon-size-4" [svgIcon]="'heroicons_solid:exclamation'"></mat-icon>
+                        <span>🟠 YÜKSEK ÖNCELİK (BUGÜN MÜDAHALE)</span>
+                      </span>
+                    } @else {
+                      <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-slate-600 text-white font-semibold text-xs">
+                        <span>🟡 TAKİP VE TEDAVİ</span>
+                      </span>
+                    }
+                  </div>
+                </div>
+
+                <!-- 1. Immediate First Aid (Ne Yapılmalı?) -->
+                <div class="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-800/60 space-y-1.5">
+                  <div class="text-[11px] font-bold text-emerald-800 dark:text-emerald-300 flex items-center gap-1.5">
+                    <mat-icon class="icon-size-4 text-emerald-600 dark:text-emerald-400" [svgIcon]="'heroicons_solid:check-circle'"></mat-icon>
+                    <span>VETERİNER GELENE KADAR İLK YARDIM (YAPILMASI GEREKENLER):</span>
+                  </div>
+                  <ul class="space-y-1 pl-5 list-disc text-emerald-900 dark:text-emerald-200 text-[11px] leading-relaxed">
+                    @for (aid of res.scenario.immediateFirstAid; track aid) {
+                      <li>{{ aid }}</li>
+                    }
+                  </ul>
+                </div>
+
+                <!-- 2. Contraindications (KESİNLİKLE YAPILMAMASI GEREKENLER!) -->
+                @if (res.scenario.contraindications.length > 0) {
+                  <div class="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/50 border border-rose-200/80 dark:border-rose-800/80 space-y-1.5">
+                    <div class="text-[11px] font-black text-rose-800 dark:text-rose-300 flex items-center gap-1.5">
+                      <mat-icon class="icon-size-4 text-rose-600 dark:text-rose-400" [svgIcon]="'heroicons_solid:ban'"></mat-icon>
+                      <span>HAYATİ UYARI! KESİNLİKLE YAPILMAMASI GEREKENLER:</span>
+                    </div>
+                    <ul class="space-y-1 pl-5 list-disc text-rose-900 dark:text-rose-200 text-[11px] leading-relaxed font-semibold">
+                      @for (contra of res.scenario.contraindications; track contra) {
+                        <li>{{ contra }}</li>
+                      }
+                    </ul>
+                  </div>
+                }
+
+                <!-- 3. Recommended Medication / Protocol Guide -->
+                <div class="p-3 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                  <div>
+                    <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                      Olası İlaç & Etken Madde Rehberi
+                    </div>
+                    <div class="text-xs font-bold text-slate-800 dark:text-slate-200 mt-0.5">
+                      {{ res.scenario.recommendedMedicationGroup }}
+                    </div>
+                  </div>
+
+                  <!-- Quick Action: Start Treatment -->
+                  <button
+                    type="button"
+                    (click)="onStartTreatmentClicked(res.scenario)"
+                    class="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-black shadow-md shadow-emerald-600/20 flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer flex-shrink-0"
+                  >
+                    <mat-icon class="icon-size-4" [svgIcon]="'heroicons_solid:plus'"></mat-icon>
+                    <span>1-Tıkla Tedavi Kaydı Başlat</span>
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Modal Footer -->
+    <div class="px-6 py-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-850 flex items-center justify-between text-xs">
+      <div class="text-[11px] text-slate-500 flex items-center gap-1.5">
+        <mat-icon class="icon-size-4 text-amber-500" [svgIcon]="'heroicons_solid:information-circle'"></mat-icon>
+        <span>Bu asistan ilk yardım ve triyaj desteğidir; veteriner teşhisinin yerine geçmez.</span>
+      </div>
+
+      <button
+        type="button"
+        (click)="close.emit()"
+        class="px-5 py-2 rounded-xl bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold transition-colors cursor-pointer"
+      >
+        Kapat
+      </button>
+    </div>
+  </div>
+</div>

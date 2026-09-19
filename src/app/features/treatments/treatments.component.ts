@@ -13,6 +13,8 @@ import { Treatment, TreatmentType, Disease } from '../../core/models/health.mode
 import { Animal } from '../../core/models/animal.model';
 import { AlertService } from '../../core/services/alert.service';
 
+import { VetAssistantModalComponent } from './components/vet-assistant-modal/vet-assistant-modal.component';
+
 @Component({
   selector: 'app-treatments',
   standalone: true,
@@ -22,6 +24,7 @@ import { AlertService } from '../../core/services/alert.service';
     MatIconModule,
     MatButtonModule,
     MatTooltipModule,
+    VetAssistantModalComponent,
   ],
   templateUrl: './treatments.component.html',
   styleUrls: ['./treatments.component.scss'],
@@ -38,6 +41,47 @@ export class TreatmentsComponent {
   readonly animals = toSignal(this.animalService.list(), { initialValue: [] as Animal[] });
   readonly treatmentTypes = toSignal(this.treatmentTypeService.list(), { initialValue: [] as TreatmentType[] });
   readonly diseases = toSignal(this.diseaseService.list(), { initialValue: [] as Disease[] });
+
+  // AI Vet Assistant
+  readonly isVetAssistantOpen = signal(false);
+
+  openVetAssistant() {
+    this.isVetAssistantOpen.set(true);
+  }
+
+  closeVetAssistant() {
+    this.isVetAssistantOpen.set(false);
+  }
+
+  onTriageStartTreatment(event: { animalId?: string; scenario: any; note: string }) {
+    this.closeVetAssistant();
+    this.isEditing.set(false);
+    this.editingId.set(null);
+    this.errorMessage.set(null);
+
+    let matchedDiseaseId = '';
+    if (event.scenario?.name) {
+      const match = this.diseases().find(
+        (d) =>
+          d.name.toLowerCase().includes(event.scenario.id) ||
+          event.scenario.name.toLowerCase().includes(d.name.toLowerCase())
+      );
+      if (match) matchedDiseaseId = match.id!;
+    }
+
+    this.form.set({
+      animalId: event.animalId || (this.animals().length > 0 ? this.animals()[0].id! : ''),
+      treatmentTypeId: this.treatmentTypes().length > 0 ? this.treatmentTypes()[0].id! : '',
+      diseaseId: matchedDiseaseId,
+      date: new Date().toISOString().substring(0, 10),
+      dosage: '',
+      performedBy: 'Veteriner Kliniği / Acil Triyaj',
+      cost: undefined,
+      note: event.note,
+    });
+
+    this.showDrawer.set(true);
+  }
 
   // UI State
   readonly searchTerm = signal('');

@@ -27,6 +27,9 @@ export interface NavGroup {
   items: NavItem[];
 }
 
+import { TagScannerService } from '../../../core/services/tag-scanner.service';
+import { TagScannerModalComponent } from '../tag-scanner/tag-scanner-modal.component';
+
 /**
  * Fuse v17 esintili ultra-modern uygulama kabuğu (Layout).
  * Klasik koyu lacivert/slate dikey navigasyon barı, açık renkli üst bar,
@@ -44,6 +47,7 @@ export interface NavGroup {
     MatMenuModule,
     MatButtonModule,
     MatTooltipModule,
+    TagScannerModalComponent,
   ],
   templateUrl: './shell.component.html',
   styleUrl: './shell.component.scss',
@@ -55,9 +59,26 @@ export class ShellComponent {
   private alertService = inject(AlertService);
   farmContext = inject(FarmContextService);
   subService = inject(SubscriptionService);
+  tagScanner = inject(TagScannerService);
 
   searchQuery = signal('');
   isNavigating = signal(false);
+
+  @HostListener('window:keydown', ['$event'])
+  handleKeyboardShortcut(event: KeyboardEvent) {
+    if ((event.ctrlKey || event.metaKey) && (event.key === 'k' || event.key === 'K')) {
+      event.preventDefault();
+      this.openTagScanner('numpad');
+    }
+  }
+
+  openTagScanner(mode: 'scanner' | 'numpad' = 'scanner') {
+    this.tagScanner.openScanner((animal) => {
+      this.router.navigate(['/hayvanlar'], {
+        queryParams: { tag: animal.farmTagNo || animal.nationalTagNo || animal.id },
+      });
+    }, mode);
+  }
 
   async renameCurrentFarm() {
     this.closeAllMenus();
@@ -308,6 +329,7 @@ export class ShellComponent {
       items: [
         { label: 'Stok Giriş / Çıkış', icon: 'heroicons_outline:cube', route: '/stok' },
         { label: 'Rasyon & Yem', icon: 'heroicons_outline:cake', route: '/rasyon' },
+        { label: 'Kurbanlık & Hisse', icon: 'heroicons_outline:gift', route: '/kurbanlik', badge: 'Yeni', badgeColor: 'bg-rose-500' },
         { label: 'Muhasebe', icon: 'heroicons_outline:cash', route: '/muhasebe' },
         { label: 'Sigortalı Hayvanlar', icon: 'heroicons_outline:document-text', route: '/sigortali-hayvanlar' },
         { label: 'Raporlar', icon: 'heroicons_outline:chart-pie', route: '/raporlar' },

@@ -16,9 +16,14 @@ import { YieldRecordService } from '../../core/services/yield-record.service';
 import { ActivityLogService } from '../../core/services/activity-log.service';
 import { PaddockService } from '../../core/services/definitions/paddock.service';
 import { HerdService } from '../../core/services/definitions/herd.service';
+import { StockItemService } from '../../core/services/stock-item.service';
+import { BriefingSectionOptions, BriefingService } from '../../core/services/briefing.service';
 import { AuthService } from '../../core/auth/auth.service';
 import { FarmContextService } from '../../core/services/farm-context.service';
 import { Animal, FarmTask, Treatment, Mating, YieldRecord } from '../../core/models';
+import { StockItem } from '../../core/models/inventory.model';
+import { BriefingModalComponent } from './components/briefing-modal/briefing-modal.component';
+import { signal } from '@angular/core';
 
 @Component({
   selector: 'app-dashboard',
@@ -30,6 +35,7 @@ import { Animal, FarmTask, Treatment, Mating, YieldRecord } from '../../core/mod
     MatIconModule,
     MatProgressBarModule,
     MatRippleModule,
+    BriefingModalComponent,
   ],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss',
@@ -47,11 +53,55 @@ export class DashboardComponent {
   private activityLogService = inject(ActivityLogService);
   private paddockService = inject(PaddockService);
   private herdService = inject(HerdService);
+  private stockItemService = inject(StockItemService);
+  private briefingService = inject(BriefingService);
 
   // User & Farm
   appUser = toSignal(this.authService.appUser$);
   activeFarmId = this.farmContext.activeFarmId;
   farmName = this.farmContext.activeFarmName;
+
+  // Briefing state
+  isBriefingModalOpen = signal(false);
+  briefingOptions = signal<BriefingSectionOptions>({
+    includeBirths: true,
+    includePregnancyChecks: true,
+    includeTreatments: true,
+    includeTasks: true,
+    includeStock: true,
+    includeYields: true,
+  });
+
+  stockItems = toSignal(this.stockItemService.list(), { initialValue: [] as StockItem[] });
+
+  dailyBriefingSummary = computed(() => {
+    return this.briefingService.generateSummary(
+      this.farmName(),
+      this.animals(),
+      this.matings(),
+      this.treatments(),
+      this.tasks(),
+      this.stockItems(),
+      this.yields(),
+      this.briefingOptions()
+    );
+  });
+
+  openBriefingModal() {
+    this.isBriefingModalOpen.set(true);
+  }
+
+  closeBriefingModal() {
+    this.isBriefingModalOpen.set(false);
+  }
+
+  updateBriefingOptions(options: BriefingSectionOptions) {
+    this.briefingOptions.set(options);
+  }
+
+  quickShareWhatsApp() {
+    this.briefingService.openWhatsApp(this.dailyBriefingSummary().messageText);
+  }
 
   userInitials = computed(() => {
     const name = this.appUser()?.displayName || this.appUser()?.email || 'U';

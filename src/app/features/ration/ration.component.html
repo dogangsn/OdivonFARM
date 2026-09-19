@@ -4,21 +4,28 @@
   <div class="relative flex flex-col sm:flex-row flex-0 sm:items-center sm:justify-between py-6 md:py-8 px-6 md:px-8 border-b bg-card">
     <div>
       <div class="flex items-center gap-3">
-        <div class="w-12 h-12 rounded-2xl bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+        <div class="w-12 h-12 rounded-2xl bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 flex items-center justify-center shadow-lg shadow-amber-500/10">
           <mat-icon class="icon-size-6" [svgIcon]="'heroicons_outline:cake'"></mat-icon>
         </div>
         <div>
-          <div class="text-3xl font-extrabold tracking-tight text-default">Rasyon & Yem Formülasyonu</div>
-          <div class="text-xs font-medium text-secondary mt-0.5">
-            Sürü dönemi ve hayvan grubuna özel yem karışımları, reçete oranları ve baş başı besleme planı.
+          <div class="flex items-center gap-2.5">
+            <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight text-default">
+              Akıllı Rasyon & Besin Dengesi
+            </h1>
+            <span class="px-2 py-0.5 text-[10px] font-black rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
+              Maliyet & Stok Düşümü
+            </span>
           </div>
+          <p class="text-xs font-medium text-secondary mt-0.5">
+            NRC/INRA standartlarında bilimsel besin dengesi analizi, hayvan başı günlük maliyet ve padok bazlı otomatik stok düşümü.
+          </p>
         </div>
       </div>
 
       <!-- Quick KPI Badges -->
       <div class="flex items-center gap-2 mt-4 flex-wrap">
         <span class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-default">
-          Toplam Rasyon: <strong class="text-primary">{{ stats().totalRations }}</strong>
+          Kayıtlı Rasyon: <strong class="text-primary">{{ stats().totalRations }}</strong>
         </span>
         <span class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-400 border border-amber-200/50">
           Hedef Grup: <strong>{{ stats().distinctGroups }}</strong>
@@ -33,7 +40,7 @@
     <div class="flex shrink-0 items-center mt-6 sm:mt-0 sm:ml-4 gap-2.5">
       <button
         mat-flat-button
-        class="!bg-amber-600 !text-white !rounded-xl !px-4 !py-2.5 !font-medium flex items-center shadow-md shadow-amber-500/20"
+        class="!bg-gradient-to-r !from-amber-600 !to-orange-600 !text-white !rounded-xl !px-4 !py-2.5 !font-bold flex items-center shadow-lg shadow-amber-600/25 active:scale-95 transition-all"
         (click)="openAddDrawer()">
         <mat-icon class="icon-size-5 mr-1.5" [svgIcon]="'heroicons_solid:plus'"></mat-icon>
         <span>Yeni Rasyon Tanımla</span>
@@ -76,7 +83,7 @@
         </div>
         <div class="text-base font-bold text-default">Henüz Rasyon Reçetesi Tanımlanmamış</div>
         <p class="text-xs text-secondary mt-1 max-w-sm mx-auto">
-          Gebe koyunlar, besi kuzuları veya koçlar için dengeli yem rasyonları oluşturarak yem maliyetlerinizi ve hayvan gelişimini optimize edin.
+          Süt inekleri, besi danaları veya gebe koyunlar için dengeli yem rasyonları oluşturarak yem maliyetlerinizi ve hayvan sağlığını optimize edin.
         </p>
         <div class="mt-5 flex justify-center gap-3">
           <button
@@ -90,12 +97,13 @@
     } @else {
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         @for (r of filteredRations(); track r.id) {
+          @let metrics = getRationMetrics(r);
           <div class="p-5 rounded-2xl bg-card border border-gray-200/80 dark:border-gray-700/60 shadow-xs hover:shadow-md transition-all flex flex-col justify-between">
             <div>
               <!-- Top bar -->
               <div class="flex items-start justify-between">
                 <div>
-                  <span class="text-2xs font-bold px-2 py-0.5 rounded-md bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300">
+                  <span class="text-2xs font-bold px-2.5 py-0.5 rounded-md bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300">
                     {{ r.targetGroup || 'Genel Sürü' }}
                   </span>
                   <h4 class="text-base font-bold text-default mt-2">{{ r.name }}</h4>
@@ -118,17 +126,42 @@
                 </div>
               </div>
 
-              <!-- Total Mix weight -->
-              <div class="mt-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 flex items-center justify-between">
-                <span class="text-xs font-medium text-secondary">Rasyon Ağırlığı (Baş Başı / Karışım)</span>
-                <span class="text-base font-extrabold text-amber-600 dark:text-amber-400">
-                  {{ calculateTotalKg(r.items) }} kg
-                </span>
+              <!-- Scientific Nutrient & Cost Mini Dashboard -->
+              <div class="mt-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/50 space-y-2">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-medium text-secondary">Günlük Yem Maliyeti:</span>
+                  <span class="text-sm font-black text-emerald-600 dark:text-emerald-400">
+                    {{ metrics.costPerAnimalDay }} ₺ <span class="text-[10px] font-normal text-secondary">/ hayvan / gün</span>
+                  </span>
+                </div>
+
+                <div class="grid grid-cols-3 gap-1.5 pt-1 text-center border-t border-slate-200/50 dark:border-slate-700/50 text-[11px]">
+                  <div class="p-1 rounded bg-white dark:bg-slate-900">
+                    <div class="text-[10px] text-secondary font-medium">Protein</div>
+                    <div class="font-bold text-default font-mono">%{{ metrics.crudeProteinPercent }}</div>
+                  </div>
+                  <div class="p-1 rounded bg-white dark:bg-slate-900">
+                    <div class="text-[10px] text-secondary font-medium">Enerji (NEL)</div>
+                    <div class="font-bold text-default font-mono">{{ metrics.averageNELMcal }} Mcal</div>
+                  </div>
+                  <div class="p-1 rounded bg-white dark:bg-slate-900">
+                    <div class="text-[10px] text-secondary font-medium">Kaba / Kesif</div>
+                    <div class="font-bold text-default font-mono">%{{ metrics.roughageRatioPercent }}/{{ metrics.concentrateRatioPercent }}</div>
+                  </div>
+                </div>
+
+                <!-- Acidosis or Protein Warning Chip if any -->
+                @if (metrics.fiberStatus === 'asidoz_riski') {
+                  <div class="px-2 py-1 rounded-lg bg-rose-500/15 border border-rose-500/30 text-rose-600 dark:text-rose-400 text-[10px] font-bold flex items-center gap-1">
+                    <mat-icon class="icon-size-3.5" [svgIcon]="'heroicons_solid:exclamation'"></mat-icon>
+                    <span>Asidoz Riski! Saman/Kaba yem yetersiz</span>
+                  </div>
+                }
               </div>
 
               <!-- Ingredients List -->
-              <div class="mt-4 space-y-2">
-                <div class="text-2xs font-semibold text-secondary uppercase tracking-wider">Yem Bileşenleri</div>
+              <div class="mt-4 space-y-1.5">
+                <div class="text-2xs font-semibold text-secondary uppercase tracking-wider">Yem Bileşenleri ({{ r.items.length }} Kalem)</div>
                 @for (item of r.items; track item.stockItemId) {
                   <div class="text-xs flex items-center justify-between py-1 border-b border-gray-100 dark:border-gray-800/60 last:border-0">
                     <div class="flex items-center gap-2">
@@ -146,8 +179,18 @@
               </div>
             </div>
 
-            <!-- Footer Action -->
-            <div class="mt-5 pt-3 border-t border-gray-100 dark:border-gray-800 flex justify-end">
+            <!-- Footer Action Buttons -->
+            <div class="mt-5 pt-3 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between gap-2">
+              <button
+                type="button"
+                (click)="openDeductModal(r)"
+                class="px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
+                matTooltip="Seçili padoktaki hayvan sayısı kadar yem stoktan düş"
+              >
+                <mat-icon class="icon-size-4" [svgIcon]="'heroicons_outline:truck'"></mat-icon>
+                <span>Padoka Dağıt & Stoktan Düş</span>
+              </button>
+
               <button
                 mat-button
                 class="!text-xs !text-amber-600 !font-semibold"
@@ -162,7 +205,7 @@
 
   </div>
 
-  <!-- Slide-Over Drawer -->
+  <!-- SLIDE-OVER DRAWER (Ration Form & Live Calculator) -->
   @if (showDrawer()) {
     <div class="fixed inset-0 z-50 overflow-hidden">
       <!-- Backdrop -->
@@ -171,20 +214,20 @@
         (click)="closeDrawer()"></div>
 
       <div class="absolute inset-y-0 right-0 max-w-full flex pl-10">
-        <div class="w-screen max-w-lg bg-card shadow-2xl border-l border-gray-200 dark:border-gray-700 flex flex-col">
+        <div class="w-screen max-w-xl bg-card shadow-2xl border-l border-gray-200 dark:border-gray-700 flex flex-col">
 
           <!-- Drawer Header -->
-          <div class="p-6 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+          <div class="p-6 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between bg-gradient-to-r from-amber-500/10 via-transparent to-transparent">
             <div class="flex items-center gap-3">
               <div class="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 flex items-center justify-center">
                 <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:cake'"></mat-icon>
               </div>
               <div>
                 <h3 class="text-base font-bold text-default">
-                  {{ isEditing() ? 'Rasyon Reçetesini Düzenle' : 'Yeni Rasyon Reçetesi' }}
+                  {{ isEditing() ? 'Rasyon Reçetesini Düzenle' : 'Yeni Akıllı Rasyon' }}
                 </h3>
                 <p class="text-2xs text-secondary">
-                  Yem hammaddeleri ve karışım oranlarını belirleyin.
+                  Yem hammaddeleri, rasyon oranları ve canlı besin dengesi.
                 </p>
               </div>
             </div>
@@ -212,119 +255,337 @@
                 type="text"
                 [ngModel]="form().name"
                 (ngModelChange)="form().name = $event"
-                placeholder="Örn: Gebe Koyun Son Dönem Rasyonu, Besi Başlangıç..."
+                placeholder="Örn: Yüksek Verim Süt Rasyonu, Besi Bitiş 500kg..."
                 class="w-full px-3 py-2.5 bg-slate-100 dark:bg-slate-750 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500/20 text-default font-medium" />
             </div>
 
-            <!-- Target Group -->
+            <!-- Target Group (NRC / INRA Standards) -->
             <div>
-              <label class="block font-semibold text-secondary mb-1.5">Hedef Hayvan Grubu</label>
-              <input
-                type="text"
+              <label class="block font-semibold text-secondary mb-1.5">Hedef Hayvan Grubu (Besin Standartları) *</label>
+              <select
                 [ngModel]="form().targetGroup"
                 (ngModelChange)="form().targetGroup = $event"
-                placeholder="Örn: Gebe Koyunlar, Besi Kuzuları, Damızlık Koçlar..."
-                class="w-full px-3 py-2.5 bg-slate-100 dark:bg-slate-750 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500/20 text-default font-medium" />
+                class="w-full px-3 py-2.5 bg-slate-100 dark:bg-slate-750 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500/20 text-default font-medium">
+                @for (group of targetGroups; track group) {
+                  <option [value]="group">{{ group }}</option>
+                }
+              </select>
+            </div>
+
+            <!-- LIVE SCIENTIFIC ANALYSIS CARD -->
+            @let metrics = formCalculatedMetrics();
+            <div class="p-4 rounded-2xl bg-gradient-to-br from-slate-900 to-slate-950 border border-slate-800 text-white space-y-3 shadow-md">
+              <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                <div class="text-xs font-bold text-amber-400 flex items-center gap-1.5">
+                  <mat-icon class="icon-size-4" [svgIcon]="'heroicons_outline:chart-bar'"></mat-icon>
+                  <span>Canlı Besin Dengesi & Maliyet Analizi</span>
+                </div>
+                <span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold">
+                  {{ metrics.costPerAnimalDay }} ₺ / baş / gün
+                </span>
+              </div>
+
+              <!-- 4 Metrics Grid -->
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
+                <!-- Protein -->
+                <div class="p-2 rounded-xl bg-slate-800/80 border border-slate-700/60">
+                  <div class="text-[10px] text-slate-400 font-semibold">Ham Protein (HP)</div>
+                  <div class="text-base font-black font-mono mt-0.5"
+                    [ngClass]="metrics.proteinStatus === 'ideal' ? 'text-emerald-400' : metrics.proteinStatus === 'yuksek' ? 'text-amber-400' : 'text-blue-400'">
+                    %{{ metrics.crudeProteinPercent }}
+                  </div>
+                  <span class="text-[9px] font-bold uppercase tracking-wider"
+                    [ngClass]="metrics.proteinStatus === 'ideal' ? 'text-emerald-400' : 'text-slate-400'">
+                    {{ metrics.proteinStatus === 'ideal' ? 'İdeal Denge' : metrics.proteinStatus === 'yuksek' ? 'Fazla Protein' : 'Düşük Protein' }}
+                  </span>
+                </div>
+
+                <!-- Energy -->
+                <div class="p-2 rounded-xl bg-slate-800/80 border border-slate-700/60">
+                  <div class="text-[10px] text-slate-400 font-semibold">Net Enerji (NEL)</div>
+                  <div class="text-base font-black font-mono text-emerald-400 mt-0.5">
+                    {{ metrics.averageNELMcal }} <span class="text-[10px] font-normal text-slate-400">Mcal</span>
+                  </div>
+                  <span class="text-[9px] text-slate-400 font-bold uppercase tracking-wider">
+                    kg KM Başına
+                  </span>
+                </div>
+
+                <!-- Kuru Madde -->
+                <div class="p-2 rounded-xl bg-slate-800/80 border border-slate-700/60">
+                  <div class="text-[10px] text-slate-400 font-semibold">Kuru Madde (KM)</div>
+                  <div class="text-base font-black font-mono text-white mt-0.5">
+                    %{{ metrics.averageDryMatterPercent }}
+                  </div>
+                  <span class="text-[9px] text-slate-400 font-bold">
+                    {{ metrics.totalDryMatterKg }} kg KM
+                  </span>
+                </div>
+
+                <!-- 1 kg Maliyet -->
+                <div class="p-2 rounded-xl bg-slate-800/80 border border-slate-700/60">
+                  <div class="text-[10px] text-slate-400 font-semibold">1 kg Rasyon</div>
+                  <div class="text-base font-black font-mono text-amber-400 mt-0.5">
+                    {{ metrics.costPerKg }} ₺
+                  </div>
+                  <span class="text-[9px] text-slate-400 font-bold">
+                    Toplam: {{ metrics.totalAsFedKg }} kg
+                  </span>
+                </div>
+              </div>
+
+              <!-- Roughage vs Concentrate Ratio Bar -->
+              <div>
+                <div class="flex items-center justify-between text-[11px] font-semibold text-slate-300 mb-1">
+                  <span>🌾 Kaba Yem: %{{ metrics.roughageRatioPercent }}</span>
+                  <span>🌽 Kesif Yem: %{{ metrics.concentrateRatioPercent }}</span>
+                </div>
+                <div class="w-full h-2 rounded-full bg-slate-800 overflow-hidden flex">
+                  <div class="h-full bg-amber-500 transition-all duration-300" [style.width.%]="metrics.roughageRatioPercent"></div>
+                  <div class="h-full bg-indigo-500 transition-all duration-300" [style.width.%]="metrics.concentrateRatioPercent"></div>
+                </div>
+              </div>
+
+              <!-- Warnings / Formulation Tips -->
+              @if (metrics.warnings.length > 0) {
+                <div class="p-2.5 rounded-xl bg-slate-800/90 border border-slate-700 space-y-1 text-[11px]">
+                  @for (w of metrics.warnings; track w) {
+                    <div class="flex items-start gap-1.5 text-amber-300">
+                      <mat-icon class="icon-size-3.5 text-amber-400 flex-shrink-0 mt-0.5" [svgIcon]="'heroicons_solid:exclamation'"></mat-icon>
+                      <span>{{ w }}</span>
+                    </div>
+                  }
+                </div>
+              }
             </div>
 
             <!-- Ingredients Section -->
-            <div class="pt-2">
-              <div class="flex items-center justify-between mb-2">
-                <label class="font-bold text-default">Yem Hammaddeleri & Miktarları (kg)</label>
+            <div class="space-y-3 pt-2">
+              <div class="flex items-center justify-between">
+                <div>
+                  <div class="font-bold text-default text-sm">Yem Hammaddeleri & Miktarları</div>
+                  <div class="text-2xs text-secondary">
+                    Hayvan başına günlük verilecek yaş miktar (kg).
+                  </div>
+                </div>
                 <button
                   type="button"
-                  (click)="addItemRow()"
-                  class="text-2xs font-bold text-amber-600 hover:text-amber-700 flex items-center gap-1">
-                  <mat-icon class="icon-size-3.5" [svgIcon]="'heroicons_solid:plus'"></mat-icon>
-                  <span>+ Yem Ekle</span>
+                  mat-stroked-button
+                  class="!text-xs !text-amber-600 !border-amber-400 !rounded-xl !py-1 !px-2.5"
+                  (click)="addItemRow()">
+                  <mat-icon class="icon-size-4 mr-1" [svgIcon]="'heroicons_solid:plus'"></mat-icon>
+                  Yem Ekle
                 </button>
               </div>
 
-              <!-- Items Table -->
+              <!-- Ingredients List -->
               <div class="space-y-2.5">
                 @for (item of form().items; track $index) {
-                  <div class="flex items-center gap-2 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-gray-200 dark:border-gray-700">
-                    <!-- Feed Item Select -->
+                  <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-700/60 flex items-center gap-2">
+                    <!-- Stock item selector -->
                     <div class="flex-1">
                       <select
-                        [ngModel]="item.stockItemId"
-                        (ngModelChange)="item.stockItemId = $event"
-                        class="w-full px-2.5 py-1.5 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg text-default text-xs font-medium">
-                        <option value="" disabled>Yem Seçin</option>
-                        @for (si of stockItems(); track si.id) {
-                          <option [value]="si.id">{{ si.name }} ({{ si.unit }})</option>
+                        [(ngModel)]="item.stockItemId"
+                        class="w-full px-2.5 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-default focus:outline-none focus:ring-1 focus:ring-amber-500 font-medium">
+                        @for (stock of stockItems(); track stock.id) {
+                          <option [value]="stock.id">{{ stock.name }} ({{ stock.unit || 'kg' }})</option>
                         }
                       </select>
                     </div>
 
-                    <!-- Amount Kg -->
-                    <div class="w-24 relative">
-                      <input
-                        type="number"
-                        step="0.1"
-                        min="0.01"
-                        [ngModel]="item.amountKg"
-                        (ngModelChange)="item.amountKg = $event"
-                        placeholder="Kg"
-                        class="w-full px-2.5 py-1.5 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg text-default text-xs font-bold" />
-                      <span class="absolute right-2 top-1/2 -translate-y-1/2 text-2xs text-secondary font-semibold pointer-events-none">
-                        kg
-                      </span>
+                    <!-- Amount input -->
+                    <div class="w-24">
+                      <div class="relative">
+                        <input
+                          type="number"
+                          [(ngModel)]="item.amountKg"
+                          min="0.1"
+                          step="0.1"
+                          placeholder="Miktar"
+                          class="w-full px-2.5 py-2 pr-8 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-default font-mono font-bold focus:outline-none focus:ring-1 focus:ring-amber-500" />
+                        <span class="absolute right-2 top-1/2 -translate-y-1/2 text-2xs text-secondary font-bold">kg</span>
+                      </div>
                     </div>
 
-                    <!-- Remove Button -->
+                    <!-- Remove row -->
                     <button
                       type="button"
                       mat-icon-button
-                      class="!w-7 !h-7 text-secondary hover:text-rose-600 shrink-0"
+                      class="!w-8 !h-8 text-secondary hover:text-rose-600 flex-shrink-0"
+                      matTooltip="Satırı Kaldır"
                       (click)="removeItemRow($index)">
                       <mat-icon class="icon-size-4" [svgIcon]="'heroicons_outline:trash'"></mat-icon>
                     </button>
                   </div>
                 }
-
-                @if (form().items.length === 0) {
-                  <div class="p-4 text-center rounded-xl bg-slate-50 dark:bg-slate-800 text-secondary text-2xs">
-                    Henüz yem hammaddesi eklenmedi. Yukarıdaki "+ Yem Ekle" butonuna tıklayın.
-                  </div>
-                }
               </div>
-
-              <!-- Total calculation summary -->
-              @if (form().items.length > 0) {
-                <div class="mt-3 p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200/50 flex items-center justify-between font-bold">
-                  <span class="text-amber-800 dark:text-amber-300">Toplam Karışım Ağırlığı:</span>
-                  <span class="text-sm text-amber-700 dark:text-amber-400">{{ formTotalKg() }} kg / baş</span>
-                </div>
-              }
             </div>
 
           </div>
 
           <!-- Drawer Footer -->
-          <div class="p-4 border-t border-gray-200 dark:border-gray-700 flex items-center justify-end gap-2.5 bg-slate-50/50 dark:bg-slate-800/40">
-            <button
-              type="button"
-              mat-stroked-button
-              class="!rounded-xl"
-              (click)="closeDrawer()"
-              [disabled]="isSaving()">
-              Vazgeç
-            </button>
-            <button
-              type="button"
-              mat-flat-button
-              class="!bg-amber-600 !text-white !rounded-xl !px-5"
-              (click)="saveRation()"
-              [disabled]="isSaving()">
-              @if (isSaving()) {
-                <span>Kaydediliyor...</span>
-              } @else {
-                <span>{{ isEditing() ? 'Güncelle' : 'Kaydet' }}</span>
-              }
-            </button>
+          <div class="p-4 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between bg-card">
+            <div class="text-xs text-secondary font-medium">
+              Toplam Karışım: <strong class="text-default">{{ formTotalKg() }} kg / baş</strong>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <button
+                mat-button
+                (click)="closeDrawer()">
+                Vazgeç
+              </button>
+              <button
+                mat-flat-button
+                class="!bg-gradient-to-r !from-amber-600 !to-orange-600 !text-white !rounded-xl !px-5 !py-2 !font-bold shadow-md shadow-amber-600/20"
+                [disabled]="isSaving()"
+                (click)="saveRation()">
+                {{ isSaving() ? 'Kaydediliyor...' : (isEditing() ? 'Güncelle' : 'Rasyonu Kaydet') }}
+              </button>
+            </div>
           </div>
 
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- FEED DISTRIBUTION & STOCK DEDUCTION MODAL -->
+  @if (isDeductModalOpen()) {
+    @let calc = deductCalculations();
+    <div class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 md:p-6 bg-slate-950/85 backdrop-blur-md animate-in fade-in duration-200">
+      <div class="fixed inset-0" (click)="closeDeductModal()"></div>
+
+      <div
+        class="relative z-10 w-full max-w-xl max-h-[92vh] flex flex-col rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden text-slate-900 dark:text-slate-100"
+        (click)="$event.stopPropagation()"
+      >
+        <!-- Modal Header -->
+        <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800 bg-gradient-to-r from-emerald-500/10 via-amber-500/10 to-transparent">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white flex items-center justify-center shadow-lg shadow-emerald-500/20">
+              <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:truck'"></mat-icon>
+            </div>
+            <div>
+              <h3 class="text-base font-bold text-slate-900 dark:text-white tracking-tight">
+                Padoka Yem Dağıtımı & Stoktan Düş
+              </h3>
+              <p class="text-xs text-slate-500 dark:text-slate-400">
+                {{ selectedRationForDeduct()?.name }}
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            (click)="closeDeductModal()"
+            class="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+          >
+            <mat-icon class="icon-size-5" [svgIcon]="'heroicons_solid:x'"></mat-icon>
+          </button>
+        </div>
+
+        <!-- Modal Body -->
+        <div class="flex-1 overflow-y-auto p-6 space-y-4 text-xs">
+          <!-- Selection Grid: Paddock & Warehouse -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">
+                Hedef Padok *
+              </label>
+              <select
+                [(ngModel)]="selectedPaddockId"
+                class="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 font-bold focus:ring-2 focus:ring-emerald-500/20 focus:outline-none">
+                @for (p of paddocks(); track p.id) {
+                  <option [value]="p.id">{{ p.name }}</option>
+                }
+              </select>
+            </div>
+
+            <div>
+              <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">
+                Çıkış Yapılacak Yem Deposu *
+              </label>
+              <select
+                [(ngModel)]="selectedWarehouseId"
+                class="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 font-bold focus:ring-2 focus:ring-emerald-500/20 focus:outline-none">
+                @for (w of warehouses(); track w.id) {
+                  <option [value]="w.id">{{ w.name }}</option>
+                }
+              </select>
+            </div>
+          </div>
+
+          <!-- Paddock Animal Count Summary Card -->
+          <div class="p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-800/60 flex items-center justify-between">
+            <div class="flex items-center gap-2.5">
+              <mat-icon class="icon-size-5 text-emerald-600 dark:text-emerald-400" [svgIcon]="'heroicons_solid:user-group'"></mat-icon>
+              <div>
+                <div class="text-xs font-bold text-emerald-900 dark:text-emerald-200">
+                  Seçili Padoktaki Aktif Hayvan Sayısı
+                </div>
+                <div class="text-[11px] text-emerald-700 dark:text-emerald-400">
+                  Rasyon bu hayvan sayısına göre otomatik çarpılır.
+                </div>
+              </div>
+            </div>
+            <span class="text-xl font-black text-emerald-600 dark:text-emerald-400 font-mono">
+              {{ paddockAnimals().length }} Baş
+            </span>
+          </div>
+
+          <!-- Calculated Feed Breakdown Table -->
+          <div class="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden">
+            <div class="px-4 py-2.5 bg-slate-50 dark:bg-slate-850 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between font-bold text-slate-700 dark:text-slate-300 text-xs">
+              <span>Depodan Düşülecek Yemler</span>
+              <span>Toplam Miktar</span>
+            </div>
+
+            <div class="divide-y divide-slate-100 dark:divide-slate-800">
+              @for (item of calc.items; track item.stockItemId) {
+                <div class="px-4 py-2.5 flex items-center justify-between text-xs">
+                  <div>
+                    <div class="font-bold text-slate-800 dark:text-slate-200">{{ item.itemName }}</div>
+                    <div class="text-[10px] text-slate-400">Baş başı: {{ item.perAnimalKg }} kg × {{ paddockAnimals().length }} hayvan</div>
+                  </div>
+                  <div class="text-right font-mono">
+                    <div class="font-black text-slate-900 dark:text-white">{{ item.totalAmount }} {{ item.unit }}</div>
+                    <div class="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">~{{ item.estimatedCost }} ₺</div>
+                  </div>
+                </div>
+              }
+            </div>
+
+            <!-- Total Bar -->
+            <div class="p-3 bg-slate-100 dark:bg-slate-850/80 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs font-bold">
+              <span>Toplam Yem Çıkışı:</span>
+              <div class="text-right font-mono">
+                <span class="text-sm font-black text-slate-900 dark:text-white">{{ calc.totalKg }} kg</span>
+                <span class="text-xs text-emerald-600 dark:text-emerald-400 ml-2">(~{{ calc.totalEstimatedCost.toLocaleString('tr-TR') }} ₺)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="px-6 py-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-850 flex items-center justify-between">
+          <button
+            type="button"
+            (click)="closeDeductModal()"
+            class="px-4 py-2 rounded-xl bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold transition-all cursor-pointer"
+          >
+            Vazgeç
+          </button>
+
+          <button
+            type="button"
+            (click)="executeStockDeduction()"
+            [disabled]="isDeducting() || paddockAnimals().length === 0"
+            class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 active:from-emerald-700 text-white text-xs font-black shadow-lg shadow-emerald-600/30 flex items-center gap-2 transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
+          >
+            <mat-icon class="icon-size-4" [svgIcon]="'heroicons_solid:check'"></mat-icon>
+            <span>{{ isDeducting() ? 'İşleniyor...' : 'Yem Çıkışını Onayla ve Stoktan Düş' }}</span>
+          </button>
         </div>
       </div>
     </div>

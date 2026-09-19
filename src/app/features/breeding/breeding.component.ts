@@ -16,7 +16,9 @@ import { SubscriptionService } from '../../core/services/subscription.service';
 import { WeightRecordService } from '../../core/services/weight-record.service';
 import { Mating, MatingStatus } from '../../core/models/production.model';
 import { Animal, AnimalStatus, Breed, Herd, Paddock, AnimalType } from '../../core/models';
+import { PedigreeService, InbreedingAnalysisResult, PedigreeNode } from '../../core/services/pedigree.service';
 import { AlertService } from '../../core/services/alert.service';
+import Swal from 'sweetalert2';
 
 interface EnrichedMating extends Mating {
   progressPercent?: number;
@@ -39,6 +41,7 @@ interface EnrichedMating extends Mating {
 export class BreedingComponent {
   private matingService = inject(MatingService);
   private animalService = inject(AnimalService);
+  private pedigreeService = inject(PedigreeService);
   private alertService = inject(AlertService);
   private breedService = inject(BreedService);
   private herdService = inject(HerdService);
@@ -63,6 +66,40 @@ export class BreedingComponent {
   readonly editingId = signal<string | null>(null);
   readonly isSaving = signal(false);
   readonly errorMessage = signal<string | null>(null);
+
+  // Inbreeding & Pedigree Analysis State
+  readonly showPedigreeModal = signal(false);
+
+  readonly inbreedingAnalysis = computed<InbreedingAnalysisResult | null>(() => {
+    const fId = this.form().femaleId;
+    const mId = this.form().maleId;
+    const animals = this.animals() || [];
+    console.log('[Breeding] inbreedingAnalysis computed:', { fId, mId, animalsCount: animals.length });
+    if (!fId || !mId) return null;
+    try {
+      const res = this.pedigreeService.analyzeInbreeding(fId, mId, animals);
+      console.log('[Breeding] inbreedingAnalysis result:', res);
+      return res;
+    } catch (err) {
+      console.error('[Breeding] Error in analyzeInbreeding:', err);
+      return null;
+    }
+  });
+
+  readonly pedigreeComparison = computed(() => {
+    const fId = this.form().femaleId;
+    const mId = this.form().maleId;
+    if (!fId || !mId) return null;
+    return this.pedigreeService.buildComparisonTree(fId, mId, this.animals() || []);
+  });
+
+  openPedigreeModal() {
+    this.showPedigreeModal.set(true);
+  }
+
+  closePedigreeModal() {
+    this.showPedigreeModal.set(false);
+  }
 
   // Birth Modal & Pedigree State
   readonly showBirthModal = signal(false);
@@ -283,15 +320,25 @@ export class BreedingComponent {
     this.updateFormField('expectedBirthDate', expected);
   }
 
+  onFemaleChange(val: string) {
+    this.form.update((prev) => ({ ...prev, femaleId: val }));
+  }
+
+  onMaleChange(val: string) {
+    this.form.update((prev) => ({ ...prev, maleId: val }));
+  }
+
   // Drawer Actions
   openAddDrawer() {
     this.isEditing.set(false);
     this.editingId.set(null);
     this.errorMessage.set(null);
     const today = new Date().toISOString().substring(0, 10);
+    const females = this.femaleAnimals();
+    const males = this.maleAnimals();
     this.form.set({
-      femaleId: this.femaleAnimals().length > 0 ? this.femaleAnimals()[0].id! : '',
-      maleId: this.maleAnimals().length > 0 ? this.maleAnimals()[0].id! : '',
+      femaleId: females.length > 0 ? (females[0].id || females[0].farmTagNo) : '',
+      maleId: males.length > 0 ? (males[0].id || males[0].farmTagNo) : '',
       matingDate: today,
       status: 'koculdu',
       expectedBirthDate: this.calculateExpectedBirthDate(today, 150),
@@ -479,6 +526,48 @@ export class BreedingComponent {
     if (!f.matingDate) {
       this.errorMessage.set('Lütfen çiftleşme tarihini giriniz.');
       return;
+    }
+
+    // Akraba Çiftleşmesi (Inbreeding) Güvenlik Doğrulaması
+    const analysis = this.inbreedingAnalysis();
+    if (analysis && (analysis.riskLevel === 'critical' || analysis.riskLevel === 'high')) {
+      const isDark = document.documentElement.classList.contains('dark');
+      const isCrit = analysis.riskLevel === 'critical';
+      const result = await Swal.fire({
+        title: isCrit ? '🚨 Kritik Akraba Çiftleşmesi Uyarısı!' : '⚠️ Yüksek Akrabalık Riski Uyarısı!',
+        html: `
+          <div class="text-left text-sm space-y-3 font-sans">
+            <div class="p-3.5 rounded-2xl ${isCrit ? 'bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-900 text-rose-800 dark:text-rose-200' : 'bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-900 text-amber-800 dark:text-amber-200'}">
+              <div class="font-extrabold text-sm flex items-center justify-between">
+                <span>${analysis.relationshipTitle}</span>
+                <span class="px-2 py-0.5 rounded-full text-xs font-mono font-black ${isCrit ? 'bg-rose-600 text-white' : 'bg-amber-600 text-white'}">%${analysis.percentage} Risk</span>
+              </div>
+              <p class="text-xs mt-1.5 leading-relaxed opacity-95">${analysis.summary}</p>
+            </div>
+            <div class="p-3 bg-slate-50 dark:bg-slate-800/70 rounded-xl text-xs space-y-1.5 border border-slate-200/70 dark:border-slate-700">
+              <div class="font-bold text-slate-700 dark:text-slate-200">Kalıtsal Riskler ve Tehlikeler:</div>
+              <ul class="list-disc pl-4 space-y-1 text-slate-600 dark:text-slate-300">
+                ${analysis.warnings.map((w: string) => `<li>${w}</li>`).join('')}
+              </ul>
+            </div>
+            <p class="text-xs text-rose-600 dark:text-rose-400 font-semibold italic text-center">
+              Tavsiye: ${analysis.recommendation}
+            </p>
+          </div>
+        `,
+        icon: isCrit ? 'error' : 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Riski Kabul Ediyorum ve Kaydet',
+        cancelButtonText: 'Vazgeç (Damızlığı Değiştir)',
+        confirmButtonColor: isCrit ? '#e11d48' : '#d97706',
+        cancelButtonColor: '#4f46e5',
+        background: isDark ? '#1e293b' : '#ffffff',
+        color: isDark ? '#f8fafc' : '#0f172a',
+      });
+
+      if (!result.isConfirmed) {
+        return;
+      }
     }
 
     this.isSaving.set(true);

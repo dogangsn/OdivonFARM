@@ -20,8 +20,9 @@ import { AnimalTypeService } from '../../core/services/definitions/animal-type.s
 import { Animal, AnimalStatus, Breed, Herd, Paddock, AnimalType } from '../../core/models';
 import { AlertService } from '../../core/services/alert.service';
 
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { SubscriptionService } from '../../core/services/subscription.service';
+import { TagScannerService } from '../../core/services/tag-scanner.service';
 
 import { AnimalDetailModalComponent } from './animal-detail-modal/animal-detail-modal.component';
 import { AnimalLocationModalComponent } from './animal-location-modal/animal-location-modal.component';
@@ -58,6 +59,8 @@ export class AnimalsComponent {
   private animalTypeService = inject(AnimalTypeService);
   private subService = inject(SubscriptionService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
+  tagScanner = inject(TagScannerService);
 
   // Live signals
   loading = signal(true);
@@ -69,8 +72,40 @@ export class AnimalsComponent {
 
   constructor() {
     this.animalService.list().subscribe({
-      next: () => this.loading.set(false),
+      next: (list) => {
+        this.loading.set(false);
+        this.checkQueryParamTag(list);
+      },
       error: () => this.loading.set(false),
+    });
+
+    this.route.queryParams.subscribe((params) => {
+      const tag = params['tag'];
+      if (tag) {
+        this.searchTerm.set(tag);
+        this.checkQueryParamTag(this.animals());
+      }
+    });
+  }
+
+  private checkQueryParamTag(list: Animal[]) {
+    const currentSearch = this.searchTerm();
+    if (!currentSearch || list.length === 0) return;
+    const match = list.find(
+      (a) =>
+        String(a.farmTagNo || '') === currentSearch ||
+        String(a.nationalTagNo || '') === currentSearch ||
+        a.id === currentSearch
+    );
+    if (match) {
+      this.openDetailModal(match);
+    }
+  }
+
+  openTagScanner() {
+    this.tagScanner.openScanner((animal) => {
+      this.searchTerm.set(animal.farmTagNo || animal.nationalTagNo || '');
+      this.openDetailModal(animal);
     });
   }
 

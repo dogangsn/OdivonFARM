@@ -76,6 +76,11 @@ export const routes: Routes = [
           import('./features/ration/ration.component').then((m) => m.RationComponent),
       },
       {
+        path: 'kurbanlik',
+        loadComponent: () =>
+          import('./features/kurban/kurban.component').then((m) => m.KurbanComponent),
+      },
+      {
         path: 'sayim',
         loadComponent: () =>
           import('./features/counting/counting.component').then((m) => m.CountingComponent),

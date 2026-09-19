@@ -1,7 +1,8 @@
 <div class="flex flex-col flex-auto min-w-0 p-4 sm:p-6 lg:p-8 space-y-6">
 
   <!-- Welcome & Farm Status Banner (Modern Gradient Mesh) -->
-  <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 via-[#0a1526] to-[#090d16] border border-slate-800/90 text-white p-6 sm:p-8 shadow-2xl">
+  <div
+    class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 via-[#0a1526] to-[#090d16] border border-slate-800/90 text-white p-6 sm:p-8 shadow-2xl">
     <!-- Ambient Glow Orbs -->
     <div class="absolute -right-12 -top-12 w-64 h-64 rounded-full bg-emerald-500/15 blur-3xl pointer-events-none"></div>
     <div class="absolute right-1/3 -bottom-16 w-80 h-80 rounded-full bg-teal-500/10 blur-3xl pointer-events-none"></div>
@@ -10,7 +11,8 @@
       <!-- Left: Avatar & Greeting -->
       <div class="flex items-center gap-5">
         <div class="relative flex-shrink-0">
-          <div class="w-16 h-16 sm:w-18 sm:h-18 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-700 text-white font-black text-2xl flex items-center justify-center shadow-xl shadow-emerald-500/25 ring-2 ring-emerald-500/30">
+          <div
+            class="w-16 h-16 sm:w-18 sm:h-18 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-700 text-white font-black text-2xl flex items-center justify-center shadow-xl shadow-emerald-500/25 ring-2 ring-emerald-500/30">
             {{ userInitials() }}
           </div>
           <span class="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-emerald-400 ring-2 ring-slate-900"></span>
@@ -25,7 +27,8 @@
           </div>
 
           <div class="flex items-center gap-3 mt-2 text-xs sm:text-sm text-slate-300 flex-wrap">
-            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 font-bold text-xs">
+            <span
+              class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 font-bold text-xs">
               <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
               {{ farmName() }}
             </span>
@@ -43,22 +46,92 @@
 
       <!-- Right: Action Buttons -->
       <div class="flex items-center gap-3 flex-wrap">
-        <button
-          type="button"
-          (click)="navigateTo('/tedaviler')"
-          class="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/15 active:bg-white/20 text-white text-xs sm:text-sm font-semibold border border-white/10 backdrop-blur-xs flex items-center gap-2 transition-all cursor-pointer shadow-sm"
-        >
+        <button type="button" (click)="navigateTo('/tedaviler')"
+          class="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/15 active:bg-white/20 text-white text-xs sm:text-sm font-semibold border border-white/10 backdrop-blur-xs flex items-center gap-2 transition-all cursor-pointer shadow-sm">
           <mat-icon class="icon-size-4.5 text-emerald-400" [svgIcon]="'heroicons_solid:shield-check'"></mat-icon>
           <span>Aşı & Tedavi</span>
         </button>
 
-        <button
-          type="button"
-          (click)="navigateTo('/hayvanlar')"
-          class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 active:from-emerald-700 active:to-teal-800 text-white text-xs sm:text-sm font-bold shadow-lg shadow-emerald-500/25 flex items-center gap-2 transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
-        >
+        <button type="button" (click)="navigateTo('/hayvanlar')"
+          class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 active:from-emerald-700 active:to-teal-800 text-white text-xs sm:text-sm font-bold shadow-lg shadow-emerald-500/25 flex items-center gap-2 transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer">
           <mat-icon class="icon-size-4.5" [svgIcon]="'heroicons_solid:plus'"></mat-icon>
-          <span>+ Hayvan Ekle</span>
+          <span>Hayvan Ekle</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MORNING BRIEFING & DAILY OPERATIONS WIDGET (WhatsApp & SMS) -->
+  <div
+    class="relative overflow-hidden p-5 sm:p-6 rounded-3xl bg-gradient-to-r from-amber-500/10 via-emerald-500/10 to-transparent border border-amber-500/25 dark:border-amber-500/20 bg-white/70 dark:bg-slate-900/70 backdrop-blur-md shadow-lg shadow-amber-500/5">
+    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
+      <!-- Left: Title & Quick Summary -->
+      <div class="space-y-2">
+        <div class="flex items-center gap-2.5">
+          <div
+            class="w-9 h-9 rounded-2xl bg-gradient-to-tr from-amber-500 to-emerald-500 text-white flex items-center justify-center shadow-md shadow-amber-500/20">
+            <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:sun'"></mat-icon>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h2 class="text-base font-bold text-slate-900 dark:text-white tracking-tight">
+                Günün Sabah Brifingi & Saha Operasyon Özeti
+              </h2>
+              <span
+                class="px-2 py-0.5 text-[10px] font-black rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30">
+                1-Tıkla Paylaş
+              </span>
+            </div>
+            <p class="text-xs text-slate-500 dark:text-slate-400">
+              Doğumlar, tohumlama kontrolleri, aşılar ve acil görevler hazırlandı.
+            </p>
+          </div>
+        </div>
+
+        <!-- Metric Chips -->
+        <div class="flex items-center gap-2 flex-wrap pt-1">
+          <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-bold"
+            [ngClass]="dailyBriefingSummary().upcomingBirths.length > 0 ? 'bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'">
+            <span>🍼 {{ dailyBriefingSummary().upcomingBirths.length }} Doğum Yaklaşıyor</span>
+          </span>
+
+          <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-bold"
+            [ngClass]="dailyBriefingSummary().pregnancyChecks.length > 0 ? 'bg-blue-100 dark:bg-blue-950/60 text-blue-800 dark:text-blue-300 border border-blue-300 dark:border-blue-800' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'">
+            <span>🔍 {{ dailyBriefingSummary().pregnancyChecks.length }} Kontrol</span>
+          </span>
+
+          <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-bold"
+            [ngClass]="dailyBriefingSummary().todayTreatments.length > 0 ? 'bg-rose-100 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300 border border-rose-300 dark:border-rose-800' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'">
+            <span>💉 {{ dailyBriefingSummary().todayTreatments.length }} Sağlık / Aşı</span>
+          </span>
+
+          <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-bold"
+            [ngClass]="dailyBriefingSummary().pendingTasks.length > 0 ? 'bg-purple-100 dark:bg-purple-950/60 text-purple-800 dark:text-purple-300 border border-purple-300 dark:border-purple-800' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'">
+            <span>📋 {{ dailyBriefingSummary().pendingTasks.length }} Görev</span>
+          </span>
+
+          @if (dailyBriefingSummary().lowStockItems.length > 0) {
+          <span
+            class="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-bold bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800 animate-pulse">
+            <span>⚠️ {{ dailyBriefingSummary().lowStockItems.length }} Kritik Stok</span>
+          </span>
+          }
+        </div>
+      </div>
+
+      <!-- Right: Action Buttons -->
+      <div class="flex items-center gap-2.5 flex-shrink-0">
+        <button type="button" (click)="openBriefingModal()"
+          class="px-4 py-2.5 rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 text-xs font-bold shadow-xs flex items-center gap-2 transition-all cursor-pointer">
+          <mat-icon class="icon-size-4" [svgIcon]="'heroicons_outline:document-text'"></mat-icon>
+          <span>Brifingi İncele & Düzenle</span>
+        </button>
+
+        <button type="button" (click)="quickShareWhatsApp()"
+          class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white text-xs font-black shadow-lg shadow-emerald-600/30 flex items-center gap-2 transition-all active:scale-95 cursor-pointer"
+          matTooltip="WhatsApp üzerinden personele veya yöneticilere gönder">
+          <mat-icon class="icon-size-4.5" [svgIcon]="'heroicons_solid:paper-airplane'"></mat-icon>
+          <span>WhatsApp ile Paylaş</span>
         </button>
       </div>
     </div>
@@ -66,12 +139,14 @@
 
   <!-- The 4 Big Executive KPI Cards -->
   <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
-    
+
     <!-- KPI 1: Sürü Varlığı -->
-    <div class="kpi-card kpi-emerald p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm">
+    <div
+      class="kpi-card kpi-emerald p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm">
       <div class="flex items-center justify-between">
         <span class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Sürü Varlığı</span>
-        <div class="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shadow-xs">
+        <div
+          class="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shadow-xs">
           <mat-icon class="icon-size-5" [svgIcon]="'heroicons_solid:user-group'"></mat-icon>
         </div>
       </div>
@@ -85,12 +160,14 @@
         </div>
       </div>
 
-      <div class="flex items-center justify-between mt-5 pt-3.5 border-t border-slate-100 dark:border-slate-800/80 text-xs">
+      <div
+        class="flex items-center justify-between mt-5 pt-3.5 border-t border-slate-100 dark:border-slate-800/80 text-xs">
         <span class="text-slate-500 dark:text-slate-400">
           <strong class="text-slate-900 dark:text-white font-bold">{{ activeCount() }}</strong> Aktif
         </span>
         <span class="text-slate-500 dark:text-slate-400">
-          <strong class="text-slate-900 dark:text-white font-bold">{{ femaleCount() }}</strong> Dişi (%{{ femaleRatio() }})
+          <strong class="text-slate-900 dark:text-white font-bold">{{ femaleCount() }}</strong> Dişi (%{{ femaleRatio()
+          }})
         </span>
         <span class="text-slate-500 dark:text-slate-400">
           <strong class="text-slate-900 dark:text-white font-bold">{{ maleCount() }}</strong> Erkek
@@ -99,10 +176,13 @@
     </div>
 
     <!-- KPI 2: Üreme & Gebelik -->
-    <div class="kpi-card kpi-rose p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm">
+    <div
+      class="kpi-card kpi-rose p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm">
       <div class="flex items-center justify-between">
-        <span class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Üreme & Gebelik</span>
-        <div class="w-10 h-10 rounded-xl bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center shadow-xs">
+        <span class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Üreme &
+          Gebelik</span>
+        <div
+          class="w-10 h-10 rounded-xl bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center shadow-xs">
           <mat-icon class="icon-size-5" [svgIcon]="'heroicons_solid:heart'"></mat-icon>
         </div>
       </div>
@@ -116,7 +196,8 @@
         </div>
       </div>
 
-      <div class="flex items-center justify-between mt-5 pt-3.5 border-t border-slate-100 dark:border-slate-800/80 text-xs">
+      <div
+        class="flex items-center justify-between mt-5 pt-3.5 border-t border-slate-100 dark:border-slate-800/80 text-xs">
         <span class="text-slate-500 dark:text-slate-400">
           <strong class="text-slate-900 dark:text-white font-bold">{{ observationCount() }}</strong> Gözlemde
         </span>
@@ -127,10 +208,12 @@
     </div>
 
     <!-- KPI 3: Süt Üretimi -->
-    <div class="kpi-card kpi-sky p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm">
+    <div
+      class="kpi-card kpi-sky p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm">
       <div class="flex items-center justify-between">
         <span class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Süt Verimi</span>
-        <div class="w-10 h-10 rounded-xl bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400 flex items-center justify-center shadow-xs">
+        <div
+          class="w-10 h-10 rounded-xl bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400 flex items-center justify-center shadow-xs">
           <mat-icon class="icon-size-5" [svgIcon]="'heroicons_solid:beaker'"></mat-icon>
         </div>
       </div>
@@ -145,7 +228,8 @@
         </div>
       </div>
 
-      <div class="flex items-center justify-between mt-5 pt-3.5 border-t border-slate-100 dark:border-slate-800/80 text-xs">
+      <div
+        class="flex items-center justify-between mt-5 pt-3.5 border-t border-slate-100 dark:border-slate-800/80 text-xs">
         <span class="text-slate-500 dark:text-slate-400">
           <strong class="text-slate-900 dark:text-white font-bold">{{ totalMilkYield() }} Lt</strong> Toplam Sağım
         </span>
@@ -157,10 +241,13 @@
     </div>
 
     <!-- KPI 4: Operasyon & Sağlık -->
-    <div class="kpi-card kpi-amber p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm">
+    <div
+      class="kpi-card kpi-amber p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm">
       <div class="flex items-center justify-between">
-        <span class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Bekleyen İşler</span>
-        <div class="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center shadow-xs">
+        <span class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Bekleyen
+          İşler</span>
+        <div
+          class="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center shadow-xs">
           <mat-icon class="icon-size-5" [svgIcon]="'heroicons_solid:clipboard-check'"></mat-icon>
         </div>
       </div>
@@ -174,12 +261,14 @@
         </div>
       </div>
 
-      <div class="flex items-center justify-between mt-5 pt-3.5 border-t border-slate-100 dark:border-slate-800/80 text-xs">
+      <div
+        class="flex items-center justify-between mt-5 pt-3.5 border-t border-slate-100 dark:border-slate-800/80 text-xs">
         <span class="text-slate-500 dark:text-slate-400">
           <strong class="text-slate-900 dark:text-white font-bold">{{ pendingTasks().length }}</strong> Görev
         </span>
         <span class="text-slate-500 dark:text-slate-400">
-          <strong class="text-slate-900 dark:text-white font-bold">{{ pendingTreatments().length }}</strong> Planlı Tedavi
+          <strong class="text-slate-900 dark:text-white font-bold">{{ pendingTreatments().length }}</strong> Planlı
+          Tedavi
         </span>
       </div>
     </div>
@@ -193,21 +282,23 @@
     <div class="lg:col-span-8 space-y-6">
 
       <!-- Fast Operation Hub (Kısayollar) -->
-      <div class="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm">
+      <div
+        class="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm">
         <div class="flex items-center justify-between mb-5">
           <div>
-            <h2 class="text-base font-bold text-slate-900 dark:text-white tracking-tight">Hızlı Operasyon Kısayolları</h2>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Sık kullanılan çiftlik modüllerine tek tıkla doğrudan erişin.</p>
+            <h2 class="text-base font-bold text-slate-900 dark:text-white tracking-tight">Hızlı Operasyon Kısayolları
+            </h2>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Sık kullanılan çiftlik modüllerine tek tıkla
+              doğrudan erişin.</p>
           </div>
         </div>
 
         <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
           <!-- Hayvanlar -->
-          <div
-            (click)="navigateTo('/hayvanlar')"
-            class="action-card cursor-pointer p-4 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/40 hover:border-emerald-500/50 hover:bg-white dark:hover:bg-slate-800 group"
-          >
-            <div class="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform shadow-xs">
+          <div (click)="navigateTo('/hayvanlar')"
+            class="action-card cursor-pointer p-4 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/40 hover:border-emerald-500/50 hover:bg-white dark:hover:bg-slate-800 group">
+            <div
+              class="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform shadow-xs">
               <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:identification'"></mat-icon>
             </div>
             <div class="font-bold text-sm text-slate-900 dark:text-white">Hayvan Yönetimi</div>
@@ -215,11 +306,10 @@
           </div>
 
           <!-- Canlı Ağırlık -->
-          <div
-            (click)="navigateTo('/canli-agirlik')"
-            class="action-card cursor-pointer p-4 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/40 hover:border-teal-500/50 hover:bg-white dark:hover:bg-slate-800 group"
-          >
-            <div class="w-10 h-10 rounded-xl bg-teal-50 dark:bg-teal-950/60 text-teal-600 dark:text-teal-400 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform shadow-xs">
+          <div (click)="navigateTo('/canli-agirlik')"
+            class="action-card cursor-pointer p-4 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/40 hover:border-teal-500/50 hover:bg-white dark:hover:bg-slate-800 group">
+            <div
+              class="w-10 h-10 rounded-xl bg-teal-50 dark:bg-teal-950/60 text-teal-600 dark:text-teal-400 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform shadow-xs">
               <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:scale'"></mat-icon>
             </div>
             <div class="font-bold text-sm text-slate-900 dark:text-white">Canlı Ağırlık</div>
@@ -227,11 +317,10 @@
           </div>
 
           <!-- Çiftleşmeler -->
-          <div
-            (click)="navigateTo('/ciftlesmeler')"
-            class="action-card cursor-pointer p-4 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/40 hover:border-rose-500/50 hover:bg-white dark:hover:bg-slate-800 group"
-          >
-            <div class="w-10 h-10 rounded-xl bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform shadow-xs">
+          <div (click)="navigateTo('/ciftlesmeler')"
+            class="action-card cursor-pointer p-4 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/40 hover:border-rose-500/50 hover:bg-white dark:hover:bg-slate-800 group">
+            <div
+              class="w-10 h-10 rounded-xl bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform shadow-xs">
               <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:heart'"></mat-icon>
             </div>
             <div class="font-bold text-sm text-slate-900 dark:text-white">Çiftleşmeler</div>
@@ -239,11 +328,10 @@
           </div>
 
           <!-- Tedaviler -->
-          <div
-            (click)="navigateTo('/tedaviler')"
-            class="action-card cursor-pointer p-4 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/40 hover:border-amber-500/50 hover:bg-white dark:hover:bg-slate-800 group"
-          >
-            <div class="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform shadow-xs">
+          <div (click)="navigateTo('/tedaviler')"
+            class="action-card cursor-pointer p-4 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/40 hover:border-amber-500/50 hover:bg-white dark:hover:bg-slate-800 group">
+            <div
+              class="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform shadow-xs">
               <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:shield-check'"></mat-icon>
             </div>
             <div class="font-bold text-sm text-slate-900 dark:text-white">Tedavi & Aşı</div>
@@ -251,11 +339,10 @@
           </div>
 
           <!-- Verimler -->
-          <div
-            (click)="navigateTo('/verimler')"
-            class="action-card cursor-pointer p-4 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/40 hover:border-sky-500/50 hover:bg-white dark:hover:bg-slate-800 group"
-          >
-            <div class="w-10 h-10 rounded-xl bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform shadow-xs">
+          <div (click)="navigateTo('/verimler')"
+            class="action-card cursor-pointer p-4 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/40 hover:border-sky-500/50 hover:bg-white dark:hover:bg-slate-800 group">
+            <div
+              class="w-10 h-10 rounded-xl bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform shadow-xs">
               <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:beaker'"></mat-icon>
             </div>
             <div class="font-bold text-sm text-slate-900 dark:text-white">Verimler</div>
@@ -263,11 +350,10 @@
           </div>
 
           <!-- Rasyon & Yem -->
-          <div
-            (click)="navigateTo('/rasyon')"
-            class="action-card cursor-pointer p-4 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/40 hover:border-indigo-500/50 hover:bg-white dark:hover:bg-slate-800 group"
-          >
-            <div class="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform shadow-xs">
+          <div (click)="navigateTo('/rasyon')"
+            class="action-card cursor-pointer p-4 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/40 hover:border-indigo-500/50 hover:bg-white dark:hover:bg-slate-800 group">
+            <div
+              class="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform shadow-xs">
               <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:cake'"></mat-icon>
             </div>
             <div class="font-bold text-sm text-slate-900 dark:text-white">Rasyon & Yem</div>
@@ -277,62 +363,57 @@
       </div>
 
       <!-- Padok Doluluk Durumu -->
-      <div class="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm">
+      <div
+        class="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm">
         <div class="flex items-center justify-between mb-4">
           <div>
             <h2 class="text-base font-bold text-slate-900 dark:text-white tracking-tight">Padok Doluluk Durumu</h2>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Çiftlik içi padok kapasiteleri ve sürü yerleşim oranları.</p>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Çiftlik içi padok kapasiteleri ve sürü yerleşim
+              oranları.</p>
           </div>
-          <button
-            type="button"
+          <button type="button"
             class="text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:underline cursor-pointer"
-            (click)="navigateTo('/tanimlamalar/padoklar')"
-          >
+            (click)="navigateTo('/tanimlamalar/padoklar')">
             Padokları Yönet →
           </button>
         </div>
 
         @if (paddockStats().length > 0) {
-          <div class="space-y-4">
-            @for (pad of paddockStats(); track pad.id) {
-              <div>
-                <div class="flex items-center justify-between text-xs font-medium mb-1.5">
-                  <span class="font-bold text-slate-800 dark:text-slate-200">{{ pad.name }}</span>
-                  <span class="text-slate-500 dark:text-slate-400">
-                    <strong class="text-slate-900 dark:text-white font-bold">{{ pad.count }}</strong> / {{ pad.capacity }} Baş (%{{ pad.percent }})
-                  </span>
-                </div>
-                <div class="w-full bg-slate-100 dark:bg-slate-800 h-2.5 rounded-full overflow-hidden">
-                  <div
-                    class="h-2.5 rounded-full transition-all duration-500"
-                    [ngClass]="{
+        <div class="space-y-4">
+          @for (pad of paddockStats(); track pad.id) {
+          <div>
+            <div class="flex items-center justify-between text-xs font-medium mb-1.5">
+              <span class="font-bold text-slate-800 dark:text-slate-200">{{ pad.name }}</span>
+              <span class="text-slate-500 dark:text-slate-400">
+                <strong class="text-slate-900 dark:text-white font-bold">{{ pad.count }}</strong> / {{ pad.capacity }}
+                Baş (%{{ pad.percent }})
+              </span>
+            </div>
+            <div class="w-full bg-slate-100 dark:bg-slate-800 h-2.5 rounded-full overflow-hidden">
+              <div class="h-2.5 rounded-full transition-all duration-500" [ngClass]="{
                       'bg-emerald-500': pad.percent < 75,
                       'bg-amber-500': pad.percent >= 75 && pad.percent < 90,
                       'bg-rose-500': pad.percent >= 90
-                    }"
-                    [style.width.%]="pad.percent"
-                  ></div>
-                </div>
-              </div>
-            }
-          </div>
-        } @else {
-          <div class="text-center py-8 px-4 rounded-xl border border-dashed border-slate-200 dark:border-slate-800">
-            <div class="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 flex items-center justify-center mx-auto mb-3">
-              <mat-icon class="icon-size-6" [svgIcon]="'heroicons_outline:view-boards'"></mat-icon>
+                    }" [style.width.%]="pad.percent"></div>
             </div>
-            <h3 class="text-sm font-bold text-slate-900 dark:text-white">Henüz padok kaydı yok</h3>
-            <p class="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto mt-1 mb-4">
-              Padok tanımlayarak hayvanlarınızı bölümlere ayırabilir ve kapasiteyi canlı izleyebilirsiniz.
-            </p>
-            <button
-              type="button"
-              (click)="navigateTo('/tanimlamalar/padoklar')"
-              class="px-4 py-2 rounded-xl bg-emerald-600 text-white font-bold text-xs hover:bg-emerald-700 transition-colors cursor-pointer"
-            >
-              + Yeni Padok Tanımla
-            </button>
           </div>
+          }
+        </div>
+        } @else {
+        <div class="text-center py-8 px-4 rounded-xl border border-dashed border-slate-200 dark:border-slate-800">
+          <div
+            class="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 flex items-center justify-center mx-auto mb-3">
+            <mat-icon class="icon-size-6" [svgIcon]="'heroicons_outline:view-boards'"></mat-icon>
+          </div>
+          <h3 class="text-sm font-bold text-slate-900 dark:text-white">Henüz padok kaydı yok</h3>
+          <p class="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto mt-1 mb-4">
+            Padok tanımlayarak hayvanlarınızı bölümlere ayırabilir ve kapasiteyi canlı izleyebilirsiniz.
+          </p>
+          <button type="button" (click)="navigateTo('/tanimlamalar/padoklar')"
+            class="px-4 py-2 rounded-xl bg-emerald-600 text-white font-bold text-xs hover:bg-emerald-700 transition-colors cursor-pointer">
+            + Yeni Padok Tanımla
+          </button>
+        </div>
         }
       </div>
 
@@ -342,58 +423,63 @@
     <div class="lg:col-span-4 space-y-6">
 
       <!-- Görevler Paneli -->
-      <div class="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm">
+      <div
+        class="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm">
         <div class="flex items-center justify-between mb-4">
           <div class="flex items-center gap-2">
             <h2 class="text-base font-bold text-slate-900 dark:text-white tracking-tight">Görevler</h2>
             @if (pendingTasks().length > 0) {
-              <span class="px-2 py-0.5 rounded-full text-[11px] font-black bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300">
-                {{ pendingTasks().length }}
-              </span>
+            <span
+              class="px-2 py-0.5 rounded-full text-[11px] font-black bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300">
+              {{ pendingTasks().length }}
+            </span>
             }
           </div>
-          <button
-            type="button"
+          <button type="button"
             class="text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:underline cursor-pointer"
-            (click)="navigateTo('/gorevler')"
-          >
+            (click)="navigateTo('/gorevler')">
             Tümü →
           </button>
         </div>
 
         @if (pendingTasks().length > 0) {
-          <div class="space-y-3">
-            @for (task of pendingTasks().slice(0, 5); track task.id) {
-              <div class="flex items-start gap-3 p-3 rounded-xl bg-slate-50/80 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/40">
-                <mat-icon class="icon-size-5 text-emerald-600 dark:text-emerald-400 mt-0.5" [svgIcon]="'heroicons_outline:check-circle'"></mat-icon>
-                <div class="min-w-0 flex-1">
-                  <div class="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">{{ task.title }}</div>
-                  @if (task.description) {
-                    <div class="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">{{ task.description }}</div>
-                  }
-                  @if (task.dueDate) {
-                    <div class="text-[10px] text-amber-600 dark:text-amber-400 font-semibold mt-1 flex items-center gap-1">
-                      <mat-icon class="icon-size-3" [svgIcon]="'heroicons_outline:clock'"></mat-icon>
-                      <span>Vade: {{ task.dueDate | date:'shortDate' }}</span>
-                    </div>
-                  }
-                </div>
+        <div class="space-y-3">
+          @for (task of pendingTasks().slice(0, 5); track task.id) {
+          <div
+            class="flex items-start gap-3 p-3 rounded-xl bg-slate-50/80 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/40">
+            <mat-icon class="icon-size-5 text-emerald-600 dark:text-emerald-400 mt-0.5"
+              [svgIcon]="'heroicons_outline:check-circle'"></mat-icon>
+            <div class="min-w-0 flex-1">
+              <div class="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">{{ task.title }}</div>
+              @if (task.description) {
+              <div class="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">{{ task.description }}</div>
+              }
+              @if (task.dueDate) {
+              <div class="text-[10px] text-amber-600 dark:text-amber-400 font-semibold mt-1 flex items-center gap-1">
+                <mat-icon class="icon-size-3" [svgIcon]="'heroicons_outline:clock'"></mat-icon>
+                <span>Vade: {{ task.dueDate | date:'shortDate' }}</span>
               </div>
-            }
+              }
+            </div>
           </div>
+          }
+        </div>
         } @else {
-          <div class="text-center py-6 px-4 rounded-xl bg-slate-50/80 dark:bg-slate-800/40 border border-dashed border-slate-200 dark:border-slate-800">
-            <mat-icon class="icon-size-8 text-slate-400 mb-1" [svgIcon]="'heroicons_outline:clipboard-check'"></mat-icon>
-            <p class="text-xs font-bold text-slate-800 dark:text-slate-200">Bekleyen görev bulunmuyor</p>
-            <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Çiftlik işleri güncel.</p>
-          </div>
+        <div
+          class="text-center py-6 px-4 rounded-xl bg-slate-50/80 dark:bg-slate-800/40 border border-dashed border-slate-200 dark:border-slate-800">
+          <mat-icon class="icon-size-8 text-slate-400 mb-1" [svgIcon]="'heroicons_outline:clipboard-check'"></mat-icon>
+          <p class="text-xs font-bold text-slate-800 dark:text-slate-200">Bekleyen görev bulunmuyor</p>
+          <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Çiftlik işleri güncel.</p>
+        </div>
         }
       </div>
 
       <!-- Akıllı Çiftlik Bilgilendirme Kartı -->
-      <div class="rounded-2xl p-6 bg-gradient-to-br from-emerald-900/90 via-teal-950 to-slate-900 text-white shadow-xl relative overflow-hidden border border-emerald-800/40">
+      <div
+        class="rounded-2xl p-6 bg-gradient-to-br from-emerald-900/90 via-teal-950 to-slate-900 text-white shadow-xl relative overflow-hidden border border-emerald-800/40">
         <div class="relative z-10">
-          <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-white/10 text-emerald-200 border border-white/10 mb-3">
+          <div
+            class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-white/10 text-emerald-200 border border-white/10 mb-3">
             <mat-icon class="icon-size-3.5" [svgIcon]="'heroicons_solid:sparkles'"></mat-icon>
             <span>Akıllı Çiftlik İpucu</span>
           </div>
@@ -401,15 +487,13 @@
             Otomatik RFID ve Sayım
           </h3>
           <p class="text-xs text-slate-300 leading-relaxed">
-            Bluetooth özellikli RFID el terminalleriyle padok ve sayım operasyonlarını anlık olarak sisteme aktarabilirsiniz.
+            Bluetooth özellikli RFID el terminalleriyle padok ve sayım operasyonlarını anlık olarak sisteme
+            aktarabilirsiniz.
           </p>
           <div class="mt-4 pt-3 border-t border-white/10 flex items-center justify-between">
             <span class="text-[11px] text-emerald-300/80 font-semibold">OdivonFARM v2.0</span>
-            <button
-              type="button"
-              class="text-xs text-emerald-300 hover:text-white font-bold cursor-pointer"
-              (click)="navigateTo('/sayim')"
-            >
+            <button type="button" class="text-xs text-emerald-300 hover:text-white font-bold cursor-pointer"
+              (click)="navigateTo('/sayim')">
               Sayım Başlat →
             </button>
           </div>
@@ -421,5 +505,11 @@
     </div>
 
   </div>
+
+  <!-- Briefing Review & Edit Modal -->
+  @if (isBriefingModalOpen()) {
+  <app-briefing-modal [summary]="dailyBriefingSummary()" [options]="briefingOptions()" (close)="closeBriefingModal()"
+    (optionsChange)="updateBriefingOptions($event)"></app-briefing-modal>
+  }
 
 </div>
