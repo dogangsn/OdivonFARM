@@ -6,6 +6,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { IotService } from '../../core/services/iot.service';
 import { IotDevice, IotDeviceType, IotConnectionProtocol, MilkingSessionTelemetry } from '../../core/models/iot.model';
 import { AlertService } from '../../core/services/alert.service';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-iot-devices',
@@ -39,7 +40,7 @@ import { AlertService } from '../../core/services/alert.service';
             class="px-4 py-2.5 rounded-xl border border-indigo-200 dark:border-indigo-800 bg-indigo-50/80 hover:bg-indigo-100 dark:bg-indigo-950/50 dark:hover:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 text-xs font-bold transition-all flex items-center gap-2 shadow-xs cursor-pointer disabled:opacity-50"
             matTooltip="Google Chrome/Edge üzerinden doğrudan Bluetooth tartıya bağlanın"
           >
-            <mat-icon class="icon-size-4" [svgIcon]="'heroicons_solid:signal'"></mat-icon>
+            <mat-icon class="icon-size-4" [svgIcon]="'feather:bluetooth'"></mat-icon>
             <span>{{ iotService.isBleConnected() ? 'BLE: ' + iotService.bleDeviceName() : 'Bluetooth Tartı Eşleştir' }}</span>
           </button>
 
@@ -62,7 +63,7 @@ import { AlertService } from '../../core/services/alert.service';
           <div class="flex items-center justify-between">
             <span class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Bağlı Cihazlar</span>
             <div class="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
-              <mat-icon class="icon-size-5" [svgIcon]="'heroicons_solid:cpu-chip'"></mat-icon>
+              <mat-icon class="icon-size-5" [svgIcon]="'heroicons_solid:chip'"></mat-icon>
             </div>
           </div>
           <div class="mt-4">
@@ -100,7 +101,7 @@ import { AlertService } from '../../core/services/alert.service';
             <span>Süt Metresi: <strong>ICAR Uyumlu</strong></span>
             @if (hasMastitisAlert()) {
               <span class="text-rose-500 font-bold flex items-center gap-1">
-                <mat-icon class="icon-size-3.5" [svgIcon]="'heroicons_solid:exclamation-triangle'"></mat-icon>
+                <mat-icon class="icon-size-3.5" [svgIcon]="'heroicons_solid:exclamation'"></mat-icon>
                 Mastitis Riski!
               </span>
             } @else {
@@ -196,7 +197,7 @@ import { AlertService } from '../../core/services/alert.service';
           [class.active-tab]="activeTab() === 'devices'"
           class="tab-btn px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center gap-2 cursor-pointer shrink-0"
         >
-          <mat-icon class="icon-size-4.5" [svgIcon]="'heroicons_solid:cpu-chip'"></mat-icon>
+          <mat-icon class="icon-size-4.5" [svgIcon]="'heroicons_solid:chip'"></mat-icon>
           <span>Cihaz Listesi & Protokoller</span>
         </button>
       </div>
@@ -214,10 +215,37 @@ import { AlertService } from '../../core/services/alert.service';
                 Her sağım durağında hayvanın elektronik kulak küpesi RFID okuyucu tarafından algılanır, ICAR onaylı süt metresi akan süt miktarını (Lt) ve elektrik iletkenliğini (mS/cm) anlık olarak sisteme aktarır. Subklinik mastitis riski anında tespit edilir.
               </p>
             </div>
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-2 flex-wrap">
               <span class="px-3 py-1.5 rounded-xl text-xs font-bold bg-white dark:bg-slate-800 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-700 shadow-2xs">
                 Protokol: Modbus RS485 / MQTT
               </span>
+            </div>
+          </div>
+
+          <!-- Milking Stalls Toolbar -->
+          <div class="flex items-center justify-between gap-3 flex-wrap bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-2xs">
+            <div class="flex items-center gap-2 text-xs font-bold text-slate-600 dark:text-slate-300">
+              <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+              <span>Aktif Sağımhane Durakları (Toplam {{ iotService.milkingStalls().length }} Durak)</span>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <button
+                type="button"
+                (click)="iotService.addStall()"
+                class="px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition-all shadow-xs flex items-center gap-1.5 cursor-pointer"
+              >
+                <mat-icon class="icon-size-4" [svgIcon]="'heroicons_solid:plus'"></mat-icon>
+                <span>Yeni Durak Ekle</span>
+              </button>
+              <button
+                type="button"
+                (click)="clearAllStallsConfirm()"
+                class="px-3.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+              >
+                <mat-icon class="icon-size-4" [svgIcon]="'heroicons_outline:trash'"></mat-icon>
+                <span>Tüm Durakları Sıfırla</span>
+              </button>
             </div>
           </div>
 
@@ -242,17 +270,29 @@ import { AlertService } from '../../core/services/alert.service';
                       <span class="text-xs font-bold text-slate-700 dark:text-slate-300">Sağım Durağı</span>
                     </div>
 
-                    <!-- Status Badge -->
-                    <span
-                      class="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold uppercase tracking-wide"
-                      [ngClass]="{
-                        'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300': stall.status === 'milking',
-                        'bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-300': stall.status === 'finished',
-                        'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400': stall.status === 'idle'
-                      }"
-                    >
-                      {{ stall.status === 'milking' ? 'Sağılıyor' : stall.status === 'finished' ? 'Tamamlandı' : 'Boş / Hazır' }}
-                    </span>
+                    <div class="flex items-center gap-1.5">
+                      <!-- Status Badge -->
+                      <span
+                        class="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold uppercase tracking-wide"
+                        [ngClass]="{
+                          'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300': stall.status === 'milking',
+                          'bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-300': stall.status === 'finished',
+                          'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400': stall.status === 'idle'
+                        }"
+                      >
+                        {{ stall.status === 'milking' ? 'Sağılıyor' : stall.status === 'finished' ? 'Tamamlandı' : 'Boş' }}
+                      </span>
+
+                      <!-- Delete Stall Button -->
+                      <button
+                        type="button"
+                        (click)="deleteStallConfirm(stall.stallNumber)"
+                        class="w-7 h-7 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/60 text-slate-400 hover:text-rose-600 flex items-center justify-center transition-colors cursor-pointer"
+                        matTooltip="Durağı Sistemden Kaldır"
+                      >
+                        <mat-icon class="icon-size-3.5" [svgIcon]="'heroicons_outline:trash'"></mat-icon>
+                      </button>
+                    </div>
                   </div>
 
                   <!-- Animal Info in Stall -->
@@ -292,7 +332,7 @@ import { AlertService } from '../../core/services/alert.service';
                     </div>
                     @if (stall.isMastitisAlert) {
                       <div class="p-2 rounded-lg bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-300 text-[11px] font-bold flex items-center gap-1.5">
-                        <mat-icon class="icon-size-4 text-rose-500" [svgIcon]="'heroicons_solid:exclamation-triangle'"></mat-icon>
+                        <mat-icon class="icon-size-4 text-rose-500" [svgIcon]="'heroicons_solid:exclamation'"></mat-icon>
                         <span>Mastitis Uyarısı! İletkenlik > 6.5 mS/cm</span>
                       </div>
                     }
@@ -300,7 +340,7 @@ import { AlertService } from '../../core/services/alert.service';
                 </div>
 
                 <!-- Action Buttons -->
-                <div class="pt-2 border-t border-slate-100 dark:border-slate-800 flex gap-2">
+                <div class="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center gap-2">
                   @if (stall.status === 'idle') {
                     <button
                       type="button"
@@ -317,6 +357,14 @@ import { AlertService } from '../../core/services/alert.service';
                     >
                       Durdur
                     </button>
+                    <button
+                      type="button"
+                      (click)="iotService.resetStall(stall.stallNumber)"
+                      class="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs font-bold transition-all cursor-pointer"
+                      matTooltip="Durağı Boşalt ve Sıfırla"
+                    >
+                      Boşalt
+                    </button>
                   } @else {
                     <button
                       type="button"
@@ -324,6 +372,14 @@ import { AlertService } from '../../core/services/alert.service';
                       class="flex-1 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all cursor-pointer shadow-xs"
                     >
                       Verimlere Kaydet
+                    </button>
+                    <button
+                      type="button"
+                      (click)="iotService.resetStall(stall.stallNumber)"
+                      class="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs font-bold transition-all cursor-pointer"
+                      matTooltip="Durağı Boşalt"
+                    >
+                      Boşalt
                     </button>
                   }
                 </div>
@@ -349,9 +405,29 @@ import { AlertService } from '../../core/services/alert.service';
                     Bluetooth Low Energy (BLE) veya RS232 kantar indikatörü ile anlık canlı hayvan tartımı.
                   </p>
                 </div>
-                <span class="px-3 py-1 rounded-full text-xs font-bold" [ngClass]="iotService.isBleConnected() ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600'">
-                  {{ iotService.isBleConnected() ? 'BLE Bağlı' : 'Bağlantı Hazır' }}
-                </span>
+                <div class="flex items-center gap-2">
+                  <span class="px-3 py-1 rounded-full text-xs font-bold" [ngClass]="iotService.isBleConnected() ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'">
+                    {{ iotService.isBleConnected() ? 'BLE: ' + iotService.bleDeviceName() : 'Bağlantı Hazır' }}
+                  </span>
+                  @if (iotService.isBleConnected()) {
+                    <button
+                      type="button"
+                      (click)="iotService.disconnectBleScale()"
+                      class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-rose-50 text-rose-600 hover:bg-rose-100 dark:bg-rose-950/60 dark:text-rose-300 transition-colors cursor-pointer"
+                    >
+                      Bağlantıyı Kes
+                    </button>
+                  } @else {
+                    <button
+                      type="button"
+                      (click)="enableVirtualScale()"
+                      class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-indigo-50 text-indigo-600 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:text-indigo-300 transition-colors cursor-pointer"
+                      matTooltip="Fiziksel cihaz olmadan test için sanal terazi bağla"
+                    >
+                      Sanal BLE Başlat
+                    </button>
+                  }
+                </div>
               </div>
 
               <!-- Big Digital Scale Indicator -->
@@ -533,7 +609,7 @@ import { AlertService } from '../../core/services/alert.service';
           <div class="p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
             <h3 class="text-lg font-bold text-slate-900 dark:text-white">Yeni Cihaz / İstasyon Ekle</h3>
             <button type="button" (click)="closeAddDrawer()" class="w-8 h-8 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center text-slate-400">
-              <mat-icon [svgIcon]="'heroicons_outline:x-mark'"></mat-icon>
+              <mat-icon [svgIcon]="'heroicons_outline:x'"></mat-icon>
             </button>
           </div>
 
@@ -629,18 +705,131 @@ export class IotDevicesComponent {
   });
 
   async connectBluetooth(): Promise<void> {
+    if (this.iotService.isBleConnected()) {
+      const result = await Swal.fire({
+        title: 'Bluetooth Tartı Bağlı',
+        html: `
+          <div class="text-sm text-slate-600 dark:text-slate-300">
+            Şu anda <strong>${this.iotService.bleDeviceName()}</strong> cihazı bağlı.
+          </div>
+        `,
+        icon: 'info',
+        showCancelButton: true,
+        showDenyButton: true,
+        confirmButtonText: 'Dara Al (0.0 kg)',
+        denyButtonText: 'Bağlantıyı Kes',
+        cancelButtonText: 'Kapat',
+        confirmButtonColor: '#10b981',
+        denyButtonColor: '#ef4444',
+        cancelButtonColor: '#64748b',
+      });
+
+      if (result.isConfirmed) {
+        this.iotService.tareScale();
+        this.alert.toastSuccess('Terazi sıfırlandı (Dara alındı).');
+      } else if (result.isDenied) {
+        this.iotService.disconnectBleScale();
+        this.alert.toastSuccess('Bluetooth tartı bağlantısı kesildi.');
+      }
+      return;
+    }
+
     const success = await this.iotService.connectBleScale();
     if (success) {
       this.alert.toastSuccess('Bluetooth Akıllı Tartı başarıyla bağlandı!');
     } else {
-      this.alert.warning('Bluetooth', 'Bağlantı kurulamadı veya cihaz seçilmedi.');
+      const simResult = await Swal.fire({
+        title: 'Fiziksel BLE Cihaz Algılanamadı',
+        html: `
+          <div class="text-left text-xs text-slate-600 dark:text-slate-300 space-y-2">
+            <p>Web Bluetooth API, tarayıcı üzerinden yakındaki aktif Bluetooth Low Energy (BLE) tartısını aradı ancak fiziksel cihaz bulunamadı ya da seçim penceresi kapatıldı.</p>
+            <div class="p-3 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-900 text-indigo-700 dark:text-indigo-300 font-medium">
+              💡 <strong>Test & Demo Çözümü:</strong>
+              <br>
+              Fiziksel donanıma ihtiyaç duymadan veri akışını ve kantar tartım kayıtlarını test etmek için <strong>Sanal BLE Terazi Simülatörü</strong>'nü bağlayabilirsiniz.
+            </div>
+          </div>
+        `,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Sanal BLE Terazi Başlat',
+        cancelButtonText: 'Vazgeç',
+        confirmButtonColor: '#4f46e5',
+        cancelButtonColor: '#64748b',
+      });
+
+      if (simResult.isConfirmed) {
+        this.enableVirtualScale();
+      }
     }
   }
 
-  quickStartMilking(stallNumber: number): void {
-    const randomTag = 'TR-06-K-' + Math.floor(1000 + Math.random() * 9000);
-    this.iotService.startMilking(stallNumber, randomTag, 'Sağmal Koyun');
-    this.alert.toastSuccess(`Durak #${stallNumber} için sağım başlatıldı!`);
+  enableVirtualScale(): void {
+    this.iotService.enableVirtualBleScale();
+    this.alert.toastSuccess('Sanal Bluetooth Akıllı Tartı bağlandı! Canlı telemetri aktif.');
+  }
+
+  async quickStartMilking(stallNumber: number): Promise<void> {
+    const defaultTag = 'TR-06-K-' + Math.floor(1000 + Math.random() * 9000);
+    const { value: tagNo } = await Swal.fire({
+      title: `Durak #${stallNumber} - Sağım Başlat`,
+      html: `
+        <p class="text-xs text-slate-500 dark:text-slate-400 mb-3 text-left">
+          Bu sağım durağına girecek hayvanın kulak küpe numarasını girin veya önerilen küpeyi onaylayın:
+        </p>
+      `,
+      input: 'text',
+      inputValue: defaultTag,
+      inputAttributes: {
+        placeholder: 'Örn: TR-06-K-1042',
+      },
+      showCancelButton: true,
+      confirmButtonText: 'Sağımı Başlat',
+      cancelButtonText: 'İptal',
+      confirmButtonColor: '#4f46e5',
+      cancelButtonColor: '#64748b',
+    });
+
+    if (tagNo && tagNo.trim()) {
+      this.iotService.startMilking(stallNumber, tagNo.trim(), 'Sağmal Koyun');
+      this.alert.toastSuccess(`Durak #${stallNumber} için ${tagNo.trim()} küpeli hayvanın sağımı başlatıldı!`);
+    }
+  }
+
+  async deleteStallConfirm(stallNumber: number): Promise<void> {
+    const result = await Swal.fire({
+      title: `Durak #${stallNumber} Silinsin mi?`,
+      text: `Bu sağım durağı sistemden kaldırılacaktır. Devam etmek istiyor musunuz?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Evet, Durağı Sil',
+      cancelButtonText: 'Vazgeç',
+      confirmButtonColor: '#e11d48',
+      cancelButtonColor: '#64748b',
+    });
+
+    if (result.isConfirmed) {
+      this.iotService.deleteStall(stallNumber);
+      this.alert.toastSuccess(`Durak #${stallNumber} başarıyla silindi.`);
+    }
+  }
+
+  async clearAllStallsConfirm(): Promise<void> {
+    const result = await Swal.fire({
+      title: 'Tüm Duraklar Sıfırlansın mı?',
+      text: 'Tüm sağım duraklarındaki aktif veriler ve atanan hayvanlar temizlenecek, duraklar boş konuma getirilecektir.',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Evet, Hepsini Sıfırla',
+      cancelButtonText: 'Vazgeç',
+      confirmButtonColor: '#4f46e5',
+      cancelButtonColor: '#64748b',
+    });
+
+    if (result.isConfirmed) {
+      this.iotService.clearAllStalls();
+      this.alert.toastSuccess('Tüm sağım durakları başarıyla sıfırlandı ve boşaltıldı.');
+    }
   }
 
   saveAndResetStall(stallNumber: number, liters: number, tagNo?: string): void {

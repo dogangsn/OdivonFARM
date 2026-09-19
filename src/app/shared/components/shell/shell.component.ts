@@ -324,7 +324,7 @@ export class ShellComponent {
         { label: 'Görevler Paneli', icon: 'heroicons_outline:clipboard-check', route: '/gorevler' },
         { label: 'Sayım Operasyonları', icon: 'heroicons_outline:qrcode', route: '/sayim' },
         { label: 'Verimler (Süt/Yapağı)', icon: 'heroicons_outline:beaker', route: '/verimler' },
-        { label: 'IoT & Cihaz Yönetimi', icon: 'heroicons_outline:cpu-chip', route: '/iot-cihazlar', badge: 'IoT', badgeColor: 'bg-indigo-600' },
+        { label: 'IoT & Cihaz Yönetimi', icon: 'heroicons_outline:chip', route: '/iot-cihazlar', badge: 'IoT', badgeColor: 'bg-indigo-600' },
         { label: 'Foto Galeri', icon: 'heroicons_outline:photograph', route: '/galeri' },
         { label: 'Çiftlikte Yapılanlar', icon: 'heroicons_outline:clock', route: '/aktiviteler' },
       ],

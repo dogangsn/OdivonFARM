@@ -185,14 +185,10 @@ export class IotService {
 
     try {
       const nav: any = navigator;
+      // Tüm cihazları listele veya terazi filtrelerini tara
       const device = await nav.bluetooth.requestDevice({
-        filters: [
-          { services: ['weight_scale'] },
-          { namePrefix: 'Odivon' },
-          { namePrefix: 'Scale' },
-          { namePrefix: 'ESP32' },
-        ],
-        optionalServices: ['battery_service', 'device_information'],
+        acceptAllDevices: true,
+        optionalServices: ['weight_scale', 'battery_service', 'device_information', 0x181d],
       });
 
       if (!device) return false;
@@ -221,9 +217,39 @@ export class IotService {
 
       return true;
     } catch (err: any) {
-      console.error('BLE terazi bağlantı hatası:', err);
+      console.error('BLE terazi bağlantı hatası veya kullanıcı iptal etti:', err);
       return false;
     }
+  }
+
+  /**
+   * Fiziksel Bluetooth cihazı masada açık olmadığında test ve demonstrasyon için Sanal BLE Terazi Modu
+   */
+  enableVirtualBleScale(): void {
+    this.isBleConnected.set(true);
+    this.bleDeviceName.set('Odivon-SmartScale-ESP32 (Sanal BLE)');
+    this.activeScaleWeight.set({
+      deviceId: 'virtual-ble-scale',
+      scaleName: 'Odivon-SmartScale-ESP32 (Sanal BLE)',
+      weightKg: 38.5,
+      isStable: true,
+      unit: 'kg',
+      animalTagNo: 'TR-06-K-1042',
+      timestamp: new Date(),
+    });
+    this.weightStreamSubject.next(this.activeScaleWeight());
+  }
+
+  /**
+   * Bluetooth bağlantısını sonlandır
+   */
+  disconnectBleScale(): void {
+    if (this.bluetoothDevice && this.bluetoothDevice.gatt?.connected) {
+      this.bluetoothDevice.gatt.disconnect();
+    }
+    this.bluetoothDevice = null;
+    this.isBleConnected.set(false);
+    this.bleDeviceName.set('');
   }
 
   /**
@@ -404,6 +430,55 @@ export class IotService {
             }
           : s
       )
+    );
+  }
+
+  /**
+   * Yeni Sağım Durağı Ekle (Örn: 5, 6...)
+   */
+  addStall(): void {
+    this.milkingStalls.update((stalls) => {
+      const nextNum = stalls.length > 0 ? Math.max(...stalls.map((s) => s.stallNumber)) + 1 : 1;
+      const newStall: MilkingSessionTelemetry = {
+        deviceId: 'dev-milking-01',
+        stallNumber: nextNum,
+        currentLiters: 0.0,
+        flowRateKgPerMin: 0.0,
+        durationSeconds: 0,
+        conductivityMilliSiemens: 0.0,
+        isMastitisAlert: false,
+        temperatureC: 0.0,
+        status: 'idle',
+      };
+      return [...stalls, newStall];
+    });
+  }
+
+  /**
+   * Sağım Durağını Komple Sil
+   */
+  deleteStall(stallNumber: number): void {
+    this.milkingStalls.update((stalls) => stalls.filter((s) => s.stallNumber !== stallNumber));
+  }
+
+  /**
+   * Tüm Sağım Duraklarını Sıfırla / Temizle
+   */
+  clearAllStalls(): void {
+    this.milkingStalls.update((stalls) =>
+      stalls.map((s) => ({
+        ...s,
+        animalTagNo: undefined,
+        animalName: undefined,
+        animalRfid: undefined,
+        currentLiters: 0.0,
+        flowRateKgPerMin: 0.0,
+        durationSeconds: 0,
+        conductivityMilliSiemens: 0.0,
+        isMastitisAlert: false,
+        temperatureC: 0.0,
+        status: 'idle',
+      }))
     );
   }
 

@@ -47,7 +47,7 @@ import { OnboardingService, OnboardingStep, SystemTourItem } from '../../../core
               (click)="close()"
               class="w-10 h-10 rounded-xl hover:bg-slate-200/60 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 flex items-center justify-center transition-colors cursor-pointer"
             >
-              <mat-icon [svgIcon]="'heroicons_outline:x-mark'"></mat-icon>
+              <mat-icon [svgIcon]="'heroicons_outline:x'"></mat-icon>
             </button>
           </div>
 
@@ -56,7 +56,7 @@ import { OnboardingService, OnboardingStep, SystemTourItem } from '../../../core
             <div class="flex-1 max-w-md">
               <div class="flex items-center justify-between text-xs font-bold mb-1.5">
                 <span class="text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                  <mat-icon class="icon-size-4 text-indigo-500" [svgIcon]="'heroicons_solid:check-badge'"></mat-icon>
+                  <mat-icon class="icon-size-4 text-indigo-500" [svgIcon]="'heroicons_solid:badge-check'"></mat-icon>
                   Kurulum İlerlemesi ({{ onboardingService.completedCount() }}/{{ onboardingService.totalSteps() }})
                 </span>
                 <span class="text-indigo-600 dark:text-indigo-400 font-extrabold">
@@ -82,7 +82,7 @@ import { OnboardingService, OnboardingStep, SystemTourItem } from '../../../core
                 [class.dark:text-slate-300]="onboardingService.activeTab() !== 'steps'"
                 class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
               >
-                <mat-icon class="icon-size-4" [svgIcon]="'heroicons_solid:list-bullet'"></mat-icon>
+                <mat-icon class="icon-size-4" [svgIcon]="'heroicons_solid:view-list'"></mat-icon>
                 <span>Kurulum Adımları</span>
               </button>
               <button
@@ -218,7 +218,7 @@ import { OnboardingService, OnboardingStep, SystemTourItem } from '../../../core
                       class="w-full py-2 rounded-xl bg-slate-100 hover:bg-indigo-50 dark:bg-slate-800 dark:hover:bg-slate-700/80 text-slate-700 hover:text-indigo-600 dark:text-slate-300 dark:hover:text-white text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                     >
                       <span>Modüle Git</span>
-                      <mat-icon class="icon-size-3.5" [svgIcon]="'heroicons_solid:arrow-top-right-on-square'"></mat-icon>
+                      <mat-icon class="icon-size-3.5" [svgIcon]="'heroicons_solid:external-link'"></mat-icon>
                     </button>
                   </div>
                 }

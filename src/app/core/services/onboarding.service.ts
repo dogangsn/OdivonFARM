@@ -138,7 +138,7 @@ export class OnboardingService {
       id: 'iot',
       title: 'Gömülü Sistemler (IoT) & Telemetri',
       category: 'Donanım Entegrasyonu',
-      icon: 'heroicons_solid:cpu-chip',
+      icon: 'heroicons_solid:chip',
       summary: 'Web Bluetooth üzerinden akıllı kantar, RFID geçiş kapısı ve barınak mikroklima sensörleri.',
       keyFeatures: [
         'Web Bluetooth ile tarayıcıdan direkt tartı bağlantısı',
