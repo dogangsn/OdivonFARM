@@ -272,6 +272,56 @@
               </select>
             </div>
 
+            <!-- AI LEAST-COST OPTIMIZATION WIDGET -->
+            <div class="p-4 rounded-2xl bg-gradient-to-r from-amber-500/10 via-indigo-500/10 to-purple-500/10 border border-amber-500/20 dark:border-amber-500/30 space-y-3">
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                <div>
+                  <div class="text-xs font-black text-amber-700 dark:text-amber-400 flex items-center gap-1.5">
+                    <mat-icon class="icon-size-4" [svgIcon]="'heroicons_solid:chip'"></mat-icon>
+                    <span>Yapay Zekâ ile En Düşük Maliyetli Rasyon (Least-Cost AI)</span>
+                  </div>
+                  <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                    Mevcut yem stoklarının fiyat ve besin analizini yaparak hedef gruba en ucuz NRC rasyonunu hesaplar.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  (click)="autoOptimizeRation()"
+                  class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-600 to-indigo-600 hover:from-amber-500 hover:to-indigo-500 text-white text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 cursor-pointer shrink-0"
+                >
+                  <mat-icon class="icon-size-4" [svgIcon]="'heroicons_solid:lightning-bolt'"></mat-icon>
+                  <span>🤖 Reçeteyi Otomatik Optimize Et</span>
+                </button>
+              </div>
+
+              <!-- Optimization Savings Preview if generated -->
+              @if (latestOptimizationResult(); as opt) {
+                <div class="p-3 rounded-xl bg-white dark:bg-slate-900 border border-emerald-500/30 text-xs space-y-2 animate-in fade-in">
+                  <div class="flex items-center justify-between">
+                    <span class="font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                      <mat-icon class="icon-size-3.5" [svgIcon]="'heroicons_solid:check-circle'"></mat-icon>
+                      Optimum Reçete Formüle Edildi
+                    </span>
+                    <span class="font-mono text-[11px] font-bold text-slate-500">Güvenilirlik: %{{ opt.algorithmConfidence }}</span>
+                  </div>
+                  <div class="grid grid-cols-3 gap-2 text-center pt-1">
+                    <div class="p-2 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800">
+                      <div class="text-[10px] text-slate-500">Hayvan Başı Günlük Tasarruf</div>
+                      <div class="text-sm font-black text-emerald-600 dark:text-emerald-400 font-mono">{{ opt.dailySavingsPerAnimal }} ₺ / gün</div>
+                    </div>
+                    <div class="p-2 rounded-lg bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800">
+                      <div class="text-[10px] text-slate-500">100 Baş Aylık Kazanç</div>
+                      <div class="text-sm font-black text-indigo-600 dark:text-indigo-400 font-mono">{{ opt.monthlySavingsPer100Animals }} ₺</div>
+                    </div>
+                    <div class="p-2 rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800">
+                      <div class="text-[10px] text-slate-500">Yıllık Çiftlik Tasarrufu</div>
+                      <div class="text-sm font-black text-amber-600 dark:text-amber-400 font-mono">{{ opt.annualSavingsPer100Animals }} ₺</div>
+                    </div>
+                  </div>
+                </div>
+              }
+            </div>
+
             <!-- LIVE SCIENTIFIC ANALYSIS CARD -->
             @let metrics = formCalculatedMetrics();
             <div class="p-4 rounded-2xl bg-gradient-to-br from-slate-900 to-slate-950 border border-slate-800 text-white space-y-3 shadow-md">

@@ -31,6 +31,9 @@ import { TagScannerService } from '../../../core/services/tag-scanner.service';
 import { TagScannerModalComponent } from '../tag-scanner/tag-scanner-modal.component';
 import { OnboardingService } from '../../../core/services/onboarding.service';
 import { OnboardingWizardComponent } from '../onboarding-wizard/onboarding-wizard.component';
+import { VoiceAssistantModalComponent } from '../voice-assistant-modal/voice-assistant-modal.component';
+
+import { OfflineSyncService } from '../../../core/services/offline-sync.service';
 
 /**
  * Fuse v17 esintili ultra-modern uygulama kabuğu (Layout).
@@ -51,6 +54,7 @@ import { OnboardingWizardComponent } from '../onboarding-wizard/onboarding-wizar
     MatTooltipModule,
     TagScannerModalComponent,
     OnboardingWizardComponent,
+    VoiceAssistantModalComponent,
   ],
   templateUrl: './shell.component.html',
   styleUrl: './shell.component.scss',
@@ -64,9 +68,12 @@ export class ShellComponent {
   onboardingService = inject(OnboardingService);
   subService = inject(SubscriptionService);
   tagScanner = inject(TagScannerService);
+  offlineSync = inject(OfflineSyncService);
 
   searchQuery = signal('');
   isNavigating = signal(false);
+  isOnboardingOpen = signal<boolean>(false);
+  isVoiceAssistantOpen = signal<boolean>(false);
 
   @HostListener('window:keydown', ['$event'])
   handleKeyboardShortcut(event: KeyboardEvent) {
@@ -325,6 +332,7 @@ export class ShellComponent {
         { label: 'Sayım Operasyonları', icon: 'heroicons_outline:qrcode', route: '/sayim' },
         { label: 'Verimler (Süt/Yapağı)', icon: 'heroicons_outline:beaker', route: '/verimler' },
         { label: 'IoT & Cihaz Yönetimi', icon: 'heroicons_outline:chip', route: '/iot-cihazlar', badge: 'IoT', badgeColor: 'bg-indigo-600' },
+        { label: 'TÜRKVET & Teşvikler', icon: 'heroicons_outline:document-text', route: '/turkvet-tesvik', badge: 'GovTech', badgeColor: 'bg-emerald-600' },
         { label: 'Foto Galeri', icon: 'heroicons_outline:photograph', route: '/galeri' },
         { label: 'Çiftlikte Yapılanlar', icon: 'heroicons_outline:clock', route: '/aktiviteler' },
       ],

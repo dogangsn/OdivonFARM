@@ -10,6 +10,7 @@ import { AnimalService } from '../../core/services/animal.service';
 import { WeightRecord } from '../../core/models/production.model';
 import { Animal } from '../../core/models/animal.model';
 import { AlertService } from '../../core/services/alert.service';
+import { FinishingAnalyticsService } from '../../core/services/finishing-analytics.service';
 
 interface EnrichedWeightRecord extends WeightRecord {
   previousWeightKg?: number;
@@ -35,6 +36,7 @@ export class WeightsComponent {
   private weightService = inject(WeightRecordService);
   private animalService = inject(AnimalService);
   private alertService = inject(AlertService);
+  finishingService = inject(FinishingAnalyticsService);
 
   readonly weightRecords = toSignal(this.weightService.list(), { initialValue: [] as WeightRecord[] });
   readonly animals = toSignal(this.animalService.list(), { initialValue: [] as Animal[] });

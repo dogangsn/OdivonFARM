@@ -200,6 +200,19 @@ import Swal from 'sweetalert2';
           <mat-icon class="icon-size-4.5" [svgIcon]="'heroicons_solid:chip'"></mat-icon>
           <span>Cihaz Listesi & Protokoller</span>
         </button>
+
+        <button
+          type="button"
+          (click)="activeTab.set('vision')"
+          [class.active-tab]="activeTab() === 'vision'"
+          class="tab-btn px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center gap-2 cursor-pointer shrink-0"
+        >
+          <mat-icon class="icon-size-4.5" [svgIcon]="'heroicons_solid:eye'"></mat-icon>
+          <span>Kamera & Yapay Zekâ Görü (BCS & Doğum)</span>
+          <span class="px-2 py-0.5 rounded-full text-[10px] bg-rose-500 text-white font-extrabold animate-pulse">
+            AI Canlı
+          </span>
+        </button>
       </div>
 
       <!-- TAB 1: SMART MILKING PARLOUR (SÜT SAĞMA MAKİNESİ) -->
@@ -599,6 +612,189 @@ import Swal from 'sweetalert2';
         </div>
       }
 
+      <!-- TAB 5: COMPUTER VISION AI (KAMERA TARTIM, BCS & DOĞUM ALARMI) -->
+      @if (activeTab() === 'vision') {
+        <div class="space-y-6">
+          <!-- Top Overview Banner -->
+          <div class="p-5 rounded-2xl bg-gradient-to-r from-purple-950/80 via-slate-900 to-indigo-950/80 text-white border border-purple-800/50 shadow-lg flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="p-1.5 rounded-lg bg-purple-500/20 text-purple-400">
+                  <mat-icon class="icon-size-5" [svgIcon]="'heroicons_solid:eye'"></mat-icon>
+                </span>
+                <h3 class="text-base font-black tracking-tight">Yapay Zekâ Bilgisayarlı Görü (Computer Vision Edge AI)</h3>
+                <span class="px-2.5 py-0.5 rounded-full text-[10px] bg-purple-500/30 text-purple-200 border border-purple-400/40 font-bold">
+                  YOLOv8 + Biyometrik 3D Kontur
+                </span>
+              </div>
+              <p class="text-xs text-slate-300 mt-1 max-w-3xl leading-relaxed">
+                Padok kameraları üzerinden hayvanları fiziksel strese sokmadan temassız canlı ağırlık ve kondisyon skoru (BCS) tahmini yapar; gebe koğuşunda doğum sancısını 45 dakika önceden tespit eder.
+              </p>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="px-3 py-1.5 rounded-xl text-xs font-bold bg-white/10 text-white border border-white/20">
+                Kamera Çözünürlüğü: 1080p @ 30fps
+              </span>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Vision Model 1: Contactless Weight & BCS -->
+            <div class="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4 flex flex-col justify-between">
+              <div>
+                <div class="flex items-center justify-between mb-3">
+                  <div class="flex items-center gap-2">
+                    <span class="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-black text-xs">
+                      01
+                    </span>
+                    <div>
+                      <h4 class="text-sm font-bold text-slate-900 dark:text-white">Kamera ile Temassız Ağırlık & BCS Tahmini</h4>
+                      <p class="text-[11px] text-slate-500">Geçiş koridorunda sırt konturu (dorsal curvature) taraması</p>
+                    </div>
+                  </div>
+                  <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                    Kamera Canlı
+                  </span>
+                </div>
+
+                <!-- Simulated Camera Viewport -->
+                <div class="relative rounded-2xl overflow-hidden bg-slate-950 border border-slate-800 aspect-video flex items-center justify-center shadow-inner">
+                  <div class="absolute inset-0 bg-[radial-gradient(#38bdf8_1px,transparent_1px)] [background-size:16px_16px] opacity-20"></div>
+                  
+                  <!-- Scanning Box Overlay -->
+                  <div class="absolute border-2 border-dashed border-emerald-400 w-3/4 h-3/5 rounded-2xl flex flex-col justify-between p-3 animate-pulse pointer-events-none">
+                    <div class="flex justify-between text-[10px] font-mono text-emerald-400 font-bold">
+                      <span>[ANIMAL_DETECTED: 98.6%]</span>
+                      <span>FPS: 29.8</span>
+                    </div>
+                    <div class="flex justify-between text-[10px] font-mono text-emerald-400 font-bold">
+                      <span>DORSAL_ARC: 68.4°</span>
+                      <span>CHEST_GIRTH: 78 cm</span>
+                    </div>
+                  </div>
+
+                  <!-- Central Target Display -->
+                  <div class="text-center z-10 space-y-1">
+                    <mat-icon class="icon-size-10 text-emerald-400 animate-bounce" [svgIcon]="'heroicons_outline:video-camera'"></mat-icon>
+                    <div class="text-xs font-bold text-white tracking-wide">Koridor Kamerası #Cam-02 (Padok A Girişi)</div>
+                    <div class="text-[11px] font-mono text-slate-400">Hayvan: TR-06-K-1042 (Merinos Toklu)</div>
+                  </div>
+                </div>
+
+                <!-- Biometric Output Indicators -->
+                <div class="grid grid-cols-3 gap-3 pt-4 text-center">
+                  <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
+                    <div class="text-[10px] text-slate-400">Tahmini Canlı Kilo</div>
+                    <div class="text-xl font-black text-emerald-600 dark:text-emerald-400 font-mono mt-0.5">46.8 kg</div>
+                    <span class="text-[9px] text-slate-400 font-medium">Doğruluk: ±%3.2</span>
+                  </div>
+
+                  <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
+                    <div class="text-[10px] text-slate-400">Kondisyon Skoru (BCS)</div>
+                    <div class="text-xl font-black text-indigo-600 dark:text-indigo-400 font-mono mt-0.5">3.25 <span class="text-xs text-slate-400">/ 5</span></div>
+                    <span class="text-[9px] text-emerald-600 font-bold">Optimum Damızlık</span>
+                  </div>
+
+                  <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
+                    <div class="text-[10px] text-slate-400">Sırt Yağ Örtüsü</div>
+                    <div class="text-xs font-black text-slate-800 dark:text-slate-200 mt-1.5">Dengeli / Kaslı</div>
+                    <span class="text-[9px] text-slate-400">Besiye Uygun</span>
+                  </div>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                (click)="saveVisionWeightToAnimal('TR-06-K-1042', 46.8)"
+                class="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer mt-2"
+              >
+                <mat-icon class="icon-size-4" [svgIcon]="'heroicons_solid:check'"></mat-icon>
+                <span>AI Ölçümünü Hayvan Kartına Kaydet (46.8 kg)</span>
+              </button>
+            </div>
+
+            <!-- Vision Model 2: Calving & Lambing Alert -->
+            <div class="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4 flex flex-col justify-between">
+              <div>
+                <div class="flex items-center justify-between mb-3">
+                  <div class="flex items-center gap-2">
+                    <span class="w-8 h-8 rounded-xl bg-rose-50 dark:bg-rose-950 text-rose-600 dark:text-rose-400 flex items-center justify-center font-black text-xs">
+                      02
+                    </span>
+                    <div>
+                      <h4 class="text-sm font-bold text-slate-900 dark:text-white">Gebe Padoku Erken Doğum Alarmı</h4>
+                      <p class="text-[11px] text-slate-500">Gece görüş kamerası davranış analitiği (yatış/kalkış frekansı)</p>
+                    </div>
+                  </div>
+                  <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 animate-pulse">
+                    🚨 Kritik Alarm
+                  </span>
+                </div>
+
+                <!-- Night Vision Simulated Camera Viewport -->
+                <div class="relative rounded-2xl overflow-hidden bg-slate-950 border border-rose-900/40 aspect-video flex items-center justify-center shadow-inner">
+                  <div class="absolute inset-0 bg-emerald-950/20 mix-blend-color"></div>
+
+                  <!-- Alert Banner Overlay -->
+                  <div class="absolute top-3 inset-x-3 p-2.5 rounded-xl bg-rose-950/80 border border-rose-700/80 text-rose-200 text-xs font-bold flex items-center gap-2 shadow-lg backdrop-blur-xs">
+                    <mat-icon class="icon-size-4.5 text-rose-400 animate-ping" [svgIcon]="'heroicons_solid:exclamation'"></mat-icon>
+                    <span>DOĞUM SANCISI TESPİT EDİLDİ: TR-06-K-1042 (Doğuma Kalan: ~45 dk)</span>
+                  </div>
+
+                  <!-- Center Content -->
+                  <div class="text-center z-10 space-y-1 pt-6">
+                    <div class="w-14 h-14 rounded-full bg-rose-500/20 text-rose-400 flex items-center justify-center mx-auto ring-4 ring-rose-500/30">
+                      <mat-icon class="icon-size-7" [svgIcon]="'heroicons_solid:bell'"></mat-icon>
+                    </div>
+                    <div class="text-xs font-bold text-white">Gebe Koğuşu IR Gece Kamerası #Cam-Night-01</div>
+                    <div class="text-[11px] font-mono text-slate-400">Son 1 saatte 18 kez yatıp-kalkma ve sürüden izolasyon saptandı</div>
+                  </div>
+                </div>
+
+                <!-- Behavioral Telemetry Indicators -->
+                <div class="grid grid-cols-3 gap-3 pt-4 text-center">
+                  <div class="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900">
+                    <div class="text-[10px] text-slate-500">Yatıp-Kalkma Frekansı</div>
+                    <div class="text-xl font-black text-rose-600 dark:text-rose-400 font-mono mt-0.5">18 / saat</div>
+                    <span class="text-[9px] text-rose-500 font-bold">Kritik Artış (Normal: 2)</span>
+                  </div>
+
+                  <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
+                    <div class="text-[10px] text-slate-400">Sancı & Ikınma İndeksi</div>
+                    <div class="text-xl font-black text-amber-500 font-mono mt-0.5">%94</div>
+                    <span class="text-[9px] text-amber-500 font-bold">Yüksek Olasılık</span>
+                  </div>
+
+                  <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
+                    <div class="text-[10px] text-slate-400">Tahmini Doğum</div>
+                    <div class="text-base font-black text-slate-800 dark:text-slate-200 mt-1">35 - 50 dk</div>
+                    <span class="text-[9px] text-slate-400">İkiz Gebelik Bekleniyor</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="flex gap-2 mt-2">
+                <button
+                  type="button"
+                  (click)="sendBirthAlertWhatsapp('TR-06-K-1042')"
+                  class="flex-1 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  <mat-icon class="icon-size-4" [svgIcon]="'heroicons_solid:chat-alt-2'"></mat-icon>
+                  <span>Nöbetçiye WhatsApp Uyarısı Gönder</span>
+                </button>
+                <button
+                  type="button"
+                  (click)="transferToMaternityPaddock('TR-06-K-1042')"
+                  class="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  <span>Doğumhaneye Sevk Et</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      }
+
       <!-- SLIDE-OVER DRAWER: ADD DEVICE -->
       @if (isAddDrawerOpen()) {
         <!-- Backdrop -->
@@ -678,7 +874,7 @@ export class IotDevicesComponent {
   iotService = inject(IotService);
   private alert = inject(AlertService);
 
-  activeTab = signal<'milking' | 'scale' | 'sensors' | 'devices'>('milking');
+  activeTab = signal<'milking' | 'scale' | 'sensors' | 'devices' | 'vision'>('milking');
   selectedTagForScale = 'TR-06-K-1042';
 
   // Add Device Drawer
@@ -891,5 +1087,17 @@ export class IotDevicesComponent {
     this.iotService.addDevice(this.newDevice);
     this.closeAddDrawer();
     this.alert.toastSuccess('Yeni IoT cihazı başarıyla eşleştirildi!');
+  }
+
+  saveVisionWeightToAnimal(tagNo: string, kg: number): void {
+    this.alert.toastSuccess(`${tagNo} küpeli hayvana yapay zekâ kamera ölçümü (${kg} kg, BCS: 3.25) başarıyla işlendi!`);
+  }
+
+  sendBirthAlertWhatsapp(tagNo: string): void {
+    this.alert.toastSuccess(`🚨 Doğum sancısı uyarısı nöbetçi personele ve sorumlu veteriner hekime WhatsApp üzerinden iletildi! (${tagNo})`);
+  }
+
+  transferToMaternityPaddock(tagNo: string): void {
+    this.alert.toastSuccess(`${tagNo} küpeli gebe koyun Doğumhane Padokuna başarıyla sevk edildi.`);
   }
 }

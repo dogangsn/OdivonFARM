@@ -445,6 +445,29 @@
           }
         </a>
 
+        <!-- AI Voice & WhatsApp Assistant Button -->
+        <button
+          type="button"
+          (click)="isVoiceAssistantOpen.set(true)"
+          class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-indigo-200 dark:border-indigo-800 bg-indigo-50/80 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:hover:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 text-xs font-bold transition-all shadow-2xs cursor-pointer"
+          matTooltip="Yapay Zekâ ve Sesli Çiftlik Asistanı (Doğal Dil & WhatsApp)"
+        >
+          <mat-icon class="icon-size-4 text-indigo-600 dark:text-indigo-400 animate-pulse" [svgIcon]="'heroicons_solid:microphone'"></mat-icon>
+          <span>Asistan (AI)</span>
+        </button>
+
+        <!-- Online / Offline Status Button -->
+        <button
+          type="button"
+          (click)="offlineSync.toggleSimulatedOffline()"
+          class="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-xs font-bold transition-all shadow-2xs cursor-pointer"
+          [ngClass]="offlineSync.isOnline() ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800' : 'bg-amber-500 text-slate-950 border-amber-600 animate-pulse'"
+          [matTooltip]="offlineSync.isOnline() ? 'Ağ Bağlantısı Aktif (Tıkla ve Çevrimdışı Simüle Et)' : 'Çevrimdışı Mod Aktif (Tıkla ve Bağlan)'"
+        >
+          <span class="w-2 h-2 rounded-full" [ngClass]="offlineSync.isOnline() ? 'bg-emerald-500' : 'bg-slate-950'"></span>
+          <span>{{ offlineSync.isOnline() ? 'Çevrimiçi' : 'Çevrimdışı' }}</span>
+        </button>
+
         <!-- Notifications Dropdown -->
         <div class="relative">
           <button
@@ -682,6 +705,28 @@
       </div>
     </header>
 
+    <!-- Offline Alert Banner -->
+    @if (!offlineSync.isOnline()) {
+      <div class="px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 text-xs font-black flex items-center justify-between shadow-md z-30 animate-in slide-in-from-top duration-200">
+        <div class="flex items-center gap-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-slate-950 animate-ping"></span>
+          <span>ÇEVRİMDIŞI MOD (OFFLINE): Arazide / meradasınız. İnternet yokken yaptığınız tüm işlemler yerel bellekte saklanır ve bağlantı sağlandığında otomatik buluta eşitlenir.</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="px-2 py-0.5 rounded-full bg-slate-950 text-amber-300 text-[10px] font-bold">
+            Kuyrukta: {{ offlineSync.pendingSyncQueue().length }} İşlem
+          </span>
+          <button
+            type="button"
+            (click)="offlineSync.toggleSimulatedOffline()"
+            class="px-2 py-0.5 rounded-lg bg-slate-950 text-white text-[10px] font-bold hover:bg-slate-800 transition-colors cursor-pointer"
+          >
+            Bağlantıyı Yenile
+          </button>
+        </div>
+      </div>
+    }
+
     <!-- Global Top Indeterminate Loader Bar (Navigation & Data Sync) -->
     @if (isNavigating() || subService.loading()) {
       <div class="relative w-full h-1 bg-indigo-100/70 dark:bg-indigo-950/50 overflow-hidden z-30">
@@ -699,5 +744,10 @@
 
     <!-- Global Onboarding & Training Wizard Modal -->
     <app-onboarding-wizard></app-onboarding-wizard>
+
+    <!-- Global Voice & WhatsApp Assistant Modal -->
+    @if (isVoiceAssistantOpen()) {
+      <app-voice-assistant-modal (close)="isVoiceAssistantOpen.set(false)"></app-voice-assistant-modal>
+    }
   </div>
 </div>

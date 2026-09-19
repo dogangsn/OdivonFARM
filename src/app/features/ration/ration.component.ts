@@ -17,6 +17,7 @@ import { AlertService } from '../../core/services/alert.service';
 import {
   CalculatedRationMetrics,
   RationCalculatorService,
+  RationOptimizationResult,
 } from '../../core/services/ration-calculator.service';
 import { Ration, RationItem } from '../../core/models/production.model';
 import { StockItem, Warehouse } from '../../core/models/inventory.model';
@@ -63,6 +64,8 @@ export class RationComponent {
   readonly editingId = signal<string | null>(null);
   readonly isSaving = signal(false);
   readonly errorMessage = signal<string | null>(null);
+
+  readonly latestOptimizationResult = signal<RationOptimizationResult | null>(null);
 
   // Form Model
   readonly form = signal<{
@@ -237,6 +240,51 @@ export class RationComponent {
       ...prev,
       items: prev.items.filter((_, i) => i !== index),
     }));
+  }
+
+  /**
+   * 🤖 Yapay Zekâ ile En Düşük Maliyetli Rasyonu Otomatik Hesapla
+   */
+  autoOptimizeRation() {
+    const targetGroup = this.form().targetGroup;
+    const stockItems = this.stockItems() || [];
+
+    const availableFeeds = stockItems.map((s) => ({
+      id: s.id,
+      name: s.name,
+    }));
+
+    const result = this.calculatorService.optimizeLeastCostRation(targetGroup, availableFeeds);
+    this.latestOptimizationResult.set(result);
+
+    const newItems: { stockItemId: string; amountKg: number; unitPrice?: number }[] = [];
+
+    for (const opt of result.optimizedItems) {
+      let match = stockItems.find((s) => s.id === opt.stockItemId);
+      if (!match) {
+        match = stockItems.find(
+          (s) =>
+            s.name.toLowerCase().includes(opt.itemName.toLowerCase()) ||
+            opt.itemName.toLowerCase().includes(s.name.toLowerCase())
+        );
+      }
+      const stockItemId: string = (match && match.id) ? match.id : (stockItems[0]?.id || 'item-default');
+      newItems.push({
+        stockItemId,
+        amountKg: opt.amountKg,
+        unitPrice: opt.unitPrice,
+      });
+    }
+
+    this.form.update((prev) => ({
+      ...prev,
+      name: prev.name || `Optimize ${targetGroup} Rasyonu`,
+      items: newItems,
+    }));
+
+    this.alertService.toastSuccess(
+      `Yapay zekâ ile en düşük maliyetli rasyon oluşturuldu! Günlük ${result.dailySavingsPerAnimal} ₺/hayvan tasarruf.`
+    );
   }
 
   async saveRation() {

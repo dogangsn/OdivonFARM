@@ -49,6 +49,77 @@
   <!-- Main Area -->
   <div class="flex-auto p-6 md:p-8 space-y-6 max-w-screen-xl mx-auto w-full bg-default pb-16">
 
+    <!-- FINISHING & OPTIMAL SLAUGHTER FINANCIAL AI BANNER -->
+    @let finish = finishingService.herdFinishingAnalysis();
+    @if (finish.overdueLossCount > 0 || finish.optimalReadyCount > 0) {
+      <div class="p-5 rounded-2xl bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white border border-indigo-800/60 shadow-lg space-y-4">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center">
+              <mat-icon class="icon-size-5" [svgIcon]="'heroicons_solid:lightning-bolt'"></mat-icon>
+            </div>
+            <div>
+              <div class="text-sm font-black flex items-center gap-2">
+                <span>Finansal Besi Analitiği: Başa-Baş Kesim & Zarar Uyarısı</span>
+                <span class="px-2 py-0.5 rounded-full text-[10px] bg-indigo-500/30 text-indigo-300 font-bold">Brody Azalan Verim Modeli</span>
+              </div>
+              <p class="text-xs text-slate-300 mt-0.5">
+                Kilo artış hızı yavaşlayan ve tükettiği yem bedeli günlük kilo getirisini aşan toklular tespit edildi.
+              </p>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-3">
+            @if (finish.overdueLossCount > 0) {
+              <div class="p-2.5 rounded-xl bg-rose-950/70 border border-rose-800 text-rose-300 text-xs flex items-center gap-2 font-bold">
+                <mat-icon class="icon-size-4 text-rose-400" [svgIcon]="'heroicons_solid:exclamation'"></mat-icon>
+                <span>{{ finish.overdueLossCount }} Baş Zarar Bölgesinde! (Kayıp: {{ finish.dailyTotalLossOverdue }} ₺/gün)</span>
+              </div>
+            }
+            @if (finish.optimalReadyCount > 0) {
+              <div class="p-2.5 rounded-xl bg-emerald-950/70 border border-emerald-800 text-emerald-300 text-xs flex items-center gap-2 font-bold">
+                <mat-icon class="icon-size-4 text-emerald-400" [svgIcon]="'heroicons_solid:check-circle'"></mat-icon>
+                <span>{{ finish.optimalReadyCount }} Baş Optimum Kesim Olgunluğunda</span>
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Overdue and Ready Animals Grid -->
+        @if (finish.overdueAnimals.length > 0 || finish.readyAnimals.length > 0) {
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 pt-2">
+            @for (item of finish.overdueAnimals.concat(finish.readyAnimals); track item.animalId) {
+              <div class="p-3.5 rounded-xl bg-slate-800/80 border text-xs flex flex-col justify-between"
+                [ngClass]="item.status === 'gecikmis_zarar' ? 'border-rose-700/80' : 'border-emerald-700/80'">
+                <div>
+                  <div class="flex items-center justify-between">
+                    <span class="font-black text-white">{{ item.tagNo }} {{ item.name ? '(' + item.name + ')' : '' }}</span>
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase"
+                      [ngClass]="item.status === 'gecikmis_zarar' ? 'bg-rose-500/20 text-rose-300' : 'bg-emerald-500/20 text-emerald-300'">
+                      {{ item.status === 'gecikmis_zarar' ? 'ZARAR BÖLGESİNDE' : 'OPTİMUM KESİM' }}
+                    </span>
+                  </div>
+                  <div class="text-[11px] text-slate-400 mt-1 flex justify-between">
+                    <span>Ağırlık: <strong class="text-white font-mono">{{ item.currentWeightKg }} kg</strong></span>
+                    <span>GCAA: <strong class="text-white font-mono">{{ item.dailyGainGrams }} g/gün</strong></span>
+                    <span>Padok: {{ item.paddockName }}</span>
+                  </div>
+                  <p class="text-[11px] mt-2 leading-relaxed"
+                    [ngClass]="item.status === 'gecikmis_zarar' ? 'text-rose-300 font-semibold' : 'text-slate-300'">
+                    {{ item.recommendationText }}
+                  </p>
+                </div>
+                <div class="mt-3 pt-2 border-t border-slate-700/60 flex items-center justify-between text-[11px]">
+                  <span>Günlük Net: <strong [ngClass]="item.marginalDailyProfit < 0 ? 'text-rose-400' : 'text-emerald-400'">{{ item.marginalDailyProfit }} ₺</strong></span>
+                  <span class="text-slate-400">Yem: {{ item.dailyFeedCost }} ₺</span>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    }
+
     <!-- Search & Filter Bar -->
     <div class="p-4 rounded-2xl bg-card shadow-sm border border-gray-200/80 dark:border-gray-700/60 flex flex-col md:flex-row items-center gap-3">
       <!-- Search Input -->

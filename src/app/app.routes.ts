@@ -106,6 +106,11 @@ export const routes: Routes = [
           import('./features/iot-devices/iot-devices.component').then((m) => m.IotDevicesComponent),
       },
       {
+        path: 'turkvet-tesvik',
+        loadComponent: () =>
+          import('./features/turkvet/turkvet.component').then((m) => m.TurkvetComponent),
+      },
+      {
         path: 'aktiviteler',
         loadComponent: () =>
           import('./features/activity-log/activity-log.component').then((m) => m.ActivityLogComponent),
