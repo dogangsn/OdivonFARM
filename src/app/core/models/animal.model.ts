@@ -16,9 +16,10 @@ export interface Animal extends BaseDoc {
   rfid?: string;
   name?: string;
   gender: Gender;
-  /** Doğum Tarihi */
   birthDate?: any;
   breedId?: string;
+  breed?: string;
+  species?: string;
   animalTypeId?: string;
   herdId?: string;
   paddockId?: string;

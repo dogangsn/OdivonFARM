@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
@@ -331,20 +331,37 @@ export class AnimalMovementsComponent {
     }
   }
 
+  isDirty = signal(false);
+  private initialSnapshot = '';
+
+  markDirty() {
+    this.isDirty.set(true);
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscapeKey() {
+    if (this.showDrawer()) {
+      this.requestCloseDrawer();
+    }
+  }
+
   openAddDrawer() {
     this.isEditing.set(false);
     this.editingId.set(null);
     this.errorMessage.set(null);
+    this.isDirty.set(false);
     const firstAnimal = (this.animals() || [])[0];
-    this.form.set({
+    const initial = {
       animalId: firstAnimal?.id || '',
-      type: 'padok',
+      type: 'padok' as const,
       fromId: firstAnimal?.paddockId || '',
       toId: '',
       date: new Date().toISOString().substring(0, 10),
       note: '',
       updateAnimalCurrentLocation: true,
-    });
+    };
+    this.form.set(initial);
+    this.initialSnapshot = JSON.stringify(initial);
     this.showDrawer.set(true);
   }
 
@@ -352,7 +369,8 @@ export class AnimalMovementsComponent {
     this.isEditing.set(true);
     this.editingId.set(movement.id || null);
     this.errorMessage.set(null);
-    this.form.set({
+    this.isDirty.set(false);
+    const initial = {
       animalId: movement.animalId,
       type: movement.type,
       fromId: movement.fromId || '',
@@ -360,15 +378,43 @@ export class AnimalMovementsComponent {
       date: this.formatDate(movement.date),
       note: movement.note || '',
       updateAnimalCurrentLocation: false,
-    });
+    };
+    this.form.set(initial);
+    this.initialSnapshot = JSON.stringify(initial);
     this.showDrawer.set(true);
+  }
+
+  hasUnsavedChanges(): boolean {
+    if (!this.showDrawer()) return false;
+    if (this.isDirty()) return true;
+    if (this.initialSnapshot && JSON.stringify(this.form()) !== this.initialSnapshot) {
+      return true;
+    }
+    const f = this.form();
+    return !this.isEditing() && (!!f.toId || !!f.note?.trim());
+  }
+
+  async requestCloseDrawer() {
+    if (this.hasUnsavedChanges()) {
+      const confirmed = await this.alertService.confirm(
+        'Kaydetmeden Çıkış',
+        'Girdiğiniz bilgiler henüz kaydedilmedi. Çıkmak istediğinizden emin misiniz?',
+        'Evet, Çık',
+        'Vazgeç'
+      );
+      if (!confirmed) return;
+    }
+    this.closeDrawer();
   }
 
   closeDrawer() {
     this.showDrawer.set(false);
+    this.isDirty.set(false);
+    this.errorMessage.set(null);
   }
 
   updateFormField<K extends keyof ReturnType<typeof this.form>>(field: K, value: any) {
+    this.isDirty.set(true);
     this.form.update((prev) => ({ ...prev, [field]: value }));
   }
 

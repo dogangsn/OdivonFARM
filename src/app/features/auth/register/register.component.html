@@ -113,22 +113,22 @@
             <label class="block text-xs font-bold text-default">
               Ülke & Cep Telefonu
             </label>
-            <span class="text-[11px] font-normal text-secondary flex items-center gap-1">
-              <span class="text-sm">{{ selectedCountry().flag }}</span>
-              <span class="truncate max-w-[130px]">{{ selectedCountry().name }}</span>
+            <span class="text-[11px] font-normal text-secondary flex items-center gap-1.5">
+              <img [src]="getFlagUrl(selectedCountry().code)" class="w-4 h-3 rounded-xs object-cover shadow-xs border border-slate-200/60 inline-block" [alt]="selectedCountry().name" />
+              <span class="truncate max-w-[130px] font-medium">{{ selectedCountry().name }}</span>
             </span>
           </div>
           <div class="flex gap-2">
             <!-- Country Selector -->
             <div class="w-2/5 relative">
-              <div class="absolute left-2.5 top-1/2 -translate-y-1/2 text-base pointer-events-none z-10">
-                {{ selectedCountry().flag }}
+              <div class="absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none z-10 flex items-center">
+                <img [src]="getFlagUrl(selectedCountry().code)" class="w-4 h-3 rounded-xs object-cover shadow-xs border border-slate-200/60" [alt]="selectedCountry().name" />
               </div>
               <select [ngModel]="selectedCountry().code" (ngModelChange)="onCountryChange($event)" name="country"
                 class="w-full pl-8 pr-6 py-3 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-xs font-semibold text-default transition-all appearance-none cursor-pointer truncate">
                 @for (c of countries; track c.code) {
                 <option [value]="c.code">
-                  {{ c.flag }} {{ c.name }} ({{ c.dialCode }})
+                  {{ c.name }} ({{ c.dialCode }})
                 </option>
                 }
               </select>
@@ -155,8 +155,8 @@
             <label class="block text-xs font-bold text-default flex items-center gap-1.5">
               <span>Uygulama & Tanım Dili</span>
               <span
-                class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 text-[10px] font-semibold border border-indigo-200/60 dark:border-indigo-800/60">
-                <span>{{ selectedLanguageOption().flag }}</span>
+                class="inline-flex items-center gap-1.5 px-1.5 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 text-[10px] font-semibold border border-indigo-200/60 dark:border-indigo-800/60">
+                <img [src]="getLangFlagUrl(selectedLanguageOption().code)" class="w-3.5 h-2.5 rounded-xs object-cover" [alt]="selectedLanguageOption().name" />
                 <span>{{ selectedLanguageOption().nativeName }}</span>
               </span>
             </label>
@@ -168,51 +168,51 @@
             class="grid grid-cols-5 gap-1.5 p-1 bg-slate-100 dark:bg-slate-800/80 rounded-xl border border-slate-200 dark:border-slate-700 mb-2">
             <button type="button" (click)="setLanguage('tr')"
               [ngClass]="language() === 'tr' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-xs font-bold border border-indigo-100 dark:border-indigo-900/50' : 'text-secondary hover:text-default font-medium border border-transparent'"
-              class="py-2 px-1 rounded-lg text-xs flex flex-col items-center justify-center gap-0.5 transition-all cursor-pointer group"
+              class="py-2 px-1 rounded-lg text-xs flex flex-col items-center justify-center gap-1 transition-all cursor-pointer group"
               title="Türkçe">
-              <span class="text-base leading-none group-hover:scale-110 transition-transform">🇹🇷</span>
+              <img [src]="getLangFlagUrl('tr')" class="w-5 h-3.5 rounded-xs object-cover shadow-xs border border-slate-200/50 group-hover:scale-110 transition-transform" alt="TR" />
               <span class="text-[10px] truncate max-w-[52px]">Türkçe</span>
             </button>
             <button type="button" (click)="setLanguage('en')"
               [ngClass]="language() === 'en' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-xs font-bold border border-indigo-100 dark:border-indigo-900/50' : 'text-secondary hover:text-default font-medium border border-transparent'"
-              class="py-2 px-1 rounded-lg text-xs flex flex-col items-center justify-center gap-0.5 transition-all cursor-pointer group"
+              class="py-2 px-1 rounded-lg text-xs flex flex-col items-center justify-center gap-1 transition-all cursor-pointer group"
               title="English">
-              <span class="text-base leading-none group-hover:scale-110 transition-transform">🇬🇧</span>
+              <img [src]="getLangFlagUrl('en')" class="w-5 h-3.5 rounded-xs object-cover shadow-xs border border-slate-200/50 group-hover:scale-110 transition-transform" alt="EN" />
               <span class="text-[10px] truncate max-w-[52px]">English</span>
             </button>
             <button type="button" (click)="setLanguage('de')"
               [ngClass]="language() === 'de' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-xs font-bold border border-indigo-100 dark:border-indigo-900/50' : 'text-secondary hover:text-default font-medium border border-transparent'"
-              class="py-2 px-1 rounded-lg text-xs flex flex-col items-center justify-center gap-0.5 transition-all cursor-pointer group"
+              class="py-2 px-1 rounded-lg text-xs flex flex-col items-center justify-center gap-1 transition-all cursor-pointer group"
               title="Deutsch (Almanya)">
-              <span class="text-base leading-none group-hover:scale-110 transition-transform">🇩🇪</span>
+              <img [src]="getLangFlagUrl('de')" class="w-5 h-3.5 rounded-xs object-cover shadow-xs border border-slate-200/50 group-hover:scale-110 transition-transform" alt="DE" />
               <span class="text-[10px] truncate max-w-[52px]">Deutsch</span>
             </button>
             <button type="button" (click)="setLanguage('nl')"
               [ngClass]="language() === 'nl' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-xs font-bold border border-indigo-100 dark:border-indigo-900/50' : 'text-secondary hover:text-default font-medium border border-transparent'"
-              class="py-2 px-1 rounded-lg text-xs flex flex-col items-center justify-center gap-0.5 transition-all cursor-pointer group"
+              class="py-2 px-1 rounded-lg text-xs flex flex-col items-center justify-center gap-1 transition-all cursor-pointer group"
               title="Nederlands (Hollanda)">
-              <span class="text-base leading-none group-hover:scale-110 transition-transform">🇳🇱</span>
+              <img [src]="getLangFlagUrl('nl')" class="w-5 h-3.5 rounded-xs object-cover shadow-xs border border-slate-200/50 group-hover:scale-110 transition-transform" alt="NL" />
               <span class="text-[10px] truncate max-w-[52px]">Nederlands</span>
             </button>
             <button type="button" (click)="setLanguage('ru')"
               [ngClass]="language() === 'ru' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-xs font-bold border border-indigo-100 dark:border-indigo-900/50' : 'text-secondary hover:text-default font-medium border border-transparent'"
-              class="py-2 px-1 rounded-lg text-xs flex flex-col items-center justify-center gap-0.5 transition-all cursor-pointer group"
+              class="py-2 px-1 rounded-lg text-xs flex flex-col items-center justify-center gap-1 transition-all cursor-pointer group"
               title="Русский (Rusya)">
-              <span class="text-base leading-none group-hover:scale-110 transition-transform">🇷🇺</span>
+              <img [src]="getLangFlagUrl('ru')" class="w-5 h-3.5 rounded-xs object-cover shadow-xs border border-slate-200/50 group-hover:scale-110 transition-transform" alt="RU" />
               <span class="text-[10px] truncate max-w-[52px]">Русский</span>
             </button>
           </div>
 
           <!-- All Languages Dropdown Selector -->
           <div class="relative">
-            <div class="absolute left-3 top-1/2 -translate-y-1/2 text-sm pointer-events-none z-10">
-              {{ selectedLanguageOption().flag }}
+            <div class="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none z-10 flex items-center">
+              <img [src]="getLangFlagUrl(selectedLanguageOption().code)" class="w-4 h-3 rounded-xs object-cover shadow-xs border border-slate-200/60" [alt]="selectedLanguageOption().name" />
             </div>
             <select [ngModel]="language()" (ngModelChange)="setLanguage($event)" name="languageSelect"
               class="w-full pl-9 pr-8 py-2.5 bg-slate-100 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-xs font-semibold text-default transition-all appearance-none cursor-pointer">
               @for (l of languages; track l.code) {
               <option [value]="l.code">
-                {{ l.flag }} {{ l.name }} ({{ l.nativeName }})
+                {{ l.name }} ({{ l.nativeName }})
               </option>
               }
             </select>

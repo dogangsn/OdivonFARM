@@ -5,7 +5,7 @@
     <div class="relative flex flex-col sm:flex-row flex-0 sm:items-center sm:justify-between py-6 md:py-8 px-6 md:px-8 border-b bg-card">
       <div>
         <div class="flex items-center gap-3">
-          <div class="w-12 h-12 rounded-2xl bg-teal-50 dark:bg-teal-950/50 text-teal-600 dark:text-teal-400 flex items-center justify-center">
+          <div class="w-12 h-12 rounded-2xl bg-teal-50 dark:bg-teal-950/50 text-teal-600 dark:text-teal-400 flex items-center justify-center shadow-xs">
             <mat-icon class="icon-size-6" [svgIcon]="'heroicons_outline:qrcode'"></mat-icon>
           </div>
           <div>
@@ -35,19 +35,19 @@
         <button
           mat-stroked-button
           class="!rounded-xl !px-3.5 !py-2.5 !font-medium"
-          (click)="startNewCount('padok')">
+          (click)="openStartModal('padok')">
           <span>Padok Sayımı</span>
         </button>
         <button
           mat-stroked-button
           class="!rounded-xl !px-3.5 !py-2.5 !font-medium"
-          (click)="startNewCount('suru')">
+          (click)="openStartModal('suru')">
           <span>Sürü Sayımı</span>
         </button>
         <button
           mat-flat-button
           class="!bg-teal-600 !text-white !rounded-xl !px-4 !py-2.5 !font-medium flex items-center shadow-md shadow-teal-500/20"
-          (click)="startNewCount('genel')">
+          (click)="openStartModal('genel')">
           <mat-icon class="icon-size-5 mr-1.5" [svgIcon]="'heroicons_solid:plus'"></mat-icon>
           <span>Genel Sayım Başlat</span>
         </button>
@@ -58,7 +58,7 @@
     <div class="flex-auto p-6 md:p-8 space-y-6 max-w-screen-xl mx-auto w-full bg-default pb-16">
 
       <!-- Search & Filters -->
-      <div class="p-4 rounded-2xl bg-card shadow-sm border border-gray-200/80 dark:border-gray-700/60 flex flex-col md:flex-row items-center gap-3">
+      <div class="p-4 rounded-2xl bg-card shadow-xs border border-gray-200/80 dark:border-gray-700/60 flex flex-col md:flex-row items-center gap-3">
         <div class="relative w-full md:w-80">
           <mat-icon class="absolute left-3.5 top-1/2 -translate-y-1/2 icon-size-4 text-secondary pointer-events-none" [svgIcon]="'heroicons_solid:search'"></mat-icon>
           <input
@@ -66,9 +66,10 @@
             [ngModel]="searchTerm()"
             (ngModelChange)="searchTerm.set($event)"
             placeholder="Kapsam, padok, sürü veya cihaz ara..."
-            class="w-full pl-9 pr-8 py-2 text-xs bg-slate-100 dark:bg-slate-750 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 text-default placeholder-secondary font-medium" />
+            class="w-full pl-9 pr-8 py-2 text-xs bg-slate-100 dark:bg-slate-750 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 text-default placeholder-secondary font-medium" />
           @if (searchTerm()) {
             <button
+              type="button"
               (click)="searchTerm.set('')"
               class="absolute right-2.5 top-1/2 -translate-y-1/2 text-secondary hover:text-default">
               <mat-icon class="icon-size-3.5" [svgIcon]="'heroicons_solid:x'"></mat-icon>
@@ -79,7 +80,7 @@
         <select
           [ngModel]="typeFilter()"
           (ngModelChange)="typeFilter.set($event)"
-          class="px-3 py-2 text-xs font-medium bg-slate-100 dark:bg-slate-750 border border-slate-200 dark:border-slate-700 rounded-xl text-default focus:outline-none">
+          class="px-3 py-2 text-xs font-medium bg-slate-100 dark:bg-slate-750 border border-slate-200 dark:border-slate-700 rounded-xl text-default focus:outline-hidden">
           <option value="all">Tüm Sayım Türleri</option>
           <option value="genel">Genel Çiftlik Sayımı</option>
           <option value="padok">Padok Bazlı Sayım</option>
@@ -88,7 +89,7 @@
       </div>
 
       <!-- Past Counts Table -->
-      @if (filteredCounts().length === 0) {
+      @if (countRows().length === 0) {
         <div class="p-12 text-center rounded-2xl bg-card border border-dashed border-gray-300 dark:border-gray-700">
           <div class="w-14 h-14 mx-auto rounded-2xl bg-teal-50 dark:bg-teal-950/40 text-teal-500 flex items-center justify-center mb-3">
             <mat-icon class="icon-size-7" [svgIcon]="'heroicons_outline:qrcode'"></mat-icon>
@@ -101,13 +102,13 @@
             <button
               mat-flat-button
               class="!bg-teal-600 !text-white !rounded-xl !px-4"
-              (click)="startNewCount('genel')">
+              (click)="openStartModal('genel')">
               İlk Sayımı Başlat
             </button>
           </div>
         </div>
       } @else {
-        <div class="bg-card rounded-2xl border border-gray-200/80 dark:border-gray-700/60 overflow-hidden shadow-sm">
+        <div class="bg-card rounded-2xl border border-gray-200/80 dark:border-gray-700/60 overflow-hidden shadow-xs">
           <div class="overflow-x-auto">
             <table class="w-full text-left text-xs">
               <thead class="bg-slate-50 dark:bg-slate-800/60 border-b border-gray-200 dark:border-gray-700 text-secondary uppercase font-semibold tracking-wider">
@@ -123,56 +124,52 @@
                 </tr>
               </thead>
               <tbody class="divide-y divide-gray-100 dark:divide-gray-800 text-default">
-                @for (c of filteredCounts(); track c.id) {
+                @for (row of countRows(); track row.id) {
                   <tr class="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors">
                     <td class="py-3.5 px-4 font-medium whitespace-nowrap">
-                      {{ c.startedAt | date:'dd.MM.yyyy HH:mm' }}
+                      <div class="font-semibold text-default">{{ row.formattedDateTime }}</div>
+                      @if (row.durationText) {
+                        <div class="text-3xs text-secondary mt-0.5 flex items-center gap-1">
+                          <mat-icon class="icon-size-3" [svgIcon]="'heroicons_outline:clock'"></mat-icon>
+                          <span>{{ row.durationText }}</span>
+                        </div>
+                      }
                     </td>
                     <td class="py-3.5 px-4 whitespace-nowrap">
-                      <span class="px-2.5 py-0.5 rounded-full text-2xs font-bold uppercase bg-slate-100 dark:bg-slate-750 text-default">
-                        {{ c.type }}
+                      <span class="px-2.5 py-0.5 rounded-full text-2xs font-bold uppercase" [class]="row.typeBadgeClass">
+                        {{ row.typeLabel }}
                       </span>
                     </td>
                     <td class="py-3.5 px-4 font-semibold whitespace-nowrap">
-                      {{ getScopeName(c.type, c.scopeId) }}
+                      {{ row.scopeName }}
                     </td>
                     <td class="py-3.5 px-4 text-center whitespace-nowrap font-bold">
-                      {{ c.expectedCount }}
+                      {{ row.expectedCount }}
                     </td>
                     <td class="py-3.5 px-4 text-center whitespace-nowrap font-bold text-teal-600 dark:text-teal-400">
-                      {{ c.countedAnimalIds.length }}
+                      {{ row.countedCount }}
                     </td>
                     <td class="py-3.5 px-4 text-center whitespace-nowrap">
-                      @if (c.countedAnimalIds.length === c.expectedCount) {
-                        <span class="px-2 py-0.5 rounded-md font-bold text-2xs bg-emerald-100 text-emerald-800">
-                          TAM (0)
-                        </span>
-                      } @else if (c.countedAnimalIds.length < c.expectedCount) {
-                        <span class="px-2 py-0.5 rounded-md font-bold text-2xs bg-rose-100 text-rose-800">
-                          {{ c.countedAnimalIds.length - c.expectedCount }} EKSİK
-                        </span>
-                      } @else {
-                        <span class="px-2 py-0.5 rounded-md font-bold text-2xs bg-blue-100 text-blue-800">
-                          +{{ c.countedAnimalIds.length - c.expectedCount }} FAZLA
-                        </span>
-                      }
+                      <span class="px-2.5 py-0.5 rounded-md font-bold text-2xs" [class]="row.diffBadgeClass">
+                        {{ row.diffText }}
+                      </span>
                     </td>
                     <td class="py-3.5 px-4 text-secondary whitespace-nowrap">
-                      {{ c.deviceName || 'Manuel' }}
+                      {{ row.deviceName }}
                     </td>
                     <td class="py-3.5 px-4 text-center whitespace-nowrap">
                       <div class="flex items-center justify-center gap-1">
                         <button
                           mat-button
-                          class="!text-xs !text-teal-600"
-                          (click)="selectedCount.set(c)">
+                          class="!text-xs !text-teal-600 dark:!text-teal-400 font-semibold"
+                          (click)="openCountDetail(row.rawCount)">
                           Detay
                         </button>
                         <button
                           mat-icon-button
                           class="!w-7 !h-7 text-secondary hover:text-rose-600"
                           matTooltip="Sil"
-                          (click)="deleteCount(c.id)">
+                          (click)="deleteCount(row.id)">
                           <mat-icon class="icon-size-3.5" [svgIcon]="'heroicons_outline:trash'"></mat-icon>
                         </button>
                       </div>
@@ -196,34 +193,34 @@
           <div class="flex items-center gap-2">
             <span class="w-2.5 h-2.5 rounded-full bg-teal-500 animate-ping"></span>
             <h2 class="text-xl font-extrabold text-default">Canlı Sayım Oturumu</h2>
-            <span class="px-2.5 py-0.5 rounded-md text-xs font-bold bg-teal-100 text-teal-800 uppercase">
+            <span class="px-2.5 py-0.5 rounded-md text-xs font-bold bg-teal-100 dark:bg-teal-950/60 text-teal-800 dark:text-teal-300 uppercase">
               {{ activeCountType() }}
             </span>
           </div>
           <div class="text-xs text-secondary mt-1">
-            Kapsam: <strong>{{ getScopeName(activeCountType(), activeScopeId()) }}</strong> • Başlangıç: {{ activeStartedAt() | date:'HH:mm:ss' }}
+            Kapsam: <strong>{{ getScopeName(activeCountType(), activeScopeId()) }}</strong> • Başlangıç: {{ formatDateTime(activeStartedAt()) }}
           </div>
         </div>
 
-        <div class="flex items-center gap-2.5">
+        <div class="flex items-center gap-2.5 flex-wrap">
           <button
             mat-stroked-button
             class="!rounded-xl"
             (click)="requestBluetoothDevice()">
-            <mat-icon class="icon-size-4 mr-1" [svgIcon]="'heroicons_outline:device-mobile'"></mat-icon>
+            <mat-icon class="icon-size-4 mr-1" [svgIcon]="'heroicons_outline:device-phone-mobile'"></mat-icon>
             <span>{{ activeDeviceName() }}</span>
           </button>
 
           <button
             mat-stroked-button
-            class="!rounded-xl !text-rose-600 hover:!bg-rose-50"
+            class="!rounded-xl !text-rose-600 hover:!bg-rose-50 dark:hover:!bg-rose-950/20"
             (click)="cancelActiveCount()">
             İptal Et
           </button>
 
           <button
             mat-flat-button
-            class="!bg-teal-600 !text-white !rounded-xl !px-5 font-bold shadow-md"
+            class="!bg-teal-600 !text-white !rounded-xl !px-5 font-bold shadow-md shadow-teal-500/20"
             [disabled]="isSaving()"
             (click)="finishAndSaveCount()">
             @if (isSaving()) {
@@ -264,7 +261,7 @@
         </div>
 
         <!-- Fast Scan Input -->
-        <div class="p-5 rounded-2xl bg-card border border-gray-200 dark:border-gray-700 shadow-sm">
+        <div class="p-5 rounded-2xl bg-card border border-gray-200 dark:border-gray-700 shadow-xs">
           <label class="block text-xs font-bold text-default mb-2">
             Hızlı Okuma (RFID Terminali veya Küpe No Girin)
           </label>
@@ -277,7 +274,7 @@
                 (ngModelChange)="scanInput.set($event)"
                 (keyup.enter)="handleScanSubmit()"
                 placeholder="RFID veya Küpe No okutun / yazın ve Enter'a basın..."
-                class="w-full pl-10 pr-4 py-3 bg-slate-100 dark:bg-slate-750 border border-slate-300 dark:border-slate-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 text-sm font-mono font-bold text-default" />
+                class="w-full pl-10 pr-4 py-3 bg-slate-100 dark:bg-slate-750 border border-slate-300 dark:border-slate-600 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-teal-500 text-sm font-mono font-bold text-default" />
             </div>
             <button
               mat-flat-button
@@ -289,11 +286,22 @@
 
           @if (scanFeedback()) {
             <div class="mt-3 p-3 rounded-xl text-xs font-bold flex items-center gap-2"
-                 [ngClass]="scanFeedback()?.success ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'">
+                 [ngClass]="scanFeedback()?.success ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300' : 'bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300'">
               <mat-icon class="icon-size-4" [svgIcon]="scanFeedback()?.success ? 'heroicons_solid:check-circle' : 'heroicons_solid:exclamation-circle'"></mat-icon>
               <span>{{ scanFeedback()?.text }}</span>
             </div>
           }
+        </div>
+
+        <!-- Session Notes (Optional) -->
+        <div class="p-4 rounded-2xl bg-card border border-gray-200 dark:border-gray-700">
+          <label class="block text-xs font-semibold text-secondary mb-1.5">Oturum Notu (Opsiyonel)</label>
+          <input
+            type="text"
+            [ngModel]="sessionNote()"
+            (ngModelChange)="sessionNote.set($event)"
+            placeholder="Örn: 2 numaralı padok kapısında kilit arızası görüldü..."
+            class="w-full px-3.5 py-2 text-xs bg-slate-100 dark:bg-slate-750 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-teal-500 text-default placeholder-secondary" />
         </div>
 
         <!-- Tabs for Missing vs Counted -->
@@ -320,7 +328,7 @@
           <div class="p-4 overflow-y-auto max-h-96">
             @if (activeTab() === 'missing') {
               @if (missingAnimals().length === 0) {
-                <div class="p-8 text-center text-emerald-600 font-bold text-sm">
+                <div class="p-8 text-center text-emerald-600 dark:text-emerald-400 font-bold text-sm">
                   🎉 Tebrikler! Kapsamdaki tüm hayvanlar eksiksiz sayıldı.
                 </div>
               } @else {
@@ -372,48 +380,482 @@
     </div>
   }
 
-  <!-- Detail Modal for Past Count -->
-  @if (selectedCount()) {
-    <div class="fixed inset-0 z-50 overflow-hidden flex items-center justify-center p-4">
-      <div class="fixed inset-0 bg-black/50 backdrop-blur-xs" (click)="selectedCount.set(null)"></div>
-      <div class="relative w-full max-w-lg bg-card rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 p-6 z-10 space-y-4">
-        <div class="flex items-center justify-between pb-3 border-b border-gray-100 dark:border-gray-800">
-          <div>
-            <h3 class="text-base font-bold text-default">Sayım Oturumu Detayı</h3>
-            <div class="text-2xs text-secondary">
-              {{ selectedCount()?.startedAt | date:'dd.MM.yyyy HH:mm' }} • {{ getScopeName(selectedCount()!.type, selectedCount()!.scopeId) }}
+  <!-- Start Count Configuration Modal -->
+  @if (isStartModalOpen()) {
+    <div class="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-3 md:p-6">
+      <div class="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity" (click)="closeStartModal()"></div>
+      <div class="relative w-full max-w-lg bg-card rounded-2xl md:rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-700 z-10 overflow-hidden flex flex-col">
+        
+        <!-- Modal Header -->
+        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-800 bg-slate-50/50 dark:bg-slate-900/50">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-teal-50 dark:bg-teal-950/60 text-teal-600 dark:text-teal-400 flex items-center justify-center">
+              <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:clipboard-document-check'"></mat-icon>
+            </div>
+            <div>
+              <h3 class="text-base font-bold text-default">Yeni Sayım Oturumu Başlat</h3>
+              <p class="text-2xs text-secondary">Kapsamı ve sayım zamanını belirleyin.</p>
             </div>
           </div>
-          <button mat-icon-button (click)="selectedCount.set(null)">
+          <button
+            mat-icon-button
+            class="text-secondary hover:text-default"
+            (click)="closeStartModal()">
             <mat-icon class="icon-size-5" [svgIcon]="'heroicons_solid:x'"></mat-icon>
           </button>
         </div>
 
-        <div class="grid grid-cols-2 gap-3 text-center">
-          <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800">
-            <div class="text-2xs text-secondary">Beklenen</div>
-            <div class="text-xl font-bold text-default">{{ selectedCount()?.expectedCount }}</div>
+        <!-- Modal Body -->
+        <div class="p-6 space-y-4 max-h-[75vh] overflow-y-auto">
+          
+          <!-- Scope Type Selector -->
+          <div>
+            <label class="block text-xs font-bold text-default mb-2">Sayım Kapsamı</label>
+            <div class="grid grid-cols-3 gap-2">
+              <button
+                type="button"
+                (click)="setStartType('genel')"
+                [class.bg-teal-50]="startConfig().type === 'genel'"
+                [class.border-teal-600]="startConfig().type === 'genel'"
+                [class.text-teal-700]="startConfig().type === 'genel'"
+                [class.dark:bg-teal-950/40]="startConfig().type === 'genel'"
+                [class.dark:border-teal-500]="startConfig().type === 'genel'"
+                [class.dark:text-teal-300]="startConfig().type === 'genel'"
+                class="p-3 rounded-xl border text-center transition-all flex flex-col items-center gap-1">
+                <mat-icon class="icon-size-5 text-teal-600" [svgIcon]="'heroicons_outline:home'"></mat-icon>
+                <span class="text-xs font-bold">Genel Çiftlik</span>
+                <span class="text-3xs text-secondary">{{ stats().totalAnimalsInFarm }} Baş</span>
+              </button>
+
+              <button
+                type="button"
+                (click)="setStartType('padok')"
+                [class.bg-indigo-50]="startConfig().type === 'padok'"
+                [class.border-indigo-600]="startConfig().type === 'padok'"
+                [class.text-indigo-700]="startConfig().type === 'padok'"
+                [class.dark:bg-indigo-950/40]="startConfig().type === 'padok'"
+                [class.dark:border-indigo-500]="startConfig().type === 'padok'"
+                [class.dark:text-indigo-300]="startConfig().type === 'padok'"
+                class="p-3 rounded-xl border text-center transition-all flex flex-col items-center gap-1">
+                <mat-icon class="icon-size-5 text-indigo-600" [svgIcon]="'heroicons_outline:squares-2x2'"></mat-icon>
+                <span class="text-xs font-bold">Padok Sayımı</span>
+                <span class="text-3xs text-secondary">{{ paddocks().length }} Padok</span>
+              </button>
+
+              <button
+                type="button"
+                (click)="setStartType('suru')"
+                [class.bg-amber-50]="startConfig().type === 'suru'"
+                [class.border-amber-600]="startConfig().type === 'suru'"
+                [class.text-amber-700]="startConfig().type === 'suru'"
+                [class.dark:bg-amber-950/40]="startConfig().type === 'suru'"
+                [class.dark:border-amber-500]="startConfig().type === 'suru'"
+                [class.dark:text-amber-300]="startConfig().type === 'suru'"
+                class="p-3 rounded-xl border text-center transition-all flex flex-col items-center gap-1">
+                <mat-icon class="icon-size-5 text-amber-600" [svgIcon]="'heroicons_outline:user-group'"></mat-icon>
+                <span class="text-xs font-bold">Sürü Sayımı</span>
+                <span class="text-3xs text-secondary">{{ herds().length }} Sürü</span>
+              </button>
+            </div>
           </div>
-          <div class="p-3 rounded-xl bg-teal-50 dark:bg-teal-950/40 text-teal-700">
-            <div class="text-2xs">Sayılan</div>
-            <div class="text-xl font-bold">{{ selectedCount()?.countedAnimalIds?.length || 0 }}</div>
+
+          <!-- Specific Paddock Selection -->
+          @if (startConfig().type === 'padok') {
+            <div>
+              <label class="block text-xs font-bold text-default mb-1.5">Hedef Padok Seçimi</label>
+              <select
+                [ngModel]="startConfig().scopeId"
+                (ngModelChange)="setStartScope($event)"
+                class="w-full px-3.5 py-2.5 text-xs bg-slate-100 dark:bg-slate-750 border border-slate-200 dark:border-slate-700 rounded-xl text-default font-medium focus:outline-hidden focus:ring-2 focus:ring-teal-500">
+                @for (p of paddocksWithCount(); track p.id) {
+                  <option [value]="p.id">{{ p.name }} ({{ p.animalCount }} Baş)</option>
+                }
+              </select>
+            </div>
+          }
+
+          <!-- Specific Herd Selection -->
+          @if (startConfig().type === 'suru') {
+            <div>
+              <label class="block text-xs font-bold text-default mb-1.5">Hedef Sürü Seçimi</label>
+              <select
+                [ngModel]="startConfig().scopeId"
+                (ngModelChange)="setStartScope($event)"
+                class="w-full px-3.5 py-2.5 text-xs bg-slate-100 dark:bg-slate-750 border border-slate-200 dark:border-slate-700 rounded-xl text-default font-medium focus:outline-hidden focus:ring-2 focus:ring-teal-500">
+                @for (h of herdsWithCount(); track h.id) {
+                  <option [value]="h.id">{{ h.name }} ({{ h.animalCount }} Baş)</option>
+                }
+              </select>
+            </div>
+          }
+
+          <!-- Date & Time Row -->
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-bold text-default mb-1.5">Sayım Tarihi</label>
+              <input
+                type="date"
+                [ngModel]="startConfig().date"
+                (ngModelChange)="updateStartConfig('date', $event)"
+                class="w-full px-3.5 py-2 text-xs bg-slate-100 dark:bg-slate-750 border border-slate-200 dark:border-slate-700 rounded-xl text-default font-medium focus:outline-hidden focus:ring-2 focus:ring-teal-500" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-default mb-1.5">Sayım Saati</label>
+              <input
+                type="time"
+                [ngModel]="startConfig().time"
+                (ngModelChange)="updateStartConfig('time', $event)"
+                class="w-full px-3.5 py-2 text-xs bg-slate-100 dark:bg-slate-750 border border-slate-200 dark:border-slate-700 rounded-xl text-default font-medium focus:outline-hidden focus:ring-2 focus:ring-teal-500" />
+            </div>
+          </div>
+
+          <!-- Reader Device Method -->
+          <div>
+            <label class="block text-xs font-bold text-default mb-1.5">Okuyucu Yöntemi / Cihaz</label>
+            <select
+              [ngModel]="startConfig().deviceName"
+              (ngModelChange)="updateStartConfig('deviceName', $event)"
+              class="w-full px-3.5 py-2.5 text-xs bg-slate-100 dark:bg-slate-750 border border-slate-200 dark:border-slate-700 rounded-xl text-default font-medium focus:outline-hidden focus:ring-2 focus:ring-teal-500">
+              <option value="Manuel / RFID Barkod Okuyucu">Manuel / RFID Barkod Okuyucu</option>
+              <option value="Bluetooth RFID El Terminali">Bluetooth RFID El Terminali</option>
+              <option value="Manuel / Klavye ile Küpe Girişi">Manuel / Klavye ile Küpe Girişi</option>
+              <option value="Otomatik Geçiş Kapısı (Anten)">Otomatik Geçiş Kapısı (Anten)</option>
+            </select>
+          </div>
+
+          <!-- Note (Optional) -->
+          <div>
+            <label class="block text-xs font-bold text-default mb-1.5">Açıklama / Not (Opsiyonel)</label>
+            <input
+              type="text"
+              [ngModel]="startConfig().note"
+              (ngModelChange)="updateStartConfig('note', $event)"
+              placeholder="Örn: Aylık rutin padok kontrolü..."
+              class="w-full px-3.5 py-2 text-xs bg-slate-100 dark:bg-slate-750 border border-slate-200 dark:border-slate-700 rounded-xl text-default placeholder-secondary focus:outline-hidden focus:ring-2 focus:ring-teal-500" />
+          </div>
+
+          <!-- Existing Count Warning Banner -->
+          @if (existingCountForSelectedScope(); as existing) {
+            <div class="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300/80 dark:border-amber-800/80 text-amber-900 dark:text-amber-200 space-y-3">
+              <div class="flex items-start gap-2.5">
+                <mat-icon class="icon-size-5 text-amber-600 shrink-0 mt-0.5" [svgIcon]="'heroicons_outline:exclamation-triangle'"></mat-icon>
+                <div>
+                  <div class="text-xs font-bold">Bu Tarih ve Kapsamda Kayıtlı Sayım Bulundu</div>
+                  <div class="text-2xs text-amber-800 dark:text-amber-300 mt-0.5 leading-relaxed">
+                    Seçtiğiniz tarih için mevcut bir sayım oturumu bulunuyor (Beklenen: {{ existing.expectedCount }}, Sayılan: {{ existing.countedAnimalIds.length || 0 }} baş).
+                  </div>
+                </div>
+              </div>
+
+              <div class="flex flex-col sm:flex-row items-center gap-2 pt-1">
+                <button
+                  type="button"
+                  (click)="startConfiguredCount(true)"
+                  class="w-full sm:w-auto flex-1 px-3.5 py-2 rounded-xl text-xs font-bold bg-teal-600 text-white hover:bg-teal-700 transition-colors shadow-xs flex items-center justify-center gap-1.5">
+                  <mat-icon class="icon-size-4" [svgIcon]="'heroicons_outline:arrow-path'"></mat-icon>
+                  <span>Önceki Sayımı Devam Ettir</span>
+                </button>
+
+                <button
+                  type="button"
+                  (click)="startConfiguredCount(false)"
+                  class="w-full sm:w-auto px-3 py-2 rounded-xl text-xs font-semibold bg-white dark:bg-slate-800 border border-amber-300 dark:border-amber-700 text-default hover:bg-slate-50 transition-colors">
+                  Yeni Baştan Say
+                </button>
+              </div>
+            </div>
+          }
+
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="flex items-center justify-end gap-2 px-6 py-4 border-t border-gray-100 dark:border-gray-800 bg-slate-50/50 dark:bg-slate-900/50">
+          <button
+            mat-stroked-button
+            class="!rounded-xl"
+            (click)="closeStartModal()">
+            Vazgeç
+          </button>
+          
+          @if (!existingCountForSelectedScope()) {
+            <button
+              mat-flat-button
+              class="!bg-teal-600 !text-white !rounded-xl !px-5 font-bold shadow-md shadow-teal-500/20"
+              (click)="startConfiguredCount(false)">
+              Sayımı Başlat
+            </button>
+          }
+        </div>
+
+      </div>
+    </div>
+  }
+
+  <!-- Detail Modal for Past Count -->
+  @if (selectedCountDetails(); as details) {
+    <div class="fixed inset-0 z-50 overflow-hidden flex items-center justify-center p-3 md:p-6">
+      <div class="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity" (click)="closeCountDetail()"></div>
+      <div class="relative w-full max-w-4xl max-h-[90vh] flex flex-col bg-card rounded-2xl md:rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-700 z-10 overflow-hidden">
+        
+        <!-- Modal Header -->
+        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-800 bg-slate-50/50 dark:bg-slate-900/50">
+          <div>
+            <div class="flex items-center gap-2">
+              <h3 class="text-lg font-bold text-default">Sayım Oturumu Detayı</h3>
+              <span class="px-2 py-0.5 rounded-full text-2xs font-bold uppercase bg-slate-200 dark:bg-slate-700 text-default">
+                {{ details.count.type }}
+              </span>
+            </div>
+            <div class="text-xs text-secondary mt-0.5 flex items-center gap-2">
+              <span>{{ formatDateTime(details.count.startedAt || details.count.date || details.count.createdAt) }}</span>
+              <span>•</span>
+              <span class="font-semibold text-default">{{ getScopeName(details.count.type, details.count.scopeId) }}</span>
+              <span>•</span>
+              <span>Cihaz: {{ details.count.deviceName || 'Manuel Sayım' }}</span>
+            </div>
+          </div>
+          
+          <div class="flex items-center gap-2">
+            @if (details.missingCount > 0) {
+              <button
+                type="button"
+                (click)="copyMissingTags()"
+                class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 hover:bg-rose-100 transition-colors border border-rose-200/50 dark:border-rose-900/50">
+                <mat-icon class="icon-size-4" [svgIcon]="'heroicons_outline:clipboard-document'"></mat-icon>
+                <span>Eksik Küpeleri Kopyala ({{ details.missingCount }})</span>
+              </button>
+
+              <button
+                type="button"
+                (click)="downloadMissingCsv()"
+                class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-teal-50 dark:bg-teal-950/40 text-teal-700 dark:text-teal-300 hover:bg-teal-100 transition-colors border border-teal-200/50 dark:border-teal-900/50">
+                <mat-icon class="icon-size-4" [svgIcon]="'heroicons_outline:arrow-down-tray'"></mat-icon>
+                <span>CSV İndir</span>
+              </button>
+            }
+            <button
+              mat-icon-button
+              class="text-secondary hover:text-default"
+              (click)="closeCountDetail()">
+              <mat-icon class="icon-size-5" [svgIcon]="'heroicons_solid:x'"></mat-icon>
+            </button>
           </div>
         </div>
 
-        <div>
-          <div class="text-xs font-bold text-default mb-2">Sayılan Hayvanlar ({{ selectedCount()?.countedAnimalIds?.length || 0 }})</div>
-          <div class="flex flex-wrap gap-1.5 max-h-48 overflow-y-auto p-2 bg-slate-50 dark:bg-slate-800 rounded-xl">
-            @for (id of selectedCount()?.countedAnimalIds || []; track id) {
-              <span class="px-2 py-0.5 rounded font-mono text-2xs font-bold bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-default">
-                {{ getAnimal(id)?.farmTagNo || id }}
-              </span>
+        <!-- 4 KPI Summary Cards -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 p-6 pb-4 border-b border-gray-100 dark:border-gray-800">
+          <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60">
+            <div class="text-2xs font-semibold text-secondary uppercase tracking-wider">Beklenen Hayvan</div>
+            <div class="text-2xl font-black text-default mt-1">{{ details.expectedCount }}</div>
+            <div class="text-2xs text-secondary mt-0.5">Sürü/padoktaki mevcut</div>
+          </div>
+
+          <div class="p-3.5 rounded-2xl bg-teal-50/70 dark:bg-teal-950/30 border border-teal-200/60 dark:border-teal-900/50 text-teal-800 dark:text-teal-200">
+            <div class="text-2xs font-semibold uppercase tracking-wider text-teal-700 dark:text-teal-300">Sayılan Hayvan</div>
+            <div class="text-2xl font-black text-teal-700 dark:text-teal-400 mt-1">{{ details.countedCount }}</div>
+            <div class="text-2xs text-teal-600/80 dark:text-teal-400/80 mt-0.5">Tespit edilen küpeler</div>
+          </div>
+
+          <div class="p-3.5 rounded-2xl border"
+               [class.bg-rose-50/70]="details.missingCount > 0"
+               [class.border-rose-200/60]="details.missingCount > 0"
+               [class.text-rose-800]="details.missingCount > 0"
+               [class.dark:bg-rose-950/30]="details.missingCount > 0"
+               [class.dark:border-rose-900/50]="details.missingCount > 0"
+               [class.dark:text-rose-200]="details.missingCount > 0"
+               [class.bg-emerald-50/70]="details.missingCount === 0"
+               [class.border-emerald-200/60]="details.missingCount === 0"
+               [class.text-emerald-800]="details.missingCount === 0"
+               [class.dark:bg-emerald-950/30]="details.missingCount === 0"
+               [class.dark:border-emerald-900/50]="details.missingCount === 0"
+               [class.dark:text-emerald-200]="details.missingCount === 0">
+            <div class="text-2xs font-semibold uppercase tracking-wider"
+                 [class.text-rose-700]="details.missingCount > 0"
+                 [class.text-emerald-700]="details.missingCount === 0">
+              Eksik Hayvan
+            </div>
+            <div class="text-2xl font-black mt-1"
+                 [class.text-rose-600]="details.missingCount > 0"
+                 [class.text-emerald-600]="details.missingCount === 0">
+              {{ details.missingCount }}
+            </div>
+            <div class="text-2xs mt-0.5 opacity-80">
+              {{ details.missingCount === 0 ? 'Kayıp bulunmuyor' : 'Fark edilen kayıp' }}
+            </div>
+          </div>
+
+          <div class="p-3.5 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200/60 dark:border-indigo-900/50 text-indigo-800 dark:text-indigo-200">
+            <div class="text-2xs font-semibold uppercase tracking-wider text-indigo-700 dark:text-indigo-300">Başarı Oranı</div>
+            <div class="text-2xl font-black text-indigo-700 dark:text-indigo-400 mt-1">%{{ details.successRate }}</div>
+            <div class="w-full bg-indigo-200/60 dark:bg-indigo-900/60 rounded-full h-1.5 mt-2 overflow-hidden">
+              <div class="bg-indigo-600 h-1.5 rounded-full transition-all duration-500" [style.width.%]="details.successRate"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Filter, Tabs and Search Toolbar -->
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-3 px-6 py-3 border-b border-gray-100 dark:border-gray-800 bg-slate-50/30 dark:bg-slate-850/30">
+          <!-- Filter Tabs -->
+          <div class="flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl w-full sm:w-auto">
+            <button
+              type="button"
+              (click)="setDetailTab('all')"
+              [class.bg-white]="detailTab() === 'all'"
+              [class.dark:bg-slate-700]="detailTab() === 'all'"
+              [class.shadow-xs]="detailTab() === 'all'"
+              [class.font-bold]="detailTab() === 'all'"
+              class="flex-1 sm:flex-none px-3 py-1.5 rounded-lg text-xs transition-all text-default">
+              Tümü ({{ details.expectedCount }})
+            </button>
+            <button
+              type="button"
+              (click)="setDetailTab('counted')"
+              [class.bg-white]="detailTab() === 'counted'"
+              [class.dark:bg-slate-700]="detailTab() === 'counted'"
+              [class.shadow-xs]="detailTab() === 'counted'"
+              [class.font-bold]="detailTab() === 'counted'"
+              class="flex-1 sm:flex-none px-3 py-1.5 rounded-lg text-xs transition-all text-teal-600 dark:text-teal-400">
+              Sayılanlar ({{ details.countedCount }})
+            </button>
+            <button
+              type="button"
+              (click)="setDetailTab('missing')"
+              [class.bg-white]="detailTab() === 'missing'"
+              [class.dark:bg-slate-700]="detailTab() === 'missing'"
+              [class.shadow-xs]="detailTab() === 'missing'"
+              [class.font-bold]="detailTab() === 'missing'"
+              class="flex-1 sm:flex-none px-3 py-1.5 rounded-lg text-xs transition-all text-rose-600 dark:text-rose-400">
+              Eksikler ({{ details.missingCount }})
+            </button>
+          </div>
+
+          <!-- Search Input -->
+          <div class="relative w-full sm:w-64">
+            <mat-icon class="absolute left-3 top-1/2 -translate-y-1/2 icon-size-4 text-secondary" [svgIcon]="'heroicons_outline:magnifying-glass'"></mat-icon>
+            <input
+              type="text"
+              [ngModel]="detailSearchTerm()"
+              (ngModelChange)="onDetailSearchChange($event)"
+              placeholder="Küpe No veya İsim ile ara..."
+              class="w-full pl-9 pr-3 py-1.5 text-xs rounded-xl bg-white dark:bg-slate-800 border border-gray-200 dark:border-gray-700 text-default focus:outline-hidden focus:ring-2 focus:ring-teal-500/30" />
+          </div>
+        </div>
+
+        <!-- Scrollable Animals Card Grid (Fast & Responsive for 150+ items) -->
+        <div class="flex-1 overflow-y-auto p-6 max-h-[420px]">
+          @if (details.paginatedList.length === 0) {
+            <div class="text-center py-12 text-secondary">
+              <mat-icon class="icon-size-10 mx-auto text-gray-300 dark:text-gray-600 mb-2" [svgIcon]="'heroicons_outline:funnel'"></mat-icon>
+              <div class="text-sm font-semibold">Eşleşen hayvan bulunamadı</div>
+              <div class="text-xs mt-1">Arama filtresini temizleyin veya sekmeyi değiştirin.</div>
+            </div>
+          } @else {
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              @for (item of details.paginatedList; track (item.animal.id || item.animal.farmTagNo)) {
+                <div
+                  class="p-3.5 rounded-2xl border transition-all flex items-start justify-between gap-2"
+                  [class.bg-emerald-50/50]="item.isCounted"
+                  [class.border-emerald-200]="item.isCounted"
+                  [class.dark:bg-emerald-950/20]="item.isCounted"
+                  [class.dark:border-emerald-900/50]="item.isCounted"
+                  [class.bg-rose-50/50]="!item.isCounted"
+                  [class.border-rose-200]="!item.isCounted"
+                  [class.dark:bg-rose-950/20]="!item.isCounted"
+                  [class.dark:border-rose-900/50]="!item.isCounted">
+                  
+                  <div class="space-y-1 min-w-0">
+                    <div class="flex items-center gap-1.5">
+                      <span class="font-mono text-xs font-black tracking-wide text-default">
+                        {{ item.animal.farmTagNo || item.animal.id }}
+                      </span>
+                      @if (item.animal.name) {
+                        <span class="text-2xs text-secondary truncate">({{ item.animal.name }})</span>
+                      }
+                    </div>
+
+                    <div class="text-2xs text-secondary flex items-center gap-2">
+                      @if (item.animal.breed) {
+                        <span>{{ item.animal.breed }}</span>
+                      }
+                      @if (item.animal.species) {
+                        <span>• {{ item.animal.species }}</span>
+                      }
+                    </div>
+
+                    @if (item.animal.nationalTagNo) {
+                      <div class="text-3xs font-mono text-secondary truncate">
+                        TR: {{ item.animal.nationalTagNo }}
+                      </div>
+                    }
+                  </div>
+
+                  <div>
+                    @if (item.isCounted) {
+                      <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-3xs font-bold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300">
+                        <mat-icon class="icon-size-3 text-emerald-600" [svgIcon]="'heroicons_solid:check'"></mat-icon>
+                        Sayıldı
+                      </span>
+                    } @else {
+                      <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-3xs font-bold bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300">
+                        <mat-icon class="icon-size-3 text-rose-600" [svgIcon]="'heroicons_solid:exclamation-triangle'"></mat-icon>
+                        Eksik
+                      </span>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        </div>
+
+        <!-- Pagination & Footer -->
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between px-6 py-3.5 border-t border-gray-100 dark:border-gray-800 bg-slate-50/50 dark:bg-slate-900/50 gap-3">
+          <div class="text-xs text-secondary flex items-center gap-2">
+            <span>
+              Toplam <strong>{{ details.totalItems }}</strong> kayıttan <strong>{{ details.paginatedList.length }}</strong> tanesi gösteriliyor.
+            </span>
+            @if (details.totalItems > 24) {
+              <button
+                type="button"
+                (click)="toggleShowAllInDetail()"
+                class="text-teal-600 dark:text-teal-400 font-semibold hover:underline">
+                {{ showAllInDetail() ? 'Sayfalı Göster (24)' : 'Tümünü Göster' }}
+              </button>
             }
           </div>
+
+          <div class="flex items-center gap-2 justify-between sm:justify-end">
+            @if (!showAllInDetail() && details.totalPages > 1) {
+              <div class="flex items-center gap-1 text-xs">
+                <button
+                  type="button"
+                  [disabled]="details.currentPage === 1"
+                  (click)="setDetailPage(details.currentPage - 1)"
+                  class="px-2.5 py-1 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-slate-800 text-default disabled:opacity-40 hover:bg-slate-50">
+                  Önceki
+                </button>
+                <span class="px-2 font-medium text-secondary">
+                  {{ details.currentPage }} / {{ details.totalPages }}
+                </span>
+                <button
+                  type="button"
+                  [disabled]="details.currentPage === details.totalPages"
+                  (click)="setDetailPage(details.currentPage + 1)"
+                  class="px-2.5 py-1 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-slate-800 text-default disabled:opacity-40 hover:bg-slate-50">
+                  Sonraki
+                </button>
+              </div>
+            }
+
+            <button
+              mat-flat-button
+              class="!rounded-xl !bg-slate-200 dark:!bg-slate-800 !text-default hover:!bg-slate-300"
+              (click)="closeCountDetail()">
+              Kapat
+            </button>
+          </div>
         </div>
 
-        <div class="flex justify-end pt-2">
-          <button mat-flat-button class="!rounded-xl" (click)="selectedCount.set(null)">Kapat</button>
-        </div>
       </div>
     </div>
   }

@@ -12,6 +12,7 @@ import { AnimalService } from '../../core/services/animal.service';
 import { WeightRecordService } from '../../core/services/weight-record.service';
 import { FarmContextService } from '../../core/services/farm-context.service';
 import { AlertService } from '../../core/services/alert.service';
+import { EmailService } from '../../core/services/email.service';
 import { KurbanAnimal, KurbanHisse } from '../../core/models/kurban.model';
 import { Animal } from '../../core/models/animal.model';
 
@@ -34,6 +35,7 @@ export class KurbanComponent {
   private weightService = inject(WeightRecordService);
   private farmContext = inject(FarmContextService);
   private alertService = inject(AlertService);
+  private emailService = inject(EmailService);
 
   readonly kurbanList = toSignal(this.kurbanService.list(), { initialValue: [] as KurbanAnimal[] });
   readonly animals = toSignal(this.animalService.list(), { initialValue: [] as Animal[] });
@@ -88,6 +90,7 @@ export class KurbanComponent {
     id: '1',
     hissedarName: '',
     phone: '',
+    email: '',
     sharePrice: 20000,
     depositPaid: 5000,
     remainingPayment: 15000,
@@ -357,6 +360,7 @@ export class KurbanComponent {
       id: String(shareIndex + 1),
       hissedarName: '',
       phone: '',
+      email: '',
       sharePrice: k.sharePrice,
       depositPaid: 0,
       remainingPayment: k.sharePrice,
@@ -364,7 +368,13 @@ export class KurbanComponent {
       isPaid: false,
     };
 
-    this.shareForm.set({ ...share });
+    const paymentLink = share.paymentLink || (k.id ? this.kurbanService.getPaymentLink(k.id, share.id) : '');
+
+    this.shareForm.set({
+      ...share,
+      email: share.email || '',
+      paymentLink,
+    });
     this.isShareModalOpen.set(true);
   }
 
@@ -391,6 +401,10 @@ export class KurbanComponent {
     if (!k?.id) return;
 
     const shareData = { ...this.shareForm() };
+    shareData.email = shareData.email?.trim() || '';
+    shareData.paymentLink = this.kurbanService.getPaymentLink(k.id, shareData.id);
+    shareData.paymentStatus = shareData.isPaid ? 'odendi' : (shareData.depositPaid > 0 ? 'kismi_odendi' : 'bekliyor');
+
     const updatedShares = [...(k.shares || [])];
     updatedShares[idx] = shareData;
 
@@ -427,6 +441,7 @@ export class KurbanComponent {
       id: String(shareIndex + 1),
       hissedarName: '',
       phone: '',
+      email: '',
       sharePrice: k.sharePrice,
       depositPaid: 0,
       remainingPayment: k.sharePrice,
@@ -445,7 +460,7 @@ export class KurbanComponent {
     }
   }
 
-  // Send WhatsApp Appointment Card
+  // Send WhatsApp Appointment Card & Payment Link
   sendWhatsApp(kurban: KurbanAnimal, hisse: KurbanHisse, event?: Event) {
     if (event) event.stopPropagation();
     if (!hisse.hissedarName) {
@@ -453,6 +468,71 @@ export class KurbanComponent {
       return;
     }
     this.kurbanService.openWhatsAppAppointment(kurban, hisse, this.farmName());
+  }
+
+  // Send SMS with Online Payment Link
+  sendSMS(kurban: KurbanAnimal, hisse: KurbanHisse, event?: Event) {
+    if (event) event.stopPropagation();
+    if (!hisse.hissedarName) {
+      this.alertService.error('Hata', 'Lütfen önce hissedar bilgilerini giriniz.');
+      return;
+    }
+    this.kurbanService.openSms(kurban, hisse, this.farmName());
+  }
+
+  // Send Email with Online Payment Link
+  async sendEmail(kurban: KurbanAnimal, hisse: KurbanHisse, event?: Event) {
+    if (event) event.stopPropagation();
+    if (!hisse.hissedarName) {
+      this.alertService.error('Hata', 'Lütfen önce hissedar bilgilerini giriniz.');
+      return;
+    }
+    if (!hisse.email?.trim()) {
+      this.alertService.error('E-Posta Eksik', 'Lütfen hissedar kartından geçerli bir e-posta adresi kaydediniz.');
+      return;
+    }
+
+    const paymentLink = hisse.paymentLink || (kurban.id ? this.kurbanService.getPaymentLink(kurban.id, hisse.id) : '');
+
+    try {
+      await this.emailService.sendKurbanPaymentEmail({
+        email: hisse.email.trim(),
+        hissedarName: hisse.hissedarName,
+        farmName: this.farmName(),
+        kurbanTagNo: kurban.tagNo,
+        animalName: kurban.animalName,
+        category: kurban.category,
+        slaughterOrder: kurban.slaughterOrder,
+        slaughterDay: kurban.slaughterDay,
+        slaughterTime: kurban.slaughterTime,
+        sharePrice: hisse.sharePrice,
+        depositPaid: hisse.depositPaid,
+        remainingPayment: hisse.remainingPayment,
+        paymentLink,
+        meatPreference: hisse.meatPreference,
+      });
+
+      this.alertService.toastSuccess(
+        `${hisse.hissedarName} hissedarına (${hisse.email}) ödeme linki başarıyla gönderildi.`
+      );
+    } catch (err) {
+      this.alertService.error('Hata', 'E-posta gönderimi yapılamadı.');
+    }
+  }
+
+  // Copy Online Payment Link to Clipboard
+  copyPaymentLink(kurban: KurbanAnimal, hisse: KurbanHisse, event?: Event) {
+    if (event) event.stopPropagation();
+    const url = hisse.paymentLink || (kurban.id ? this.kurbanService.getPaymentLink(kurban.id, hisse.id) : '');
+    if (!url) return;
+
+    if (navigator?.clipboard?.writeText) {
+      navigator.clipboard.writeText(url).then(() => {
+        this.alertService.toastSuccess('Online ödeme linki panoya kopyalandı.');
+      }).catch(() => {
+        this.alertService.error('Hata', 'Bağlantı panoya kopyalanamadı.');
+      });
+    }
   }
 
   // Mark as Slaughtered

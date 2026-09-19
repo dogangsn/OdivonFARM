@@ -133,20 +133,25 @@
           <thead
             class="bg-slate-50 dark:bg-slate-800/60 border-b border-gray-200 dark:border-gray-700 text-secondary uppercase font-semibold tracking-wider">
             <tr>
-              <th class="py-3 px-4">Tarih</th>
+              <th class="py-3 px-4">Tarih & Seans</th>
               <th class="py-3 px-4">Verim Türü</th>
               <th class="py-3 px-4">Kapsam</th>
               <th class="py-3 px-4">Hayvan / Sürü</th>
-              <th class="py-3 px-4 text-right">Miktar</th>
+              <th class="py-3 px-4 text-right">Miktar & Kıyaslama</th>
               <th class="py-3 px-4 text-center">İşlem</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-100 dark:divide-gray-800 text-default">
             @for (y of filteredYields(); track y.id) {
             <tr class="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors">
-              <!-- Date -->
-              <td class="py-3.5 px-4 font-medium whitespace-nowrap">
-                {{ y.date ? (y.date | date:'dd.MM.yyyy') : '—' }}
+              <!-- Date & Session -->
+              <td class="py-3.5 px-4 whitespace-nowrap">
+                <div class="font-medium">{{ formatDate(y.date) }}</div>
+                @if (y.session) {
+                  <div class="text-3xs font-semibold text-secondary mt-0.5">
+                    {{ getSessionLabel(y.session) }} {{ y.time ? ('(' + y.time + ')') : '' }}
+                  </div>
+                }
               </td>
 
               <!-- Type Badge -->
@@ -185,7 +190,12 @@
                     {{ getAnimal(y.animalId)?.farmTagNo || 'Küpesiz' }}
                   </span>
                   @if (getAnimal(y.animalId)?.name) {
-                  <span class="text-secondary font-normal">({{ getAnimal(y.animalId)?.name }})</span>
+                    <span class="text-secondary font-normal">({{ getAnimal(y.animalId)?.name }})</span>
+                  }
+                  @if (getAnimal(y.animalId)?.breed) {
+                    <span class="text-3xs px-1.5 py-0.5 rounded bg-slate-50 dark:bg-slate-800 text-secondary border border-slate-200 dark:border-slate-700">
+                      {{ getAnimal(y.animalId)?.breed }}
+                    </span>
                   }
                 </div>
                 } @else if (y.herdId) {
@@ -198,10 +208,26 @@
                 }
               </td>
 
-              <!-- Amount -->
-              <td class="py-3.5 px-4 text-right whitespace-nowrap font-bold text-sm"
-                [class]="y.type === 'sut' ? 'text-blue-600 dark:text-blue-400' : 'text-amber-600 dark:text-amber-400'">
-                {{ y.amount }} {{ y.unit }}
+              <!-- Amount & Benchmark Comparison -->
+              <td class="py-3.5 px-4 text-right whitespace-nowrap">
+                <div class="font-bold text-sm"
+                  [class]="y.type === 'sut' ? 'text-blue-600 dark:text-blue-400' : 'text-amber-600 dark:text-amber-400'">
+                  {{ y.amount }} {{ y.unit }}
+                </div>
+                @if (y.type === 'sut' && y.animalId) {
+                  @if (getBenchmarkComparison(y.animalId, y.amount, y.session); as comp) {
+                    <div class="mt-0.5 flex justify-end">
+                      <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-3xs font-semibold"
+                        [class]="comp.status === 'optimal' 
+                          ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300' 
+                          : (comp.status === 'high' 
+                              ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-300' 
+                              : 'bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300')">
+                        {{ comp.text }}
+                      </span>
+                    </div>
+                  }
+                }
               </td>
 
               <!-- Actions -->
@@ -231,10 +257,12 @@
   @if (showDrawer()) {
   <div class="fixed inset-0 z-50 overflow-hidden">
     <!-- Backdrop -->
-    <div class="absolute inset-0 bg-black/40 backdrop-blur-xs transition-opacity" (click)="closeDrawer()"></div>
+    <div class="absolute inset-0 bg-black/40 backdrop-blur-xs transition-opacity" (click)="requestCloseDrawer()"></div>
 
     <div class="absolute inset-y-0 right-0 max-w-full flex pl-10">
-      <div class="w-screen max-w-md bg-card shadow-2xl border-l border-gray-200 dark:border-gray-700 flex flex-col">
+      <div class="w-screen max-w-md bg-card shadow-2xl border-l border-gray-200 dark:border-gray-700 flex flex-col"
+        (input)="markDirty()"
+        (change)="markDirty()">
 
         <!-- Drawer Header -->
         <div class="p-6 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
@@ -252,7 +280,7 @@
               </p>
             </div>
           </div>
-          <button mat-icon-button (click)="closeDrawer()" class="text-secondary hover:text-default">
+          <button mat-icon-button type="button" (click)="requestCloseDrawer()" class="text-secondary hover:text-default">
             <mat-icon class="icon-size-5" [svgIcon]="'heroicons_solid:x'"></mat-icon>
           </button>
         </div>
@@ -308,17 +336,49 @@
           <!-- Animal / Herd Selection -->
           @if (form().targetKind === 'animal') {
           <div>
-            <label class="block font-semibold text-secondary mb-1.5">Hayvan Seçin (Küpe No) *</label>
+            <div class="flex items-center justify-between mb-1.5">
+              <label class="block font-semibold text-secondary">
+                Hayvan Seçin (Küpe No) *
+              </label>
+              @if (form().type === 'sut') {
+                <span class="text-3xs font-bold px-2 py-0.5 rounded-full bg-teal-50 dark:bg-teal-950/50 text-teal-700 dark:text-teal-300">
+                  Dişi Hayvanlar ({{ selectableAnimals().length }})
+                </span>
+              }
+            </div>
             <select [ngModel]="form().animalId" (ngModelChange)="form().animalId = $event"
               class="w-full px-3 py-2.5 bg-slate-100 dark:bg-slate-750 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-default font-medium">
               <option value="" disabled>Hayvan Seçin</option>
-              @for (a of animals(); track a.id) {
+              @for (a of selectableAnimals(); track a.id) {
               <option [value]="a.id">
-                {{ a.farmTagNo || 'Küpesiz' }} {{ a.name ? '(' + a.name + ')' : '' }}
+                {{ a.farmTagNo || 'Küpesiz' }} {{ a.name ? '(' + a.name + ')' : '' }} - {{ a.breed || a.species || 'Bilinmiyor' }} ({{ a.gender === 'disi' ? 'Dişi' : 'Erkek' }})
               </option>
               }
             </select>
+            @if (form().type === 'sut') {
+              <div class="text-3xs text-secondary mt-1">
+                Kural gereği süt sağımına yalnızca dişi damızlık ve sağmal hayvanlar dahil edilebilir.
+              </div>
+            }
           </div>
+
+          <!-- Breed Benchmark Card (When milk yield and animal selected) -->
+          @if (currentFormBenchmark(); as bm) {
+            <div class="p-3.5 rounded-2xl bg-blue-50/70 dark:bg-blue-950/30 border border-blue-200/60 dark:border-blue-900/50 space-y-1.5">
+              <div class="flex items-center justify-between">
+                <span class="font-bold text-blue-900 dark:text-blue-200 text-2xs flex items-center gap-1.5">
+                  <mat-icon class="icon-size-3.5 text-blue-600" [svgIcon]="'heroicons_outline:chart-bar'"></mat-icon>
+                  {{ bm.breedName }} Referans Verimi
+                </span>
+                <span class="px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/60 text-3xs font-black text-blue-700 dark:text-blue-300">
+                  {{ bm.minSession }} - {{ bm.maxSession }} Lt / Seans
+                </span>
+              </div>
+              <div class="text-3xs text-blue-800/80 dark:text-blue-300/80 leading-relaxed">
+                {{ bm.tips }}
+              </div>
+            </div>
+          }
           } @else {
           <div>
             <label class="block font-semibold text-secondary mb-1.5">Sürü Seçin *</label>
@@ -332,12 +392,45 @@
           </div>
           }
 
+          <!-- Milking Session Selector (If Sut) -->
+          @if (form().type === 'sut') {
+          <div>
+            <label class="block font-semibold text-secondary mb-1.5">Sağım Seansı *</label>
+            <div class="grid grid-cols-4 gap-1.5">
+              <button type="button" (click)="form().session = 'sabah'"
+                [class]="form().session === 'sabah' 
+                    ? 'py-2 px-1.5 rounded-xl font-bold bg-blue-600 text-white shadow-xs text-xs' 
+                    : 'py-2 px-1.5 rounded-xl font-medium bg-slate-100 dark:bg-slate-750 text-secondary hover:text-default text-xs'">
+                Sabah
+              </button>
+              <button type="button" (click)="form().session = 'ogle'"
+                [class]="form().session === 'ogle' 
+                    ? 'py-2 px-1.5 rounded-xl font-bold bg-blue-600 text-white shadow-xs text-xs' 
+                    : 'py-2 px-1.5 rounded-xl font-medium bg-slate-100 dark:bg-slate-750 text-secondary hover:text-default text-xs'">
+                Öğle
+              </button>
+              <button type="button" (click)="form().session = 'aksam'"
+                [class]="form().session === 'aksam' 
+                    ? 'py-2 px-1.5 rounded-xl font-bold bg-blue-600 text-white shadow-xs text-xs' 
+                    : 'py-2 px-1.5 rounded-xl font-medium bg-slate-100 dark:bg-slate-750 text-secondary hover:text-default text-xs'">
+                Akşam
+              </button>
+              <button type="button" (click)="form().session = 'genel'"
+                [class]="form().session === 'genel' 
+                    ? 'py-2 px-1.5 rounded-xl font-bold bg-blue-600 text-white shadow-xs text-xs' 
+                    : 'py-2 px-1.5 rounded-xl font-medium bg-slate-100 dark:bg-slate-750 text-secondary hover:text-default text-xs'">
+                Günlük Top.
+              </button>
+            </div>
+          </div>
+          }
+
           <!-- Amount Input -->
           <div>
             <label class="block font-semibold text-secondary mb-1.5">Miktar ({{ form().unit }}) *</label>
             <div class="relative">
               <input type="number" step="0.1" min="0.01" [ngModel]="form().amount"
-                (ngModelChange)="form().amount = $event" [placeholder]="form().type === 'sut' ? 'Örn: 2.8' : 'Örn: 3.5'"
+                (ngModelChange)="form().amount = $event" [placeholder]="form().type === 'sut' ? 'Örn: 14.5' : 'Örn: 3.5'"
                 class="w-full px-3 py-2.5 bg-slate-100 dark:bg-slate-750 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 font-bold text-sm text-default" />
               <span class="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-semibold text-secondary">
                 {{ form().unit }}
@@ -345,11 +438,34 @@
             </div>
           </div>
 
-          <!-- Date -->
-          <div>
-            <label class="block font-semibold text-secondary mb-1.5">Tarih *</label>
-            <input type="date" [ngModel]="form().date" (ngModelChange)="form().date = $event"
-              class="w-full px-3 py-2.5 bg-slate-100 dark:bg-slate-750 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-default font-medium" />
+          <!-- Live Benchmark Comparison Card -->
+          @if (currentComparison(); as cmp) {
+            <div class="p-3.5 rounded-2xl border transition-all space-y-1"
+              [class]="cmp.status === 'optimal' 
+                ? 'bg-emerald-50/80 dark:bg-emerald-950/30 border-emerald-200/80 dark:border-emerald-900/60 text-emerald-900 dark:text-emerald-200' 
+                : (cmp.status === 'high' 
+                    ? 'bg-indigo-50/80 dark:bg-indigo-950/30 border-indigo-200/80 dark:border-indigo-900/60 text-indigo-900 dark:text-indigo-200' 
+                    : 'bg-amber-50/80 dark:bg-amber-950/30 border-amber-200/80 dark:border-amber-900/60 text-amber-900 dark:text-amber-200')">
+              <div class="flex items-center justify-between font-bold text-2xs">
+                <span>{{ cmp.text }}</span>
+                <span class="font-mono text-3xs opacity-85">Ref: {{ cmp.min }}-{{ cmp.max }} {{ cmp.benchmark.unit }}</span>
+              </div>
+              <div class="text-3xs opacity-85 leading-relaxed">{{ cmp.advice }}</div>
+            </div>
+          }
+
+          <!-- Date & Time Grid -->
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block font-semibold text-secondary mb-1.5">Kayıt Tarihi *</label>
+              <input type="date" [ngModel]="form().date" (ngModelChange)="form().date = $event"
+                class="w-full px-3 py-2.5 bg-slate-100 dark:bg-slate-750 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-default font-medium" />
+            </div>
+            <div>
+              <label class="block font-semibold text-secondary mb-1.5">Sağım Saati</label>
+              <input type="time" [ngModel]="form().time" (ngModelChange)="form().time = $event"
+                class="w-full px-3 py-2.5 bg-slate-100 dark:bg-slate-750 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-default font-medium" />
+            </div>
           </div>
 
         </div>
@@ -357,7 +473,7 @@
         <!-- Drawer Footer -->
         <div
           class="p-4 border-t border-gray-200 dark:border-gray-700 flex items-center justify-end gap-2.5 bg-slate-50/50 dark:bg-slate-800/40">
-          <button type="button" mat-stroked-button class="!rounded-xl" (click)="closeDrawer()" [disabled]="isSaving()">
+          <button type="button" mat-stroked-button class="!rounded-xl" (click)="requestCloseDrawer()" [disabled]="isSaving()">
             Vazgeç
           </button>
           <button type="button" mat-flat-button class="!rounded-xl !px-5"

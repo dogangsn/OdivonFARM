@@ -95,6 +95,28 @@ export class RegisterComponent {
     this.showPassword.update((v) => !v);
   }
 
+  getFlagUrl(countryCode: string): string {
+    if (!countryCode || countryCode === 'OTHER') {
+      return 'https://flagcdn.com/w40/un.png';
+    }
+    const codeMap: Record<string, string> = {
+      TR: 'tr', DE: 'de', NL: 'nl', RU: 'ru', GB: 'gb', US: 'us',
+      AZ: 'az', FR: 'fr', BE: 'be', AT: 'at', CH: 'ch', ES: 'es',
+      IT: 'it', KZ: 'kz', UZ: 'uz', SA: 'sa', AE: 'ae'
+    };
+    const c = codeMap[countryCode.toUpperCase()] || countryCode.toLowerCase();
+    return `https://flagcdn.com/w40/${c}.png`;
+  }
+
+  getLangFlagUrl(langCode: string): string {
+    const map: Record<string, string> = {
+      tr: 'tr', en: 'gb', de: 'de', nl: 'nl', ru: 'ru',
+      fr: 'fr', es: 'es', ar: 'sa', az: 'az'
+    };
+    const c = map[langCode.toLowerCase()] || 'un';
+    return `https://flagcdn.com/w40/${c}.png`;
+  }
+
   onCountryChange(code: string) {
     const found = this.countries.find((c) => c.code === code) || this.countries[0];
     this.selectedCountry.set(found);

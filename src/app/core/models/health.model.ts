@@ -36,6 +36,8 @@ export interface Treatment extends BaseDoc {
   performedBy?: string;
   cost?: number;
   note?: string;
+  isAccountingSynced?: boolean;
+  accountingTransactionId?: string;
 }
 
 /** farms/{farmId}/deathReasons/{reasonId} — Ölüm Nedenleri */

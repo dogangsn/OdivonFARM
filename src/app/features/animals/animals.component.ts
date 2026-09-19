@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -262,6 +262,7 @@ export class AnimalsComponent {
   showDrawer = signal(false);
   isEditing = signal(false);
   isSaving = signal(false);
+  isDirty = signal(false);
   errorMessage = signal<string | null>(null);
 
   form = signal<Partial<Animal>>({
@@ -271,7 +272,7 @@ export class AnimalsComponent {
     rfid: '',
     name: '',
     gender: 'disi',
-    birthDate: '',
+    birthDate: new Date().toISOString().substring(0, 10),
     status: 'aktif',
     breedingStatus: 'damizlik',
     breedingScore: null,
@@ -285,6 +286,19 @@ export class AnimalsComponent {
     fatherId: '',
     notes: '',
   });
+
+  private initialSnapshot = '';
+
+  markDirty() {
+    this.isDirty.set(true);
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscapeKey() {
+    if (this.showDrawer()) {
+      this.requestCloseDrawer();
+    }
+  }
 
   formatDateForInput(val: any): string {
     if (!val) return '';
@@ -319,18 +333,20 @@ export class AnimalsComponent {
 
     this.isEditing.set(false);
     this.errorMessage.set(null);
-    this.form.set({
+    this.isDirty.set(false);
+    const today = new Date().toISOString().substring(0, 10);
+    const initialData: Partial<Animal> = {
       farmTagNo: '',
       nationalTagNo: '',
       nationalTagColor: 'Sarı',
       rfid: '',
       name: '',
       gender: 'disi',
-      birthDate: '',
+      birthDate: today,
       status: 'aktif',
       breedingStatus: 'damizlik',
       breedingScore: null,
-      acquisitionDate: new Date().toISOString().substring(0, 10),
+      acquisitionDate: today,
       acquisitionMethod: 'dogum',
       breedId: '',
       animalTypeId: '',
@@ -339,14 +355,17 @@ export class AnimalsComponent {
       motherId: '',
       fatherId: '',
       notes: '',
-    });
+    };
+    this.form.set(initialData);
+    this.initialSnapshot = JSON.stringify(initialData);
     this.showDrawer.set(true);
   }
 
   openEditForm(animal: Animal) {
     this.isEditing.set(true);
     this.errorMessage.set(null);
-    this.form.set({
+    this.isDirty.set(false);
+    const editData: Partial<Animal> = {
       ...animal,
       nationalTagColor: animal.nationalTagColor || '',
       breedingStatus: animal.breedingStatus || 'damizlik',
@@ -355,16 +374,69 @@ export class AnimalsComponent {
       birthDate: this.formatDateForInput(animal.birthDate),
       acquisitionDate: this.formatDateForInput(animal.acquisitionDate),
       notes: animal.notes || animal.description || '',
-    });
+    };
+    this.form.set(editData);
+    this.initialSnapshot = JSON.stringify(editData);
     this.showDrawer.set(true);
+  }
+
+  hasUnsavedChanges(): boolean {
+    if (!this.showDrawer()) return false;
+    if (this.isDirty()) return true;
+
+    const current = JSON.stringify(this.form());
+    if (this.initialSnapshot && current !== this.initialSnapshot) {
+      return true;
+    }
+
+    const f = this.form();
+    if (!this.isEditing()) {
+      return !!(
+        f.farmTagNo?.trim() ||
+        f.nationalTagNo?.trim() ||
+        f.rfid?.trim() ||
+        f.name?.trim() ||
+        f.notes?.trim() ||
+        f.motherId?.trim() ||
+        f.fatherId?.trim() ||
+        f.breedId ||
+        f.animalTypeId ||
+        f.herdId ||
+        f.paddockId ||
+        f.breedingScore != null ||
+        (f.nationalTagColor && f.nationalTagColor !== 'Sarı') ||
+        (f.gender && f.gender !== 'disi') ||
+        (f.acquisitionMethod && f.acquisitionMethod !== 'dogum') ||
+        (f.breedingStatus && f.breedingStatus !== 'damizlik')
+      );
+    }
+
+    return false;
+  }
+
+  async requestCloseDrawer() {
+    if (this.hasUnsavedChanges()) {
+      const confirmed = await this.alertService.confirm(
+        'Kaydetmeden Çıkış',
+        'Girdiğiniz bilgiler henüz kaydedilmedi. Çıkmak istediğinizden emin misiniz?',
+        'Evet, Çık',
+        'Vazgeç'
+      );
+      if (!confirmed) {
+        return;
+      }
+    }
+    this.closeDrawer();
   }
 
   closeDrawer() {
     this.showDrawer.set(false);
+    this.isDirty.set(false);
     this.errorMessage.set(null);
   }
 
   updateFormField<K extends keyof Animal>(field: K, value: any) {
+    this.isDirty.set(true);
     this.form.update((current) => ({ ...current, [field]: value }));
   }
 

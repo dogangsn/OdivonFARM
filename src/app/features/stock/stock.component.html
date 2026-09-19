@@ -181,7 +181,7 @@
                   <tr class="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors">
                     <!-- Date -->
                     <td class="py-3.5 px-4 font-medium whitespace-nowrap">
-                      {{ m.date ? (m.date | date:'dd.MM.yyyy') : '—' }}
+                      {{ formatDate(m.date) }}
                     </td>
 
                     <!-- Type -->

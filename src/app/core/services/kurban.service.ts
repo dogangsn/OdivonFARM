@@ -1,4 +1,5 @@
 import { Injectable, inject } from '@angular/core';
+import { doc, getDoc } from 'firebase/firestore';
 import { FirestoreCrudService } from './firestore-crud.service';
 import { KurbanAnimal, KurbanHisse } from '../models/kurban.model';
 import { AnimalService } from './animal.service';
@@ -16,10 +17,39 @@ export class KurbanService extends FirestoreCrudService<KurbanAnimal> {
   }
 
   /**
+   * Fetches a kurban document by ID (supports direct Firestore getDoc for public checkout)
+   */
+  async getById(id: string, farmId?: string): Promise<KurbanAnimal | null> {
+    try {
+      const targetFarmId = farmId || this.farmContext.activeFarmId() || localStorage.getItem('activeFarmId') || '';
+      if (targetFarmId) {
+        const dRef = doc(this.db, `farms/${targetFarmId}/kurbanAnimals/${id}`);
+        const snap = await getDoc(dRef);
+        if (snap.exists()) {
+          return { id: snap.id, ...snap.data() } as KurbanAnimal;
+        }
+      }
+      return null;
+    } catch (e) {
+      console.error('getById error in KurbanService:', e);
+      return null;
+    }
+  }
+
+  /**
+   * Generates online payment URL for a shareholder
+   */
+  getPaymentLink(kurbanId: string, hisseId: string): string {
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://odivonfarm.web.app';
+    return `${origin}/kurban-odeme?kurbanId=${kurbanId}&hisseId=${hisseId}`;
+  }
+
+  /**
    * Generates WhatsApp appointment message text for a shareholder
    */
   generateAppointmentMessage(kurban: KurbanAnimal, hisse: KurbanHisse, farmName: string = 'Odivon FARM'): string {
     const meatPerShare = (kurban.estimatedMeatKg / (kurban.shareCount || 1)).toFixed(1);
+    const paymentUrl = hisse.paymentLink || (kurban.id ? this.getPaymentLink(kurban.id, hisse.id) : '');
 
     const lines: string[] = [
       `🕋 *${farmName.toUpperCase()} — KURBANLIK HİSSE VE KESİM RANDEVU KARTI* 🕋`,
@@ -45,12 +75,40 @@ export class KurbanService extends FirestoreCrudService<KurbanAnimal> {
       `• Alınan Kapora: ${hisse.depositPaid.toLocaleString('tr-TR')} ₺`,
       `• *Kalan Bakiye:* *${hisse.remainingPayment.toLocaleString('tr-TR')} ₺* (${hisse.isPaid ? 'ÖDENDİ' : 'Kesim Günü Ödenecek'})`,
       ``,
+      ...(paymentUrl && !hisse.isPaid ? [
+        `💳 *Online Güvenli Ödeme Linki:*`,
+        `${paymentUrl}`,
+        ``,
+      ] : []),
       `📍 *Kesim Yeri:* ${farmName} Modern Kesim ve Parçalama Alanı`,
       `────────────────────────────`,
       `_Kurbanınızın kabul olmasını diler, hayırlı ve bereketli bayramlar dileriz._`,
     ];
 
     return lines.join('\n');
+  }
+
+  /**
+   * Generates short SMS notification text with online payment link
+   */
+  generateSmsMessage(kurban: KurbanAnimal, hisse: KurbanHisse, farmName: string = 'Odivon FARM'): string {
+    const paymentUrl = hisse.paymentLink || (kurban.id ? this.getPaymentLink(kurban.id, hisse.id) : '');
+    if (hisse.isPaid || hisse.remainingPayment <= 0) {
+      return `Sn. ${hisse.hissedarName}, ${farmName} kurbanlik (${kurban.tagNo}) hisse bedeliniz odenmistir. Kesim siraniz: ${kurban.slaughterOrder}, Saat: ${kurban.slaughterTime}. Hayirli bayramlar.`;
+    }
+    return `Sn. ${hisse.hissedarName}, ${farmName} ${kurban.tagNo} kurbanlik hissenizin kalan ${hisse.remainingPayment.toLocaleString('tr-TR')} TL bakiyesini online guvenle odemek icin: ${paymentUrl} Hayirli bayramlar.`;
+  }
+
+  /**
+   * Opens default SMS app with prefilled text
+   */
+  openSms(kurban: KurbanAnimal, hisse: KurbanHisse, farmName?: string): void {
+    const text = this.generateSmsMessage(kurban, hisse, farmName);
+    const cleanPhone = (hisse.phone || '').replace(/[^0-9]/g, '');
+    const uri = `sms:${cleanPhone}?body=${encodeURIComponent(text)}`;
+    if (typeof window !== 'undefined') {
+      window.location.href = uri;
+    }
   }
 
   /**
@@ -66,6 +124,33 @@ export class KurbanService extends FirestoreCrudService<KurbanAnimal> {
     if (typeof window !== 'undefined') {
       window.open(url, '_blank');
     }
+  }
+
+  /**
+   * Mark a share as paid (used by online checkout or manual action)
+   */
+  async markShareAsPaid(kurbanId: string, hisseId: string, amountPaid?: number): Promise<void> {
+    const kurban = await this.getById(kurbanId);
+    if (!kurban) throw new Error('Kurban kaydı bulunamadı.');
+
+    const updatedShares = (kurban.shares || []).map((s) => {
+      if (s.id === hisseId) {
+        const paid = amountPaid != null ? amountPaid : s.remainingPayment;
+        const newRemaining = Math.max(0, s.remainingPayment - paid);
+        return {
+          ...s,
+          remainingPayment: newRemaining,
+          isPaid: newRemaining === 0,
+          paymentStatus: newRemaining === 0 ? 'odendi' : 'kismi_odendi',
+          paidAt: new Date(),
+        } as KurbanHisse;
+      }
+      return s;
+    });
+
+    await this.update(kurbanId, {
+      shares: updatedShares,
+    });
   }
 
   /**

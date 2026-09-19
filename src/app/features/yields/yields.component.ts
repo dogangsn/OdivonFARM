@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
@@ -8,9 +8,20 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { YieldRecordService } from '../../core/services/yield-record.service';
 import { AnimalService } from '../../core/services/animal.service';
 import { HerdService } from '../../core/services/definitions/herd.service';
-import { YieldRecord, YieldType } from '../../core/models/production.model';
+import { YieldRecord, YieldType, YieldSession } from '../../core/models/production.model';
 import { Animal, Herd } from '../../core/models/animal.model';
 import { AlertService } from '../../core/services/alert.service';
+
+export interface BreedBenchmark {
+  breedName: string;
+  minDaily: number;
+  maxDaily: number;
+  avgDaily: number;
+  minSession: number;
+  maxSession: number;
+  unit: string;
+  tips: string;
+}
 
 @Component({
   selector: 'app-yields',
@@ -56,6 +67,8 @@ export class YieldsComponent {
     amount: number | null;
     unit: 'lt' | 'kg';
     date: string;
+    time: string;
+    session: YieldSession;
   }>({
     type: 'sut',
     targetKind: 'animal',
@@ -64,6 +77,21 @@ export class YieldsComponent {
     amount: null,
     unit: 'lt',
     date: new Date().toISOString().substring(0, 10),
+    time: new Date().toTimeString().substring(0, 5),
+    session: 'sabah',
+  });
+
+  // Female animals (only female animals produce milk)
+  readonly femaleAnimals = computed(() => {
+    return (this.animals() || []).filter((a) => a.gender === 'disi');
+  });
+
+  // Selectable animals based on yield type
+  readonly selectableAnimals = computed(() => {
+    if (this.form().type === 'sut') {
+      return this.femaleAnimals();
+    }
+    return this.animals() || [];
   });
 
   // Lookup maps
@@ -81,6 +109,21 @@ export class YieldsComponent {
       if (h?.id) map.set(h.id, h);
     }
     return map;
+  });
+
+  // Benchmark for the currently selected animal in the form
+  readonly currentFormBenchmark = computed(() => {
+    const f = this.form();
+    if (f.type !== 'sut' || f.targetKind !== 'animal' || !f.animalId) return null;
+    const animal = this.getAnimal(f.animalId);
+    return this.getBreedBenchmark(animal);
+  });
+
+  // Active benchmark comparison for the currently entered amount in the form
+  readonly currentComparison = computed(() => {
+    const f = this.form();
+    if (f.type !== 'sut' || f.targetKind !== 'animal' || !f.animalId || !f.amount) return null;
+    return this.getBenchmarkComparison(f.animalId, f.amount, f.session);
   });
 
   // Filtered List
@@ -146,23 +189,47 @@ export class YieldsComponent {
     };
   });
 
+  isDirty = signal(false);
+  private initialSnapshot = '';
+
+  markDirty() {
+    this.isDirty.set(true);
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscapeKey() {
+    if (this.showDrawer()) {
+      this.requestCloseDrawer();
+    }
+  }
+
   openAddDrawer(defaultType: YieldType = 'sut') {
     this.isEditing.set(false);
     this.editingId.set(null);
     this.errorMessage.set(null);
+    this.isDirty.set(false);
 
-    const firstAnimal = (this.animals() || [])[0]?.id || '';
+    const eligibleAnimals = defaultType === 'sut' ? this.femaleAnimals() : (this.animals() || []);
+    const firstAnimal = eligibleAnimals[0]?.id || '';
     const firstHerd = (this.herds() || [])[0]?.id || '';
 
-    this.form.set({
+    const now = new Date();
+    const currentHour = now.getHours();
+    const defaultSession: YieldSession = currentHour < 11 ? 'sabah' : (currentHour < 16 ? 'ogle' : 'aksam');
+
+    const initial = {
       type: defaultType,
-      targetKind: 'animal',
+      targetKind: 'animal' as const,
       animalId: firstAnimal,
       herdId: firstHerd,
-      amount: null,
-      unit: defaultType === 'sut' ? 'lt' : 'kg',
-      date: new Date().toISOString().substring(0, 10),
-    });
+      amount: null as number | null,
+      unit: (defaultType === 'sut' ? 'lt' : 'kg') as 'kg' | 'lt',
+      date: now.toISOString().substring(0, 10),
+      time: now.toTimeString().substring(0, 5),
+      session: defaultSession,
+    };
+    this.form.set(initial);
+    this.initialSnapshot = JSON.stringify(initial);
 
     this.showDrawer.set(true);
   }
@@ -172,32 +239,70 @@ export class YieldsComponent {
     this.isEditing.set(true);
     this.editingId.set(y.id);
     this.errorMessage.set(null);
+    this.isDirty.set(false);
 
-    this.form.set({
+    const initial = {
       type: y.type,
-      targetKind: y.herdId ? 'herd' : 'animal',
+      targetKind: y.herdId ? 'herd' as const : 'animal' as const,
       animalId: y.animalId || '',
       herdId: y.herdId || '',
       amount: y.amount || null,
       unit: y.unit,
       date: this.formatDateForInput(y.date),
-    });
+      time: y.time || '07:00',
+      session: y.session || 'sabah',
+    };
+    this.form.set(initial);
+    this.initialSnapshot = JSON.stringify(initial);
 
     this.showDrawer.set(true);
   }
 
+  hasUnsavedChanges(): boolean {
+    if (!this.showDrawer()) return false;
+    if (this.isDirty()) return true;
+    if (this.initialSnapshot && JSON.stringify(this.form()) !== this.initialSnapshot) {
+      return true;
+    }
+    const f = this.form();
+    return !this.isEditing() && f.amount != null;
+  }
+
+  async requestCloseDrawer() {
+    if (this.hasUnsavedChanges()) {
+      const confirmed = await this.alertService.confirm(
+        'Kaydetmeden Çıkış',
+        'Girdiğiniz bilgiler henüz kaydedilmedi. Çıkmak istediğinizden emin misiniz?',
+        'Evet, Çık',
+        'Vazgeç'
+      );
+      if (!confirmed) return;
+    }
+    this.closeDrawer();
+  }
+
   closeDrawer() {
     this.showDrawer.set(false);
+    this.isDirty.set(false);
     this.isEditing.set(false);
     this.editingId.set(null);
     this.errorMessage.set(null);
   }
 
   onTypeChange(newType: YieldType) {
+    let currentAnimalId = this.form().animalId;
+    if (newType === 'sut') {
+      const selected = this.getAnimal(currentAnimalId);
+      if (!selected || selected.gender !== 'disi') {
+        currentAnimalId = this.femaleAnimals()[0]?.id || '';
+      }
+    }
+
     this.form.update((cur) => ({
       ...cur,
       type: newType,
       unit: newType === 'sut' ? 'lt' : 'kg',
+      animalId: currentAnimalId,
     }));
   }
 
@@ -210,6 +315,13 @@ export class YieldsComponent {
     if (f.targetKind === 'animal' && !f.animalId) {
       this.errorMessage.set('Lütfen bir hayvan seçin.');
       return;
+    }
+    if (f.targetKind === 'animal' && f.type === 'sut') {
+      const animal = this.getAnimal(f.animalId);
+      if (animal && animal.gender !== 'disi') {
+        this.errorMessage.set('Süt sağımı yalnızca dişi hayvanlar için kaydedilebilir.');
+        return;
+      }
     }
     if (f.targetKind === 'herd' && !f.herdId) {
       this.errorMessage.set('Lütfen bir sürü seçin.');
@@ -229,6 +341,8 @@ export class YieldsComponent {
         amount: Number(f.amount),
         unit: f.unit,
         date: new Date(f.date),
+        time: f.time,
+        session: f.session,
         animalId: f.targetKind === 'animal' ? f.animalId : undefined,
         herdId: f.targetKind === 'herd' ? f.herdId : undefined,
       };
@@ -264,6 +378,114 @@ export class YieldsComponent {
     }
   }
 
+  // Breed Benchmarking
+  getBreedBenchmark(animal?: Animal | null): BreedBenchmark | null {
+    if (!animal) return null;
+    const breed = (animal.breed || '').toLowerCase();
+    const species = (animal.species || '').toLowerCase();
+
+    // Sığır ırkları
+    if (breed.includes('holstein') || breed.includes('siyah alaca') || breed.includes('frisian')) {
+      return { breedName: 'Holstein (Siyah Alaca)', minDaily: 25, maxDaily: 35, avgDaily: 30, minSession: 12, maxSession: 18, unit: 'Lt', tips: 'Yüksek süt verimi ırkı. Çift sağımda seans başı 12-18 Lt beklenir.' };
+    }
+    if (breed.includes('simental') || breed.includes('simmental')) {
+      return { breedName: 'Simental', minDaily: 18, maxDaily: 26, avgDaily: 22, minSession: 9, maxSession: 13, unit: 'Lt', tips: 'Kombine ırk. Yüksek yağ ve protein. Seans başı 9-13 Lt beklenir.' };
+    }
+    if (breed.includes('montofon') || breed.includes('brown swiss') || breed.includes('esmer')) {
+      return { breedName: 'Montofon (Brown Swiss)', minDaily: 20, maxDaily: 28, avgDaily: 24, minSession: 10, maxSession: 14, unit: 'Lt', tips: 'Kombine süt/et ırkı. Seans başı 10-14 Lt beklenir.' };
+    }
+    if (breed.includes('jersey')) {
+      return { breedName: 'Jersey', minDaily: 16, maxDaily: 24, avgDaily: 20, minSession: 8, maxSession: 12, unit: 'Lt', tips: 'Yüksek yağ oranlı süt ırkı. Seans başı 8-12 Lt beklenir.' };
+    }
+    if (breed.includes('manda') || species.includes('manda')) {
+      return { breedName: 'Anadolu Mandası', minDaily: 6, maxDaily: 10, avgDaily: 8, minSession: 3, maxSession: 5, unit: 'Lt', tips: 'Yüksek yağlı manda sütü. Seans başı 3-5 Lt beklenir.' };
+    }
+
+    // Keçi ırkları
+    if (breed.includes('saanen')) {
+      return { breedName: 'Saanen Keçisi', minDaily: 2.5, maxDaily: 4.5, avgDaily: 3.5, minSession: 1.2, maxSession: 2.3, unit: 'Lt', tips: 'Yüksek verimli süt keçisi. Seans başı 1.2-2.3 Lt beklenir.' };
+    }
+    if (breed.includes('halep') || breed.includes('şam') || breed.includes('damascus')) {
+      return { breedName: 'Halep (Şam) Keçisi', minDaily: 2.0, maxDaily: 3.8, avgDaily: 3.0, minSession: 1.0, maxSession: 1.9, unit: 'Lt', tips: 'Kombine keçi ırkı. Seans başı 1.0-1.9 Lt beklenir.' };
+    }
+    if (breed.includes('kıl keçi') || breed.includes('kil')) {
+      return { breedName: 'Kıl Keçisi', minDaily: 0.8, maxDaily: 1.8, avgDaily: 1.2, minSession: 0.4, maxSession: 0.9, unit: 'Lt', tips: 'Yerli dayanıklı ırk. Seans başı 0.4-0.9 Lt beklenir.' };
+    }
+
+    // Koyun ırkları
+    if (breed.includes('ivesi') || breed.includes('awassi')) {
+      return { breedName: 'İvesi Koyunu', minDaily: 1.5, maxDaily: 2.8, avgDaily: 2.0, minSession: 0.7, maxSession: 1.4, unit: 'Lt', tips: 'En yüksek süt verimli koyun ırkı. Seans başı 0.7-1.4 Lt beklenir.' };
+    }
+    if (breed.includes('sakız') || breed.includes('chios')) {
+      return { breedName: 'Sakız Koyunu', minDaily: 1.8, maxDaily: 3.2, avgDaily: 2.5, minSession: 0.9, maxSession: 1.6, unit: 'Lt', tips: 'Ege süt koyunu. Seans başı 0.9-1.6 Lt beklenir.' };
+    }
+    if (breed.includes('tahirova')) {
+      return { breedName: 'Tahirova Koyunu', minDaily: 1.4, maxDaily: 2.6, avgDaily: 2.0, minSession: 0.7, maxSession: 1.3, unit: 'Lt', tips: 'Süt koyunu melezi. Seans başı 0.7-1.3 Lt beklenir.' };
+    }
+
+    // Genel Tür Fallback
+    if (species.includes('sigir') || species.includes('büyükbaş') || species.includes('sığır')) {
+      return { breedName: animal.breed || 'Kültür Sığırı', minDaily: 16, maxDaily: 26, avgDaily: 21, minSession: 8, maxSession: 13, unit: 'Lt', tips: 'Genel kültür ırkı sığır referansı. Seans başı 8-13 Lt beklenir.' };
+    }
+    if (species.includes('keci') || species.includes('keçi')) {
+      return { breedName: animal.breed || 'Süt Keçisi', minDaily: 1.5, maxDaily: 3.5, avgDaily: 2.5, minSession: 0.8, maxSession: 1.8, unit: 'Lt', tips: 'Genel keçi süt referansı. Seans başı 0.8-1.8 Lt beklenir.' };
+    }
+    if (species.includes('koyun')) {
+      return { breedName: animal.breed || 'Süt Koyunu', minDaily: 0.8, maxDaily: 2.2, avgDaily: 1.5, minSession: 0.4, maxSession: 1.1, unit: 'Lt', tips: 'Genel koyun süt referansı. Seans başı 0.4-1.1 Lt beklenir.' };
+    }
+
+    return null;
+  }
+
+  getBenchmarkComparison(animalId?: string, amount?: number | null, session: YieldSession = 'sabah') {
+    if (!animalId || !amount || amount <= 0) return null;
+    const animal = this.getAnimal(animalId);
+    const benchmark = this.getBreedBenchmark(animal);
+    if (!benchmark) return null;
+
+    const isDaily = session === 'genel';
+    const min = isDaily ? benchmark.minDaily : benchmark.minSession;
+    const max = isDaily ? benchmark.maxDaily : benchmark.maxSession;
+    const avg = isDaily ? benchmark.avgDaily : (benchmark.minSession + benchmark.maxSession) / 2;
+
+    const diffPercent = Math.round(((amount - avg) / avg) * 100);
+
+    if (amount < min) {
+      return {
+        status: 'low',
+        diffPercent,
+        benchmark,
+        min,
+        max,
+        avg,
+        text: `Beklenti Altında (%${Math.abs(diffPercent)} daha düşük)`,
+        advice: 'Rasyon dengesini ve meme sağlığını gözlemlemeniz önerilir.',
+      };
+    } else if (amount > max) {
+      return {
+        status: 'high',
+        diffPercent,
+        benchmark,
+        min,
+        max,
+        avg,
+        text: `Yüksek Verim (+%${diffPercent} üzeri)`,
+        advice: 'Irk standartlarının üzerinde tepe verim.',
+      };
+    } else {
+      return {
+        status: 'optimal',
+        diffPercent,
+        benchmark,
+        min,
+        max,
+        avg,
+        text: `İdeal Irk Bandında`,
+        advice: 'Verim ırkın genetik referans aralığında seyrediyor.',
+      };
+    }
+  }
+
   // Helpers
   getAnimal(id?: string): Animal | undefined {
     return id ? this.animalMap().get(id) : undefined;
@@ -271,6 +493,31 @@ export class YieldsComponent {
 
   getHerd(id?: string): Herd | undefined {
     return id ? this.herdMap().get(id) : undefined;
+  }
+
+  formatDate(val: any): string {
+    if (!val) return '—';
+    let d: Date;
+    if (val.seconds) d = new Date(val.seconds * 1000);
+    else if (val.toDate && typeof val.toDate === 'function') d = val.toDate();
+    else if (val instanceof Date) d = val;
+    else d = new Date(val);
+
+    if (isNaN(d.getTime())) return '—';
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+    return `${day}.${month}.${year}`;
+  }
+
+  getSessionLabel(session?: YieldSession): string {
+    switch (session) {
+      case 'sabah': return 'Sabah Sağımı';
+      case 'ogle': return 'Öğle Sağımı';
+      case 'aksam': return 'Akşam Sağımı';
+      case 'genel': return 'Günlük Toplam';
+      default: return 'Genel';
+    }
   }
 
   private getTime(val: any): number {

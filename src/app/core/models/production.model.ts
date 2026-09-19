@@ -24,14 +24,19 @@ export interface WeightRecord extends BaseDoc {
 
 export type YieldType = 'sut' | 'yapagi' | 'diger';
 
+export type YieldSession = 'sabah' | 'ogle' | 'aksam' | 'genel';
+
 /** farms/{farmId}/yields/{id} — Verimler (süt üretimi vb.) */
 export interface YieldRecord extends BaseDoc {
   animalId?: string;
   herdId?: string;
   type: YieldType;
   date: any;
+  time?: string;
+  session?: YieldSession;
   amount: number;
   unit: 'lt' | 'kg';
+  note?: string;
 }
 
 /** farms/{farmId}/rations/{id} — Rasyon (yem formülasyonu) */

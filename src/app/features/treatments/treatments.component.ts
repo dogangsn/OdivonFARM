@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
@@ -14,6 +14,8 @@ import { Animal } from '../../core/models/animal.model';
 import { AlertService } from '../../core/services/alert.service';
 
 import { VetAssistantModalComponent } from './components/vet-assistant-modal/vet-assistant-modal.component';
+import { AccountingTransactionService } from '../../core/services/accounting-transaction.service';
+import { AccountingTransaction } from '../../core/models/inventory.model';
 
 @Component({
   selector: 'app-treatments',
@@ -35,6 +37,7 @@ export class TreatmentsComponent {
   private treatmentTypeService = inject(TreatmentTypeService);
   private diseaseService = inject(DiseaseService);
   private alertService = inject(AlertService);
+  private accountingService = inject(AccountingTransactionService);
 
   // Raw data streams
   readonly treatments = toSignal(this.treatmentService.list(), { initialValue: [] as Treatment[] });
@@ -77,6 +80,7 @@ export class TreatmentsComponent {
       dosage: '',
       performedBy: 'Veteriner Kliniği / Acil Triyaj',
       cost: undefined,
+      addToAccounting: true,
       note: event.note,
     });
 
@@ -85,7 +89,9 @@ export class TreatmentsComponent {
 
   // UI State
   readonly searchTerm = signal('');
-  readonly typeFilter = signal<string | null>(null);
+  readonly typeFilter = signal<string>('');
+  readonly animalFilter = signal<string>('');
+  readonly diseaseFilter = signal<string>('');
   readonly showDrawer = signal(false);
   readonly isEditing = signal(false);
   readonly editingId = signal<string | null>(null);
@@ -101,6 +107,7 @@ export class TreatmentsComponent {
     dosage?: string;
     performedBy?: string;
     cost?: number;
+    addToAccounting: boolean;
     note?: string;
   }>({
     animalId: '',
@@ -110,6 +117,7 @@ export class TreatmentsComponent {
     dosage: '',
     performedBy: '',
     cost: undefined,
+    addToAccounting: true,
     note: '',
   });
 
@@ -143,9 +151,17 @@ export class TreatmentsComponent {
     let list = this.treatments() || [];
     const query = (this.searchTerm() || '').trim().toLowerCase();
     const typeF = this.typeFilter();
+    const animalF = this.animalFilter();
+    const diseaseF = this.diseaseFilter();
 
     if (typeF) {
       list = list.filter((t) => t && t.treatmentTypeId === typeF);
+    }
+    if (animalF) {
+      list = list.filter((t) => t && t.animalId === animalF);
+    }
+    if (diseaseF) {
+      list = list.filter((t) => t && t.diseaseId === diseaseF);
     }
 
     if (query) {
@@ -231,20 +247,38 @@ export class TreatmentsComponent {
   }
 
   // Actions
+  isDirty = signal(false);
+  private initialSnapshot = '';
+
+  markDirty() {
+    this.isDirty.set(true);
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscapeKey() {
+    if (this.showDrawer()) {
+      this.requestCloseDrawer();
+    }
+  }
+
   openAddDrawer() {
     this.isEditing.set(false);
     this.editingId.set(null);
     this.errorMessage.set(null);
-    this.form.set({
+    this.isDirty.set(false);
+    const initial = {
       animalId: this.animals().length > 0 ? this.animals()[0].id! : '',
       treatmentTypeId: this.treatmentTypes().length > 0 ? this.treatmentTypes()[0].id! : '',
       diseaseId: '',
       date: new Date().toISOString().substring(0, 10),
       dosage: '',
       performedBy: '',
-      cost: undefined,
+      cost: undefined as number | undefined,
+      addToAccounting: true,
       note: '',
-    });
+    };
+    this.form.set(initial);
+    this.initialSnapshot = JSON.stringify(initial);
     this.showDrawer.set(true);
   }
 
@@ -252,7 +286,8 @@ export class TreatmentsComponent {
     this.isEditing.set(true);
     this.editingId.set(treatment.id || null);
     this.errorMessage.set(null);
-    this.form.set({
+    this.isDirty.set(false);
+    const initial = {
       animalId: treatment.animalId,
       treatmentTypeId: treatment.treatmentTypeId,
       diseaseId: treatment.diseaseId || '',
@@ -260,16 +295,45 @@ export class TreatmentsComponent {
       dosage: treatment.dosage || '',
       performedBy: treatment.performedBy || '',
       cost: treatment.cost,
+      addToAccounting: !treatment.isAccountingSynced,
       note: treatment.note || '',
-    });
+    };
+    this.form.set(initial);
+    this.initialSnapshot = JSON.stringify(initial);
     this.showDrawer.set(true);
+  }
+
+  hasUnsavedChanges(): boolean {
+    if (!this.showDrawer()) return false;
+    if (this.isDirty()) return true;
+    if (this.initialSnapshot && JSON.stringify(this.form()) !== this.initialSnapshot) {
+      return true;
+    }
+    const f = this.form();
+    return !this.isEditing() && (!!f.diseaseId || !!f.dosage?.trim() || !!f.performedBy?.trim() || f.cost != null || !!f.note?.trim());
+  }
+
+  async requestCloseDrawer() {
+    if (this.hasUnsavedChanges()) {
+      const confirmed = await this.alertService.confirm(
+        'Kaydetmeden Çıkış',
+        'Girdiğiniz bilgiler henüz kaydedilmedi. Çıkmak istediğinizden emin misiniz?',
+        'Evet, Çık',
+        'Vazgeç'
+      );
+      if (!confirmed) return;
+    }
+    this.closeDrawer();
   }
 
   closeDrawer() {
     this.showDrawer.set(false);
+    this.isDirty.set(false);
+    this.errorMessage.set(null);
   }
 
   updateFormField<K extends keyof ReturnType<typeof this.form>>(field: K, value: any) {
+    this.isDirty.set(true);
     this.form.update((prev) => ({ ...prev, [field]: value }));
   }
 
@@ -299,6 +363,25 @@ export class TreatmentsComponent {
         note: f.note || undefined,
       };
 
+      // Muhasebe gider kaydı entegrasyonu
+      if (payload.cost && payload.cost > 0 && f.addToAccounting) {
+        try {
+          const animal = this.animalMap().get(f.animalId);
+          const typeName = this.treatmentTypeMap().get(f.treatmentTypeId) || 'Tedavi/Aşı';
+          const txId = await this.accountingService.create({
+            accountingItemId: 'veteriner-tedavi-gideri',
+            amount: payload.cost,
+            date: new Date(f.date),
+            description: `Tedavi Gideri: ${animal?.farmTagNo || ''} (${typeName}) - ${f.performedBy || 'Veteriner'}`,
+            type: 'gider',
+          } as any);
+          payload.isAccountingSynced = true;
+          payload.accountingTransactionId = txId;
+        } catch (accErr) {
+          console.warn('[Tedavi] Muhasebe gideri oluşturulamadı:', accErr);
+        }
+      }
+
       if (this.isEditing() && this.editingId()) {
         await this.treatmentService.update(this.editingId()!, payload);
       } else {
@@ -306,10 +389,43 @@ export class TreatmentsComponent {
       }
 
       this.closeDrawer();
+      this.alertService.toastSuccess('Tedavi kaydı başarıyla kaydedildi');
     } catch (err: any) {
       this.errorMessage.set(err.message || 'Kayıt sırasında bir hata oluştu.');
     } finally {
       this.isSaving.set(false);
+    }
+  }
+
+  async syncToAccounting(t: Treatment) {
+    if (!t.cost || t.cost <= 0) {
+      this.alertService.error('Hata', 'Bu tedavide kaydedilmiş bir maliyet bulunmuyor.');
+      return;
+    }
+    if (t.isAccountingSynced) {
+      this.alertService.toastSuccess('Bu tedavi maliyeti zaten muhasebeye aktarılmış.');
+      return;
+    }
+
+    try {
+      const animal = this.animalMap().get(t.animalId);
+      const typeName = this.treatmentTypeMap().get(t.treatmentTypeId) || 'Tedavi/Aşı';
+      const txId = await this.accountingService.create({
+        accountingItemId: 'veteriner-tedavi-gideri',
+        amount: Number(t.cost),
+        date: t.date ? new Date(this.formatDate(t.date)) : new Date(),
+        description: `Tedavi Gideri: ${animal?.farmTagNo || ''} (${typeName}) - ${t.performedBy || 'Veteriner'}`,
+        type: 'gider',
+      } as any);
+
+      await this.treatmentService.update(t.id!, {
+        isAccountingSynced: true,
+        accountingTransactionId: txId,
+      });
+
+      this.alertService.toastSuccess('Tedavi maliyeti Muhasebe Giderlerine başarıyla işlendi!');
+    } catch (err: any) {
+      this.alertService.error('Hata', 'Muhasebeye aktarılırken bir sorun oluştu.');
     }
   }
 

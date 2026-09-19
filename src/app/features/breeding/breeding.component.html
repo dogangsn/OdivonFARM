@@ -302,10 +302,12 @@
 
   <!-- SLIDE-OVER DRAWER (FORM) -->
   @if (showDrawer()) {
-    <div class="fixed inset-0 z-50 overflow-hidden bg-slate-900/50 backdrop-blur-sm flex justify-end" (click)="closeDrawer()">
+    <div class="fixed inset-0 z-50 overflow-hidden bg-slate-900/50 backdrop-blur-sm flex justify-end" (click)="requestCloseDrawer()">
       <div
         class="w-full max-w-xl bg-card h-full shadow-2xl flex flex-col justify-between animate-in slide-in-from-right duration-200"
-        (click)="$event.stopPropagation()">
+        (click)="$event.stopPropagation()"
+        (input)="markDirty()"
+        (change)="markDirty()">
 
         <!-- Drawer Header -->
         <div class="p-6 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
@@ -317,7 +319,7 @@
               Dişi hayvan, erkek damızlık ve çiftleşme tarihini giriniz.
             </p>
           </div>
-          <button mat-icon-button (click)="closeDrawer()">
+          <button mat-icon-button type="button" (click)="requestCloseDrawer()">
             <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:x'"></mat-icon>
           </button>
         </div>
@@ -348,14 +350,22 @@
             </div>
 
             <div>
-              <label class="block text-xs font-semibold text-default mb-1">Erkek Hayvan (Koç / Boğa)</label>
+              <div class="flex items-center justify-between mb-1">
+                <label class="block text-xs font-semibold text-default">Erkek Hayvan (Koç / Boğa)</label>
+                @if (form().femaleId) {
+                  <span class="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                    Tür Uyumlu
+                  </span>
+                }
+              </div>
               <select
                 [ngModel]="form().maleId"
                 (ngModelChange)="onMaleChange($event)"
                 (change)="onMaleChange($any($event.target).value)"
                 class="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500/20 text-default font-medium">
                 <option value="">Erkek Seçiniz (Opsiyonel)</option>
-                @for (m of maleAnimals(); track m.id) {
+                @for (m of compatibleMaleAnimals(); track m.id) {
                   <option [value]="m.id || m.farmTagNo">{{ m.farmTagNo }} {{ m.name ? '— ' + m.name : '' }}</option>
                 }
               </select>
@@ -463,16 +473,16 @@
             </div>
 
             <div>
-              <label class="block text-xs font-semibold text-default mb-1">Durum</label>
+              <label class="block text-xs font-semibold text-default mb-1">* Durum</label>
               <select
                 [ngModel]="form().status"
                 (ngModelChange)="updateFormField('status', $event)"
                 class="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500/20 text-default font-medium">
-                <option value="koculdu">Koçuldu</option>
-                <option value="gozlem">Gözlemde</option>
-                <option value="gebe">Gebe</option>
-                <option value="dogurdu">Doğurdu</option>
-                <option value="bos-cikti">Boş Çıktı</option>
+                <option value="koculdu">Koçuldu / Aşım Yapıldı</option>
+                <option value="gebe">Gebe (Ultrason Onaylı)</option>
+                <option value="gozlem">Gözlem / Şüpheli</option>
+                <option value="dogurdu">Doğurdu (Yavruladı)</option>
+                <option value="bos">Boş / Döl Tutmadı</option>
               </select>
             </div>
           </div>
@@ -489,7 +499,12 @@
           <!-- Field 3: Tahmini Doğum & Gerçekleşen Doğum -->
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label class="block text-xs font-semibold text-default mb-1">Tahmini Doğum Tarihi (+150 Gün)</label>
+              <label class="block text-xs font-semibold text-default mb-1 flex items-center justify-between">
+                <span>Tahmini Doğum Tarihi</span>
+                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-900/60">
+                  {{ getGestationInfo(form().femaleId).label }}
+                </span>
+              </label>
               <input
                 type="date"
                 [ngModel]="form().expectedBirthDate"
@@ -524,8 +539,9 @@
         <div class="p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50/70 dark:bg-slate-800/60 flex items-center justify-end gap-3">
           <button
             mat-button
+            type="button"
             class="!text-xs !font-semibold !rounded-xl !px-4"
-            (click)="closeDrawer()">
+            (click)="requestCloseDrawer()">
             Vazgeç
           </button>
           <button

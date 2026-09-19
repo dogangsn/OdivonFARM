@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -177,13 +177,71 @@ export class BreedingComponent {
     return map;
   });
 
+  getGestationInfo(animalIdOrAnimal?: string | Animal): { days: number; label: string; species: string } {
+    let animal: Animal | undefined;
+    if (typeof animalIdOrAnimal === 'string') {
+      animal = this.getAnimal(animalIdOrAnimal);
+    } else {
+      animal = animalIdOrAnimal;
+    }
+
+    const typeId = animal?.animalTypeId;
+    const typeObj = typeId ? this.animalTypes().find((t) => t.id === typeId) : null;
+    const typeName = (typeObj?.name || '').toLowerCase();
+    const typeCategory = ((typeObj as any)?.category || '').toLowerCase();
+
+    // Büyükbaş / Sığır / İnek / Manda
+    if (typeName.includes('manda')) {
+      return { days: 310, label: '310 Gün (Manda)', species: 'manda' };
+    }
+    if (typeCategory === 'buyukbas' || typeName.includes('sığır') || typeName.includes('sigir') || typeName.includes('inek') || typeName.includes('boğa') || typeName.includes('boga') || typeName.includes('düve') || typeName.includes('duve')) {
+      return { days: 283, label: '283 Gün (Büyükbaş / Sığır)', species: 'sigir' };
+    }
+
+    // At / Eşek (Tek Tırnaklı)
+    if (typeName.includes('at') || typeName.includes('kısrak') || typeName.includes('kisrak')) {
+      return { days: 340, label: '340 Gün (At / Kısrak)', species: 'tek_tirnakli' };
+    }
+    if (typeName.includes('eşek') || typeName.includes('esek')) {
+      return { days: 365, label: '365 Gün (Eşek)', species: 'tek_tirnakli' };
+    }
+
+    // Küçükbaş / Koyun / Keçi
+    if (typeName.includes('keçi') || typeName.includes('keci') || typeName.includes('teke')) {
+      return { days: 150, label: '150 Gün (Küçükbaş / Keçi)', species: 'keci' };
+    }
+    if (typeName.includes('koyun') || typeName.includes('koç') || typeName.includes('koc') || typeCategory === 'kucukbas') {
+      return { days: 150, label: '150 Gün (Küçükbaş / Koyun)', species: 'koyun' };
+    }
+
+    return { days: 150, label: '150 Gün (Standart)', species: 'genel' };
+  }
+
+  // Dişi hayvana göre filtrelenmiş uygun damızlık erkekler (Tür uyumu kontrolü)
+  readonly compatibleMaleAnimals = computed(() => {
+    const allMales = this.maleAnimals();
+    const selectedFemaleId = this.form().femaleId;
+    if (!selectedFemaleId) return allMales;
+
+    const female = this.getAnimal(selectedFemaleId);
+    if (!female || !female.animalTypeId) return allMales;
+
+    const femaleInfo = this.getGestationInfo(female);
+    return allMales.filter((male) => {
+      if (male.animalTypeId === female.animalTypeId) return true;
+      const maleInfo = this.getGestationInfo(male);
+      return maleInfo.species === femaleInfo.species;
+    });
+  });
+
   // Enriched Matings with Gestation Progress
   readonly enrichedMatings = computed(() => {
     const now = new Date().getTime();
     const list = this.matings() || [];
     return list.filter(Boolean).map((m): EnrichedMating => {
       const matingTime = this.getTime(m.matingDate);
-      const expectedTime = m.expectedBirthDate ? this.getTime(m.expectedBirthDate) : matingTime + 150 * 24 * 60 * 60 * 1000;
+      const gestDays = this.getGestationInfo(m.femaleId).days;
+      const expectedTime = m.expectedBirthDate ? this.getTime(m.expectedBirthDate) : matingTime + gestDays * 24 * 60 * 60 * 1000;
 
       let progressPercent: number | undefined;
       let daysRemaining: number | undefined;
@@ -315,13 +373,29 @@ export class BreedingComponent {
 
   onMatingDateChange(newDate: string) {
     this.updateFormField('matingDate', newDate);
-    // Auto calculate expected birth date (+150 days for small ruminants)
-    const expected = this.calculateExpectedBirthDate(newDate, 150);
+    const female = this.getAnimal(this.form().femaleId);
+    const gestInfo = this.getGestationInfo(female);
+    const expected = this.calculateExpectedBirthDate(newDate, gestInfo.days);
     this.updateFormField('expectedBirthDate', expected);
   }
 
   onFemaleChange(val: string) {
     this.form.update((prev) => ({ ...prev, femaleId: val }));
+    const female = this.getAnimal(val);
+    const gestInfo = this.getGestationInfo(female);
+
+    const matingDate = this.form().matingDate || new Date().toISOString().substring(0, 10);
+    const expected = this.calculateExpectedBirthDate(matingDate, gestInfo.days);
+    this.updateFormField('expectedBirthDate', expected);
+
+    // Eğer önceden seçili erkek yeni dişi ile tür olarak uyumsuz ise erkek seçimini sıfırla
+    const currentMale = this.getAnimal(this.form().maleId);
+    if (currentMale && female) {
+      const maleInfo = this.getGestationInfo(currentMale);
+      if (currentMale.animalTypeId !== female.animalTypeId && maleInfo.species !== gestInfo.species) {
+        this.updateFormField('maleId', '');
+      }
+    }
   }
 
   onMaleChange(val: string) {
@@ -329,22 +403,44 @@ export class BreedingComponent {
   }
 
   // Drawer Actions
+  isDirty = signal(false);
+  private initialSnapshot = '';
+
+  markDirty() {
+    this.isDirty.set(true);
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscapeKey() {
+    if (this.showDrawer()) {
+      this.requestCloseDrawer();
+    }
+  }
+
   openAddDrawer() {
     this.isEditing.set(false);
     this.editingId.set(null);
     this.errorMessage.set(null);
+    this.isDirty.set(false);
     const today = new Date().toISOString().substring(0, 10);
     const females = this.femaleAnimals();
-    const males = this.maleAnimals();
-    this.form.set({
-      femaleId: females.length > 0 ? (females[0].id || females[0].farmTagNo) : '',
-      maleId: males.length > 0 ? (males[0].id || males[0].farmTagNo) : '',
+    const firstFemale = females.length > 0 ? (females[0].id || females[0].farmTagNo) : '';
+    const gestInfo = this.getGestationInfo(firstFemale);
+
+    const males = this.compatibleMaleAnimals();
+    const firstMale = males.length > 0 ? (males[0].id || males[0].farmTagNo) : '';
+
+    const initial = {
+      femaleId: firstFemale,
+      maleId: firstMale,
       matingDate: today,
-      status: 'koculdu',
-      expectedBirthDate: this.calculateExpectedBirthDate(today, 150),
+      status: 'koculdu' as MatingStatus,
+      expectedBirthDate: this.calculateExpectedBirthDate(today, gestInfo.days),
       actualBirthDate: '',
       note: '',
-    });
+    };
+    this.form.set(initial);
+    this.initialSnapshot = JSON.stringify(initial);
     this.showDrawer.set(true);
   }
 
@@ -352,7 +448,8 @@ export class BreedingComponent {
     this.isEditing.set(true);
     this.editingId.set(mating.id || null);
     this.errorMessage.set(null);
-    this.form.set({
+    this.isDirty.set(false);
+    const initial = {
       femaleId: mating.femaleId,
       maleId: mating.maleId || '',
       matingDate: this.formatDate(mating.matingDate),
@@ -360,15 +457,43 @@ export class BreedingComponent {
       expectedBirthDate: this.formatDate(mating.expectedBirthDate),
       actualBirthDate: mating.actualBirthDate ? this.formatDate(mating.actualBirthDate) : '',
       note: mating.note || '',
-    });
+    };
+    this.form.set(initial);
+    this.initialSnapshot = JSON.stringify(initial);
     this.showDrawer.set(true);
+  }
+
+  hasUnsavedChanges(): boolean {
+    if (!this.showDrawer()) return false;
+    if (this.isDirty()) return true;
+    if (this.initialSnapshot && JSON.stringify(this.form()) !== this.initialSnapshot) {
+      return true;
+    }
+    const f = this.form();
+    return !this.isEditing() && (!!f.maleId || !!f.note?.trim());
+  }
+
+  async requestCloseDrawer() {
+    if (this.hasUnsavedChanges()) {
+      const confirmed = await this.alertService.confirm(
+        'Kaydetmeden Çıkış',
+        'Girdiğiniz bilgiler henüz kaydedilmedi. Çıkmak istediğinizden emin misiniz?',
+        'Evet, Çık',
+        'Vazgeç'
+      );
+      if (!confirmed) return;
+    }
+    this.closeDrawer();
   }
 
   closeDrawer() {
     this.showDrawer.set(false);
+    this.isDirty.set(false);
+    this.errorMessage.set(null);
   }
 
   updateFormField<K extends keyof ReturnType<typeof this.form>>(field: K, value: any) {
+    this.isDirty.set(true);
     this.form.update((prev) => ({ ...prev, [field]: value }));
   }
 
@@ -526,6 +651,24 @@ export class BreedingComponent {
     if (!f.matingDate) {
       this.errorMessage.set('Lütfen çiftleşme tarihini giriniz.');
       return;
+    }
+
+    // Türler Arası Çiftleşme Doğrulaması (Cross-species mating prevention)
+    if (f.femaleId && f.maleId) {
+      const female = this.getAnimal(f.femaleId);
+      const male = this.getAnimal(f.maleId);
+      if (female && male) {
+        const femaleInfo = this.getGestationInfo(female);
+        const maleInfo = this.getGestationInfo(male);
+        if (female.animalTypeId !== male.animalTypeId && femaleInfo.species !== maleInfo.species) {
+          const femaleTypeName = this.getAnimalTypeName(female.animalTypeId) || femaleInfo.species;
+          const maleTypeName = this.getAnimalTypeName(male.animalTypeId) || maleInfo.species;
+          this.errorMessage.set(
+            `Farklı hayvan türleri arasında çiftleşme kaydedilemez! (Dişi: ${femaleTypeName}, Erkek: ${maleTypeName})`
+          );
+          return;
+        }
+      }
     }
 
     // Akraba Çiftleşmesi (Inbreeding) Güvenlik Doğrulaması

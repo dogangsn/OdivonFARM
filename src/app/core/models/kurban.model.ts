@@ -4,11 +4,15 @@ export interface KurbanHisse {
   id: string; // 1 to 7
   hissedarName: string;
   phone: string;
+  email?: string;
   sharePrice: number; // Hisse Bedeli (₺)
   depositPaid: number; // Alınan Kapora (₺)
   remainingPayment: number; // Kalan Bakiye (₺)
   meatPreference?: 'kemikli' | 'kemiksiz' | 'standart_7_pay' | string;
   isPaid: boolean;
+  paymentLink?: string;
+  paymentStatus?: 'bekliyor' | 'kismi_odendi' | 'odendi';
+  paidAt?: any;
   notes?: string;
 }
 

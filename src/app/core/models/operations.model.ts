@@ -27,9 +27,12 @@ export interface Count extends BaseDoc {
   scopeId?: string; // padok/sürü id, genel sayımda boş
   startedAt: any;
   finishedAt?: any;
+  date?: any;
   expectedCount: number;
   countedAnimalIds: string[];
   deviceName?: string; // Bluetooth RFID okuyucu adı
+  notes?: string;
+  status?: 'devam-ediyor' | 'tamamlandi' | 'iptal';
 }
 
 /** farms/{farmId}/activityLog/{id} — Çiftlikte Yapılanlar (aktivite akışı) */

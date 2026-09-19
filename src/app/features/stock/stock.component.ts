@@ -393,6 +393,26 @@ export class StockComponent {
     return this.accountMap().get(id)?.title || '—';
   }
 
+  formatDate(val: any): string {
+    if (!val) return '—';
+    let d: Date;
+    if (val.seconds) d = new Date(val.seconds * 1000);
+    else if (val.toDate && typeof val.toDate === 'function') d = val.toDate();
+    else if (val instanceof Date) d = val;
+    else d = new Date(val);
+
+    if (isNaN(d.getTime())) return '—';
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+    const hours = String(d.getHours()).padStart(2, '0');
+    const mins = String(d.getMinutes()).padStart(2, '0');
+    if (d.getHours() > 0 || d.getMinutes() > 0) {
+      return `${day}.${month}.${year} ${hours}:${mins}`;
+    }
+    return `${day}.${month}.${year}`;
+  }
+
   private getTime(val: any): number {
     if (!val) return 0;
     if (val.seconds) return val.seconds * 1000;

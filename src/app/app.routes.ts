@@ -17,6 +17,11 @@ export const routes: Routes = [
     ],
   },
   {
+    path: 'kurban-odeme',
+    loadComponent: () =>
+      import('./features/kurban/kurban-odeme/kurban-odeme.component').then((m) => m.KurbanOdemeComponent),
+  },
+  {
     path: '',
     canActivate: [authGuard],
     loadComponent: () => import('./shared/components/shell/shell.component').then((m) => m.ShellComponent),
