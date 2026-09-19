@@ -306,6 +306,21 @@
           <mat-icon class="icon-size-4" [svgIcon]="'heroicons_outline:camera'"></mat-icon>
           <span class="hidden md:inline">Küpe Tara</span>
         </button>
+
+        <!-- Header Onboarding / Kurulum Sihirbazı Butonu -->
+        <button
+          type="button"
+          id="header-onboarding-btn"
+          (click)="onboardingService.openWizard('steps')"
+          class="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200/80 dark:border-indigo-800/80 text-xs font-bold transition-all shadow-xs active:scale-95 cursor-pointer flex-shrink-0"
+          matTooltip="Çiftlik Kurulum ve Eğitim Sihirbazı"
+        >
+          <mat-icon class="icon-size-4 text-indigo-600 dark:text-indigo-400" [svgIcon]="'heroicons_solid:academic-cap'"></mat-icon>
+          <span class="hidden lg:inline">Eğitim Sihirbazı</span>
+          <span class="px-1.5 py-0.5 rounded-full text-[10px] font-extrabold bg-indigo-600 text-white leading-none">
+            %{{ onboardingService.progressPercent() }}
+          </span>
+        </button>
       </div>
 
       <!-- Right: Action Icons & Menus -->
@@ -681,5 +696,8 @@
 
     <!-- Global Tag Scanner & Barn Numpad Modal -->
     <app-tag-scanner-modal></app-tag-scanner-modal>
+
+    <!-- Global Onboarding & Training Wizard Modal -->
+    <app-onboarding-wizard></app-onboarding-wizard>
   </div>
 </div>

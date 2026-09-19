@@ -5,3 +5,5 @@ export * from './health.model';
 export * from './production.model';
 export * from './inventory.model';
 export * from './operations.model';
+export * from './iot.model';
+export * from './tagem.model';

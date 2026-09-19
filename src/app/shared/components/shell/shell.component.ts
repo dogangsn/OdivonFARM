@@ -29,6 +29,8 @@ export interface NavGroup {
 
 import { TagScannerService } from '../../../core/services/tag-scanner.service';
 import { TagScannerModalComponent } from '../tag-scanner/tag-scanner-modal.component';
+import { OnboardingService } from '../../../core/services/onboarding.service';
+import { OnboardingWizardComponent } from '../onboarding-wizard/onboarding-wizard.component';
 
 /**
  * Fuse v17 esintili ultra-modern uygulama kabuğu (Layout).
@@ -48,6 +50,7 @@ import { TagScannerModalComponent } from '../tag-scanner/tag-scanner-modal.compo
     MatButtonModule,
     MatTooltipModule,
     TagScannerModalComponent,
+    OnboardingWizardComponent,
   ],
   templateUrl: './shell.component.html',
   styleUrl: './shell.component.scss',
@@ -58,6 +61,7 @@ export class ShellComponent {
   private cdr = inject(ChangeDetectorRef);
   private alertService = inject(AlertService);
   farmContext = inject(FarmContextService);
+  onboardingService = inject(OnboardingService);
   subService = inject(SubscriptionService);
   tagScanner = inject(TagScannerService);
 
@@ -320,6 +324,7 @@ export class ShellComponent {
         { label: 'Görevler Paneli', icon: 'heroicons_outline:clipboard-check', route: '/gorevler' },
         { label: 'Sayım Operasyonları', icon: 'heroicons_outline:qrcode', route: '/sayim' },
         { label: 'Verimler (Süt/Yapağı)', icon: 'heroicons_outline:beaker', route: '/verimler' },
+        { label: 'IoT & Cihaz Yönetimi', icon: 'heroicons_outline:cpu-chip', route: '/iot-cihazlar', badge: 'IoT', badgeColor: 'bg-indigo-600' },
         { label: 'Foto Galeri', icon: 'heroicons_outline:photograph', route: '/galeri' },
         { label: 'Çiftlikte Yapılanlar', icon: 'heroicons_outline:clock', route: '/aktiviteler' },
       ],

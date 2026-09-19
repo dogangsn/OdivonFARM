@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <title>OdivonFARM — Sistem Teknik Şartnamesi ve TAGEM / IoT Kapsam Dokümanı</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap');
+
+    @page {
+      size: A4 portrait;
+      margin: 16mm 14mm 18mm 14mm;
+      @bottom-right {
+        content: counter(page);
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 9pt;
+        color: #64748b;
+      }
+      @bottom-left {
+        content: "OdivonFARM — Sistem Kapsam Şartnamesi (v2.4 - TAGEM & IoT Edition)";
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 8pt;
+        color: #94a3b8;
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      color: #0f172a;
+      background-color: #ffffff;
+      line-height: 1.55;
+      font-size: 10pt;
+    }
+
+    .page-break {
+      page-break-before: always;
+      break-before: page;
+    }
+
+    .avoid-break {
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+
+    /* COVER PAGE */
+    .cover-container {
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 40px 20px 20px 20px;
+      border: 2px solid #e2e8f0;
+      border-radius: 20px;
+      position: relative;
+      background: linear-gradient(145deg, #ffffff 0%, #f8fafc 60%, #eef2ff 100%);
+    }
+
+    .cover-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid #6366f1;
+      padding-bottom: 20px;
+    }
+
+    .brand-logo {
+      font-size: 26pt;
+      font-weight: 900;
+      letter-spacing: -1px;
+      color: #1e1b4b;
+    }
+
+    .brand-logo span {
+      color: #4f46e5;
+    }
+
+    .doc-badge {
+      display: inline-block;
+      padding: 6px 14px;
+      background-color: #e0e7ff;
+      color: #4338ca;
+      font-size: 9pt;
+      font-weight: 800;
+      border-radius: 9999px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .cover-body {
+      margin: 60px 0;
+    }
+
+    .doc-pre-title {
+      font-size: 11pt;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: #6366f1;
+      margin-bottom: 12px;
+    }
+
+    .doc-main-title {
+      font-size: 27pt;
+      font-weight: 900;
+      line-height: 1.2;
+      color: #090d16;
+      margin-bottom: 20px;
+      letter-spacing: -0.5px;
+    }
+
+    .doc-subtitle {
+      font-size: 13pt;
+      font-weight: 500;
+      color: #475569;
+      line-height: 1.6;
+      max-width: 650px;
+    }
+
+    .cover-meta-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+      background-color: #ffffff;
+      padding: 24px;
+      border-radius: 16px;
+      border: 1px solid #cbd5e1;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+    }
+
+    .meta-box h5 {
+      font-size: 8pt;
+      font-weight: 800;
+      text-transform: uppercase;
+      color: #64748b;
+      margin-bottom: 4px;
+      letter-spacing: 0.5px;
+    }
+
+    .meta-box p {
+      font-size: 10.5pt;
+      font-weight: 700;
+      color: #1e293b;
+    }
+
+    .cover-footer {
+      border-top: 1px solid #e2e8f0;
+      padding-top: 15px;
+      display: flex;
+      justify-content: space-between;
+      font-size: 8.5pt;
+      color: #64748b;
+      font-weight: 600;
+    }
+
+    /* TYPOGRAPHY & SECTIONS */
+    h1.section-heading {
+      font-size: 16pt;
+      font-weight: 900;
+      color: #0f172a;
+      border-bottom: 2px solid #4f46e5;
+      padding-bottom: 8px;
+      margin-top: 24px;
+      margin-bottom: 14px;
+      letter-spacing: -0.3px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    h2.sub-heading {
+      font-size: 12pt;
+      font-weight: 800;
+      color: #1e293b;
+      margin-top: 18px;
+      margin-bottom: 8px;
+    }
+
+    p {
+      color: #334155;
+      margin-bottom: 10px;
+      text-align: justify;
+      line-height: 1.55;
+    }
+
+    /* CARDS & GRIDS */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .info-card {
+      background-color: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 12px 14px;
+    }
+
+    .info-card.primary {
+      background-color: #f5f7ff;
+      border-color: #c7d2fe;
+    }
+
+    .info-card.success {
+      background-color: #f0fdf4;
+      border-color: #bbf7d0;
+    }
+
+    .info-card.warning {
+      background-color: #fffbeb;
+      border-color: #fde68a;
+    }
+
+    .info-card h4 {
+      font-size: 9.5pt;
+      font-weight: 800;
+      margin-bottom: 4px;
+      color: #1e293b;
+    }
+
+    .info-card p {
+      font-size: 8.5pt;
+      color: #475569;
+      margin-bottom: 0;
+      line-height: 1.45;
+    }
+
+    /* TABLES */
+    table.data-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 12px 0 16px 0;
+      font-size: 8.5pt;
+    }
+
+    table.data-table th {
+      background-color: #1e293b;
+      color: #ffffff;
+      font-weight: 800;
+      text-align: left;
+      padding: 8px 10px;
+      border: 1px solid #334155;
+      font-size: 8pt;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    table.data-table td {
+      padding: 7px 10px;
+      border: 1px solid #cbd5e1;
+      color: #334155;
+      vertical-align: top;
+    }
+
+    table.data-table tr:nth-child(even) {
+      background-color: #f8fafc;
+    }
+
+    /* BADGES */
+    .badge {
+      display: inline-block;
+      padding: 2px 7px;
+      border-radius: 6px;
+      font-size: 7.5pt;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .badge-blue { background: #e0e7ff; color: #3730a3; }
+    .badge-green { background: #dcfce7; color: #166534; }
+    .badge-amber { background: #fef3c7; color: #92400e; }
+    .badge-purple { background: #f3e8ff; color: #6b21a8; }
+
+    /* CODE & ARCHITECTURE BLOCK */
+    .code-diagram {
+      background-color: #0f172a;
+      color: #38bdf8;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 8pt;
+      line-height: 1.4;
+      padding: 12px;
+      border-radius: 10px;
+      margin: 12px 0;
+      white-space: pre;
+    }
+
+    ul.feature-list {
+      list-style-type: none;
+      margin-bottom: 12px;
+    }
+
+    ul.feature-list li {
+      position: relative;
+      padding-left: 18px;
+      margin-bottom: 5px;
+      font-size: 9pt;
+      color: #334155;
+    }
+
+    ul.feature-list li::before {
+      content: "■";
+      color: #4f46e5;
+      font-size: 7pt;
+      position: absolute;
+      left: 0;
+      top: 2px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ==================== COVER PAGE ==================== -->
+  <div class="cover-container">
+    <div class="cover-header">
+      <div class="brand-logo">Odivon<span>FARM</span></div>
+      <div class="doc-badge">Resmi Sistem Şartnamesi</div>
+    </div>
+
+    <div class="cover-body">
+      <div class="doc-pre-title">Ar-Ge, Islah ve IoT Entegrasyon Raporu</div>
+      <h1 class="doc-main-title">
+        Akıllı Çiftlik Yönetim Sistemi Teknik Şartnamesi, TAGEM Uyumu ve Gömülü Sistemler Kapsamı
+      </h1>
+      <p class="doc-subtitle">
+        T.C. Tarım ve Orman Bakanlığı TAGEM Islah Standartları, IoT & Web Bluetooth Canlı Tartım, RFID Tünel Antenleri, Barınak Mikroklima Telemetrisi ve 21 Çekirdek Modülün Teknik Kapsam Raporu.
+      </p>
+    </div>
+
+    <div>
+      <div class="cover-meta-grid">
+        <div class="meta-box">
+          <h5>Hedef Kurumlar</h5>
+          <p>TAGEM Enstitüleri, Üniversite Ziraat & Veteriner Fakülteleri</p>
+        </div>
+        <div class="meta-box">
+          <h5>Doküman Sürümü</h5>
+          <p>v2.4.0 (Enterprise Academic & IoT Edition)</p>
+        </div>
+        <div class="meta-box">
+          <h5>Teknoloji Mimarisi</h5>
+          <p>Angular 21 + Signals + Cloud Firestore + Web Bluetooth</p>
+        </div>
+        <div class="meta-box">
+          <h5>Yayın Tarihi & Statü</h5>
+          <p>Eylül 2026 / Resmi Teknik Şartname & Teklif Eki</p>
+        </div>
+      </div>
+
+      <div class="cover-footer" style="margin-top: 20px;">
+        <span>Odivon Teknoloji A.Ş. — Tüm Hakları Saklıdır.</span>
+        <span>https://odivonfarm.web.app</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== SECTION 1 ==================== -->
+  <div class="page-break"></div>
+
+  <h1 class="section-heading">1. Yönetici Özeti ve Stratejik Vizyon</h1>
+  <p>
+    <strong>OdivonFARM</strong>; küçükbaş (koyun, keçi) ve büyükbaş çiftlik işletmelerinin, üniversite araştırma çiftliklerinin ve Tarım Bakanlığı TAGEM ıslah projelerinin operasyonel, genetik, sağlık, besleme, telemetri ve maliyet süreçlerini uçtan uca dijitalleştiren yeni nesil, bulut tabanlı bir <strong>Çiftlik Yönetim Bilgi ve Karar Destek Sistemi</strong>'dir.
+  </p>
+  <p>
+    Geleneksel hayvancılıkta veri toplama süreçleri defterler, dağınık Excel tabloları veya personelin hafızasına bağımlıdır. Bu durum kulak küpelerinin mükerrer girilmesine, doğum ağırlıklarının eksik kalmasına, akraba çiftleşmesi (inbreeding) risklerinin görülememesine ve tedavi arınma sürelerinin kaçırılmasına yol açmaktadır. OdivonFARM, sürü yönetimini <strong>Gömülü Sistemler (IoT)</strong>, <strong>Elektronik RFID Okuyucular</strong>, <strong>Otomatik Canlı Tartım Kantarları</strong> ve <strong>TAGEM Genetik Islah Formülasyonları</strong> ile entegre ederek veriyi doğrudan sahadan, personelin elinde ve hayvanın padoğunda anlık yakalar.
+  </p>
+
+  <div class="grid-3">
+    <div class="info-card primary">
+      <h4>🌱 Veriye Dayalı Islah</h4>
+      <p>Doğumdan 180. güne çevre faktörlerinden arındırılmış düzeltilmiş ağırlık artışı ve damızlık koç/teke seçim indeksi.</p>
+    </div>
+    <div class="info-card success">
+      <h4>⚡ IoT & Gömülü Sistem</h4>
+      <p>Web Bluetooth ile tarayıcıdan doğrudan kantara bağlanma, RFID geçiş kapısı ve barınak amonyak ($NH_3$)/THI stres takibi.</p>
+    </div>
+    <div class="info-card warning">
+      <h4>🛡️ %100 Güvenli & Bulut</h4>
+      <p>Multi-Tenant mimari ile çiftlik izolasyonu, Soft-Delete veri kaybı güvencesi ve rol bazlı erişim yetkilendirmesi.</p>
+    </div>
+  </div>
+
+  <h1 class="section-heading">2. Sistem Mimarisi, Güvenlik ve Altyapı</h1>
+  <p>
+    OdivonFARM, yüksek hız, offline-first toleransı ve sıfır veri kaybı prensibiyle <strong>Angular 21</strong> (Signals & Modern Control Flow) ve <strong>Google Cloud Firestore</strong> mimarisi üzerine inşa edilmiştir.
+  </p>
+
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th style="width: 25%;">Mimari Katman</th>
+        <th style="width: 35%;">Kullanılan Teknoloji</th>
+        <th style="width: 40%;">Teknik Avantaj & Standart</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Kullanıcı Arayüzü (Frontend)</strong></td>
+        <td>Angular 21, Signals, Tailwind CSS 3, Angular Material CDK</td>
+        <td>Zoneless reaktif durum yönetimi, 60 FPS akıcı arayüz, mobil tablet ve el terminali tam responsive uyumu.</td>
+      </tr>
+      <tr>
+        <td><strong>Veritabanı (Database)</strong></td>
+        <td>Cloud Firestore NoSQL (Çoklu Çiftlik Multi-Tenant)</td>
+        <td><code>farms/{farmId}</code> veri izolasyonu, gerçek zamanlı WebSocket senkronizasyonu ve 99.99% erişilebilirlik.</td>
+      </tr>
+      <tr>
+        <td><strong>Gömülü Donanım (IoT)</strong></td>
+        <td>Web Bluetooth API (BLE), MQTT Broker, ESP32, FDX-B/HDX</td>
+        <td>Ek yazılım yüklemeden tarayıcıdan BLE tartıya bağlanma; çiftlik yerel ağı kopsa bile Edge Gateway tamponlaması.</td>
+      </tr>
+      <tr>
+        <td><strong>Güvenlik & Rol Yönetimi</strong></td>
+        <td>Firebase Auth, Firestore Rules, RBAC (6 Rol)</td>
+        <td>Yönetici, Müdür, Veteriner, Saha Personeli, Muhasebe ve Gözlemci rolleri ile hücre bazında veri güvenliği.</td>
+      </tr>
+      <tr>
+        <td><strong>Veri Bütünlüğü</strong></td>
+        <td>BaseDoc Soft-Delete Mimarisi</td>
+        <td>Silinen hiçbir kayıt fiziksel olarak yok edilmez; `deletedAt` damgasıyla Geri Dönüşüm Merkezinden kurtarılabilir.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- ==================== SECTION 3 ==================== -->
+  <div class="page-break"></div>
+
+  <h1 class="section-heading">3. 21 Temel Fonksiyonel Modülün Kapsamlı Analizi</h1>
+  <p>
+    OdivonFARM, modern bir hayvancılık işletmesinde ihtiyaç duyulabilecek tüm departmanları birbirine bağlayan 21 entegre modülden oluşmaktadır:
+  </p>
+
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th style="width: 5%;">#</th>
+        <th style="width: 25%;">Modül Adı</th>
+        <th style="width: 45%;">Fonksiyonel Kapsam ve Yetenekler</th>
+        <th style="width: 25%;">Çıktı & Rapor Türü</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>1</td>
+        <td><strong>Yönetici Kokpiti (Dashboard)</strong></td>
+        <td>Aktif sürü mevcudu, cinsiyet piramidi, yaklaşan doğumlar, süresi geçen aşılar, anlık nakit dengesi ve kritik uyarılar.</td>
+        <td>Yönetici KPI Kartları, Canlı Sürü Dağılım Grafiği</td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td><strong>Hayvan Yönetimi & Kartı</strong></td>
+        <td>Kulak küpesi (DKN), çiftlik no, RFID, ırk, doğum, cinsiyet, 3 nesil soy kütüğü (pedigri) ve yaşam boyu sağlık geçmişi.</td>
+        <td>Bireysel Hayvan Pasaportu, Sürü Envanter Listesi</td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td><strong>Hayvan Hareketleri</strong></td>
+        <td>Padoklar arası transferler, sürü değişimleri, dışarıdan alım, hibe, satış, kesim ve ölüm kayıtlarının gerekçeli takibi.</td>
+        <td>Padok Doluluk Raporu, İç Transfer İcmali</td>
+      </tr>
+      <tr>
+        <td>4</td>
+        <td><strong>Üreme & Çiftleşme</strong></td>
+        <td>Koç katımı planlaması, serbest/suni tohumlama, ultrason gebelik muayenesi, tahmini doğum ajandası ve ikizlik oranları.</td>
+        <td>Doğum Takvimi, Döl Verimi & Kısırlık Analizi</td>
+      </tr>
+      <tr>
+        <td>5</td>
+        <td><strong>Canlı Ağırlık Takibi</strong></td>
+        <td>Bluetooth kantar entegrasyonu, dönemsel tartım seansları, Günlük Canlı Ağırlık Artışı (GCAA / ADG) otomatik hesaplama.</td>
+        <td>Gelişim Eğrisi, Besi Performans Karnesi</td>
+      </tr>
+      <tr>
+        <td>6</td>
+        <td><strong>Tedavi & Veteriner Sağlık</strong></td>
+        <td>Aşı protokolleri, sürü parazit mücadeleleri, ilaç dozajları, et ve süt yasal arınma süreleri geri sayım alarmı.</td>
+        <td>Veteriner Triage Karnesi, İlaç Tüketim Dökümü</td>
+      </tr>
+      <tr>
+        <td>7</td>
+        <td><strong>Depo & Envanter</strong></td>
+        <td>Yem, ilaç, aşı, tohum ambarları, birim maliyet, son kullanma tarihi takibi ve asgari stok seviyesi kritik uyarıları.</td>
+        <td>Kritik Stok Uyarısı, Ambar Giriş/Çıkış Fişi</td>
+      </tr>
+      <tr>
+        <td>8</td>
+        <td><strong>Rasyon & Yem Reçetesi</strong></td>
+        <td>NRC & INRA standartlarında kuru madde, ham protein, metabolik enerji dengeleme; sürü grubu bazlı rasyon optimizasyonu.</td>
+        <td>Rasyon Maliyet Karnesi, Günlük Tüketim Planı</td>
+      </tr>
+      <tr>
+        <td>9</td>
+        <td><strong>RFID Sayım & Denetim</strong></td>
+        <td>RFID el terminali veya Bluetooth okuyucu ile saniyeler içinde sürü sayımı; sistemdeki mevcut ile okunanın karşılaştırılması.</td>
+        <td>Eksik ve Fazla Küpe Anlık Tespit Raporu</td>
+      </tr>
+      <tr>
+        <td>10</td>
+        <td><strong>Süt & Yapağı Verimleri</strong></td>
+        <td>Günlük sağım ölçümleri (sabah/akşam), laktasyon eğrileri, kırkım sezonu yapağı/tiftik ağırlık ve kalite sınıflandırması.</td>
+        <td>Laktasyon Verim Eğrisi, En Verimli Damızlıklar</td>
+      </tr>
+      <tr>
+        <td>11</td>
+        <td><strong>Muhasebe & Nakit Akışı</strong></td>
+        <td>Yem, ilaç, işçilik, enerji giderleri; hayvan ve süt satış gelirleri, cari hesap takibi ve kategori bazlı karlılık dökümü.</td>
+        <td>Gelir-Gider Tablosu, Cari Hesap Ekstresi</td>
+      </tr>
+      <tr>
+        <td>12</td>
+        <td><strong>Görev & İş Emri Yönetimi</strong></td>
+        <td>Çoban ve veteriner personeline görev atama, öncelik belirleme, termin tarihi ve durum takibi (Kanban panosu).</td>
+        <td>Personel Performans ve Görev Takip Çizelgesi</td>
+      </tr>
+      <tr>
+        <td>13</td>
+        <td><strong>Sigortalı Hayvanlar (TARSİM)</strong></td>
+        <td>Hayvan hayat sigortası poliçeleri, prim vadeleri, teminat kapsamı, hasar bildirimleri ve eksper raporları.</td>
+        <td>Sigorta Vade Takip Raporu, Hasar Tazmin Dökümü</td>
+      </tr>
+      <tr>
+        <td>14</td>
+        <td><strong>Kurbanlık & Hisse Takibi</strong></td>
+        <td>Kurbanlık hayvan ayrımı, hisse satışı, kapora, kesim sırası, karkas et tartımı ve müşteri teslimat bildirimi.</td>
+        <td>Hissedar Listesi, Kesim Sırası ve Teslimat Fişi</td>
+      </tr>
+      <tr>
+        <td>15</td>
+        <td><strong>Fotoğraf Arşivi & Galeri</strong></td>
+        <td>Bireysel hayvan morfoloji fotoğrafları, ultrason çıktıları, yara/sağlık lezyonları görsel kayıt arşivi.</td>
+        <td>Görsel Kimlik Kartı, Morfolojik Gelişim Albümü</td>
+      </tr>
+      <tr>
+        <td>16</td>
+        <td><strong>Raporlama & Analitik</strong></td>
+        <td>Sürü demografisi, yaş grupları, ölüm oranları, döl ve süt verimi kümülatif analitiği, PDF ve Excel rapor dışa aktarımı.</td>
+        <td>Kapsamlı Sürü Denetim ve Faaliyet Raporu</td>
+      </tr>
+      <tr>
+        <td>17</td>
+        <td><strong>Denetim Günlüğü (Audit Log)</strong></td>
+        <td>Çiftlikte hangi kullanıcının hangi tarihte hangi kaydı eklediği, güncellediği veya sildiğini kaydeden güvenlik günlüğü.</td>
+        <td>Güvenlik ve Denetim İnceleme Günlüğü</td>
+      </tr>
+      <tr>
+        <td>18</td>
+        <td><strong>Geri Dönüşüm Merkezi</strong></td>
+        <td>Yanlışlıkla silinen hayvan, tedavi veya muhasebe kayıtlarının tek tıkla kurtarılması (Soft-Delete güvencesi).</td>
+        <td>Kurtarılabilir Veri Havuzu</td>
+      </tr>
+      <tr>
+        <td>19</td>
+        <td><strong>Paket & Lisans Yönetimi</strong></td>
+        <td>Hayvan ve kullanıcı kotaları, lisans yenileme, deneme süresi ve modül yetkilendirme altyapısı.</td>
+        <td>Abonelik Durumu ve Kota Kullanım Özeti</td>
+      </tr>
+      <tr>
+        <td>20</td>
+        <td><strong>Parametrik Tanımlamalar</strong></td>
+        <td>19 dinamik parametre: Irklar, Padoklar, Sürüler, Tedavi Türleri, Hastalıklar, Cariler, Depolar, Roller vb.</td>
+        <td>Çiftlik Konfigürasyon Veri Tabanı</td>
+      </tr>
+      <tr>
+        <td>21</td>
+        <td><strong>Eğitim & Kurulum Sihirbazı</strong></td>
+        <td>Sisteme dahil olan kullanıcıyı 6 adımda çiftlik kurulumuna ve modül kullanımına yönlendiren interaktif rehber.</td>
+        <td>Kurulum İlerleme Skoru (%100 Başarı)</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- ==================== SECTION 4 ==================== -->
+  <div class="page-break"></div>
+
+  <h1 class="section-heading">4. TAGEM ve Genetik Islah Entegrasyon Şartnamesi</h1>
+  <p>
+    T.C. Tarım ve Orman Bakanlığı Tarımsal Araştırmalar ve Politikalar Genel Müdürlüğü (TAGEM) tarafından yürütülen <strong>"Halk Elinde Küçükbaş Hayvan Islahı Ülkesel Projeleri"</strong> kapsamında toplanan verilerin bilimsel doğrulukta olması ve çevre faktörlerinden arındırılması yasal zorunluluktur. OdivonFARM, TAGEM ve ICAR standartlarına tam uyumlu matematiksel motor içerir.
+  </p>
+
+  <h2 class="sub-heading">A. Standart Dönem Çevre Faktörleri Düzeltme Algoritması</h2>
+  <p>
+    Kuzuların ve oğlakların 90. gün (sütten kesim) canlı ağırlığı karşılaştırılırken anne yaşı, doğum tipi (tekiz/ikiz) ve cinsiyet farklılıkları düzeltme katsayıları ile normalize edilir:
+  </p>
+
+  <div class="code-diagram">
+Düzeltilmiş 90. Gün Ağırlığı = Doğum Ağırlığı + [ ((Ölçülen Ağırlık - Doğum Ağırlığı) / Yaş Gün) * 90 ] * K_ana * K_dogum * K_cinsiyet
+
+K_ana:     2 Yaş: 1.08 | 3-5 Yaş (Ref): 1.00 | 6+ Yaş: 1.05
+K_dogum:   Tekiz (Ref): 1.00 | İkiz: 1.12 | Üçüz: 1.18
+K_cinsiyet: Erkek (Ref): 1.00 | Dişi: 1.10
+  </div>
+
+  <h2 class="sub-heading">B. Damızlık Koç/Teke Seçim İndeksi (Kombine Islah Puanı)</h2>
+  <p>
+    Sürüdeki damızlık adaylarının seçimi için geliştirilen çok kriterli ıslah indeksi:
+  </p>
+  <ul class="feature-list">
+    <li><strong>Sütten Kesim Ağırlığı Puanı (%45 Ağırlık):</strong> 90. gün düzeltilmiş canlı ağırlık performansı.</li>
+    <li><strong>Günlük Canlı Ağırlık Artışı (%30 Ağırlık):</strong> Dönem içi büyüme hızı (GCAA / ADG).</li>
+    <li><strong>Anaç Döl Verim Performansı (%15 Ağırlık):</strong> Ananın ikizlik/üçüzlük doğurma frekansı ve yavru büyütme kabiliyeti.</li>
+    <li><strong>Soy Ağacı & Morfolojik Değerlendirme (%10 Ağırlık):</strong> 3 nesil pedigri tamlığı ve ırk standartlarına uygunluk.</li>
+  </ul>
+
+  <h2 class="sub-heading">C. TAGEM Uyumlu Veri Dışa Aktarım (Export) Standartları</h2>
+  <p>
+    OdivonFARM <code>TagemService</code> modülü üzerinden tek tıkla oluşturulan resmi dosya formatları:
+  </p>
+  <ul class="feature-list">
+    <li><strong>TAGEM Resmi XML Şeması:</strong> Proje yürütücüsü enstitü ve bakanlık sunucularına veri gönderimi için şematik XML formatı.</li>
+    <li><strong>Excel / UTF-8 BOM CSV Tablosu:</strong> Zootekni ıslah uzmanlarının SPSS, SAS veya R yazılımlarında varyans analizi yapabilmesi için hazır kolonlu veri seti.</li>
+  </ul>
+
+  <!-- ==================== SECTION 5 ==================== -->
+  <div class="page-break"></div>
+
+  <h1 class="section-heading">5. Gömülü Sistemler (IoT), RFID ve Telemetri Mimarisi</h1>
+  <p>
+    OdivonFARM'ın sahadan canlı veri toplama altyapısı 4 katmanlı hibrit bir mimariden oluşur:
+  </p>
+
+  <div class="code-diagram">
++-----------------------------------------------------------------------------------+
+| 1. SAHA DONANIM KATMANI (HARDWARE)                                                |
+| - Akıllı Süt Sağım Makinesi (Elektronik Süt Metresi + RFID + Mastitis İletkenlik)  |
+| - Akıllı Tartım Terazisi (Load Cell + HX711 + ESP32 BLE Transmitter)              |
+| - RFID Koridor/Kapı Anteni (134.2 kHz ISO 11784/11785 FDX-B/HDX + RS485/WiFi)     |
+| - Mikroklima Barınak Sensörleri (SHT31 Sıcaklık-Nem + MQ-137 Amonyak NH3)         |
++-----------------------------------------+-----------------------------------------+
+                                          |
+                                          v  (Bluetooth LE / MQTT / Modbus RS485)
++-----------------------------------------------------------------------------------+
+| 2. ÇİFTLİK YEREL AĞI & EDGE GATEWAY                                               |
+| - Web Bluetooth API (Chrome/Edge tarayıcıdan doğrudan teraziye kablosuz bağlantı)  |
+| - Raspberry Pi / ESP32 Edge Gateway (İnternet kesildiğinde yerel buffer & SQLite) |
++-----------------------------------------+-----------------------------------------+
+                                          |
+                                          v  (HTTPS REST JSON Webhook)
++-----------------------------------------------------------------------------------+
+| 3. BULUT VERİ İŞLEME KATMANI (FIREBASE / CLOUD RUN)                               |
+| - POST /api/v1/iot/milking-session --> Sağım durakları anlık litre & iletkenlik   |
+| - POST /api/v1/iot/scale-weight    --> Canlı kantar tartımı kaydı                 |
+| - POST /api/v1/iot/rfid-gate        --> Otomatik padok geçişi & sayım kaydı       |
+| - POST /api/v1/iot/telemetry        --> Sıcaklık, Nem, NH3 ve THI Stres İndeksi   |
++-----------------------------------------+-----------------------------------------+
+                                          |
+                                          v  (Angular Signals & Firestore Listener)
++-----------------------------------------------------------------------------------+
+| 4. ODIVONFARM KULLANICI ARAYÜZÜ (WEB & MOBİL - /iot-cihazlar)                     |
+| - Süt Sağım Paneli (4-24 Durak, Canlı Litre, Akış Hızı & Mastitis Erken Uyarısı) |
+| - Canlı Tartım Ekranı (Stabilize ağırlık algılama & sesli uyarı)                  |
+| - Barınak Isı Stres Haritası (THI > 74 Stres Uyarısı)                             |
+| - Merkezi Cihaz ve Donanım Eşleştirme Listesi                                     |
++-----------------------------------------------------------------------------------+
+  </div>
+
+  <h2 class="sub-heading">Barınak Sıcaklık-Nem İndeksi (THI - Temperature Humidity Index)</h2>
+  <p>
+    Süt ve döl veriminde ani düşüşlere yol açan sıcaklık stresini anlık izleyen ve uyaran formülasyon:
+  </p>
+  <div class="code-diagram">
+THI = (1.8 * Sıcaklık + 32) - (0.55 - 0.0055 * Bağıl Nem) * (1.8 * Sıcaklık - 26)
+
+THI < 68:  Normal / Konfor Alanı
+THI 68-74: Hafif Stres (Suluk ve havalandırma kontrolü önerilir)
+THI 74-79: Orta Düzey Stres (Yem tüketiminde %10 düşüş, fanları çalıştırın)
+THI 79-88: Şiddetli Stres (Süt veriminde %25 kayıp, serinletme şart)
+THI > 88:  Acil Durum (Ölümcül sıcak çarpması riski)
+  </div>
+
+  <!-- ==================== SECTION 6 & 7 ==================== -->
+  <div class="page-break"></div>
+
+  <h1 class="section-heading">6. Kullanıcı Eğitim ve Kurulum Sihirbazı (Onboarding Wizard)</h1>
+  <p>
+    Sisteme dahil olan çiftlik yöneticilerinin, akademisyenlerin ve işletme personelinin en kısa sürede sistemi aktif kullanabilmesi için <strong>6 Aşamalı İnteraktif Kurulum Sihirbazı</strong> geliştirilmiştir:
+  </p>
+
+  <div class="grid-2">
+    <div class="info-card">
+      <h4>1. Çiftlik Kimlik ve İşletme Tescili</h4>
+      <p>Tarım Bakanlığı işletme numarası, coğrafi konum ve sürü kapasitesinin sisteme tanımlanması.</p>
+    </div>
+    <div class="info-card">
+      <h4>2. Padok & Barınak Yerleşimi</h4>
+      <p>Kuzulama padoğu, revir/karantina alanı, sağmal barınak ve yem depolarının koordinatlandırılması.</p>
+    </div>
+    <div class="info-card">
+      <h4>3. Sürü Grupları & Hayvan Aktarımı</h4>
+      <p>Mevcut hayvan varlığının Excel şablonu veya kulak küpesi ile anında sisteme aktarılması.</p>
+    </div>
+    <div class="info-card">
+      <h4>4. IoT & RFID Donanım Testi</h4>
+      <p>Web Bluetooth kantar veya RFID el terminali simülatörüyle ilk donanım haberleşme testi.</p>
+    </div>
+    <div class="info-card">
+      <h4>5. İlk Saha Operasyon Kaydı</h4>
+      <p>Sistem üzerinden bir hayvana ait ilk canlı ağırlık tartımı veya koruyucu aşı protokolünün işlenmesi.</p>
+    </div>
+    <div class="info-card">
+      <h4>6. Sistem Modülleri Eğitimi</h4>
+      <p>21 modülün ne işe yaradığını, hayvan başına karlılığı nasıl artırdığını gösteren interaktif tur.</p>
+    </div>
+  </div>
+
+  <h1 class="section-heading">7. Akademik Araştırma, BAP ve Üniversite İşbirliği Çerçevesi</h1>
+  <p>
+    OdivonFARM, Ziraat Fakülteleri (Zootekni, Biyometri), Veteriner Fakülteleri ve Teknokent araştırma merkezleri için ideal bir akademik veri toplama ve analiz altyapısı sunmaktadır:
+  </p>
+  <ul class="feature-list">
+    <li><strong>Lisansüstü Tez ve BAP Projeleri:</strong> Çiftlikte toplanan binlerce tartım ve süt verimi verisi anında CSV/XML olarak dışa aktarılabilir; yüksek lisans ve doktora tezleri için temiz ve doğrulanmış veri seti oluşturur.</li>
+    <li><strong>Sürü Sağlığı ve Epidemiyoloji:</strong> Veteriner Fakülteleri için aşı etkililiği, mastitis insidansı ve antibiyotik arınma sürelerinin saha analizlerini dijitalleştirir.</li>
+    <li><strong>Üniversite-Sanayi Ortak Ar-Ge:</strong> TÜBİTAK 1505, 1001 veya TAGEM Ar-Ge destek programları kapsamında üniversite uygulama çiftliklerinde pilot demonstrasyon kurulumları.</li>
+  </ul>
+
+  <div class="avoid-break" style="margin-top: 24px; padding: 18px; border: 1.5px dashed #4f46e5; border-radius: 14px; background-color: #f8faff;">
+    <h3 style="font-size: 11pt; font-weight: 800; color: #1e1b4b; margin-bottom: 6px;">İletişim ve Yetkili Onay</h3>
+    <p style="font-size: 9pt; margin-bottom: 0;">
+      Bu teknik şartname ve kapsam dokümanı, <strong>Odivon Teknoloji A.Ş.</strong> tarafından üniversiteler, araştırma enstitüleri ve tarımsal kamu kurumları ile yürütülecek işbirlikleri için özel olarak düzenlenmiştir.
+      <br><strong>E-posta:</strong> info@odivon.com | <strong>Web:</strong> https://odivonfarm.web.app
+    </p>
+  </div>
+
+</body>
+</html>

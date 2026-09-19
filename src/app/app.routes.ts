@@ -101,6 +101,11 @@ export const routes: Routes = [
           import('./features/yields/yields.component').then((m) => m.YieldsComponent),
       },
       {
+        path: 'iot-cihazlar',
+        loadComponent: () =>
+          import('./features/iot-devices/iot-devices.component').then((m) => m.IotDevicesComponent),
+      },
+      {
         path: 'aktiviteler',
         loadComponent: () =>
           import('./features/activity-log/activity-log.component').then((m) => m.ActivityLogComponent),
