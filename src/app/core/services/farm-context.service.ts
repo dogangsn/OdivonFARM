@@ -1,28 +1,16 @@
-import { Injectable, signal, computed } from '@angular/core';
+import { Injectable, inject, signal, computed } from '@angular/core';
 import { toObservable } from '@angular/core/rxjs-interop';
-import {
-  getFirestore,
-  doc,
-  getDoc,
-  updateDoc,
-  onSnapshot,
-  Unsubscribe,
-  serverTimestamp,
-} from 'firebase/firestore';
 import { Farm, AppRole, ROLE_CATALOG } from '../models/farm.model';
+import { ApiService } from '../http/api.service';
 
 /**
- * Kullanıcı birden fazla çiftliğe (farm) üye olabilir (ör. danışman veteriner).
- * O anda üzerinde çalışılan çiftliği ve oturum açan kullanıcıyı tutar;
- * tüm FirestoreCrudService alt sınıfları buradan farmId okur.
+ * Odivon Main API'de her kullanıcı tek bir çiftliğe (tenant) bağlıdır; çiftlik kimliği
+ * sunucuda oturumdaki kullanıcıdan çözülür. Bu servis o çiftliği, kullanıcının rolünü ve
+ * oturum durumunu tutar; tüm FarmCrudService alt sınıfları buradan beslenir.
  */
 @Injectable({ providedIn: 'root' })
 export class FarmContextService {
-  private get db() {
-    return getFirestore();
-  }
-
-  private farmUnsub: Unsubscribe | null = null;
+  private api = inject(ApiService);
 
   private getStoredFarmId(): string | null {
     try {
@@ -44,6 +32,9 @@ export class FarmContextService {
   readonly activeFarmId$ = toObservable(this.activeFarmId);
   readonly uid = signal<string | null>(null);
 
+  /** Veri akışlarının yeniden çekilmesi için oturum anahtarı (kullanıcı + çiftlik). */
+  readonly session$ = toObservable(computed(() => ({ farmId: this.activeFarmId(), uid: this.uid() })));
+
   /** Aktif kullanıcının bu çiftlikteki rolü (varsayılan: admin) */
   readonly userRole = signal<AppRole>('admin');
   readonly isAdmin = computed(() => this.userRole() === 'admin');
@@ -57,18 +48,11 @@ export class FarmContextService {
     return this.activeFarm()?.name || this.cachedFarmName() || 'Çiftliğim';
   });
 
-  /** Kullanıcının yetkili olduğu tüm çiftlikler */
+  /** Kullanıcının yetkili olduğu tüm çiftlikler (Main API'de her kullanıcının tek çiftliği vardır) */
   readonly userFarms = signal<Farm[]>([]);
 
   setUserRole(role: AppRole) {
     this.userRole.set(role);
-  }
-
-  constructor() {
-    const initialId = this.getStoredFarmId();
-    if (initialId) {
-      this.subscribeToFarm(initialId);
-    }
   }
 
   requireActiveFarmId(): string {
@@ -93,7 +77,13 @@ export class FarmContextService {
     } catch {}
 
     this.activeFarmId.set(farmId);
-    this.subscribeToFarm(farmId);
+  }
+
+  /** `/farm/me` yanıtındaki çiftlik bilgisini uygular. */
+  applyFarm(farm: Farm & { id: string }) {
+    this.activeFarm.set(farm);
+    this.userFarms.set([farm]);
+    this.setActiveFarm(farm.id, farm.name);
   }
 
   setUser(uid: string | null) {
@@ -101,87 +91,19 @@ export class FarmContextService {
   }
 
   /**
-   * Belirtilen çiftlik kimliğine abone olur ve anlık güncellemeleri dinler.
-   */
-  subscribeToFarm(farmId: string) {
-    if (this.farmUnsub) {
-      this.farmUnsub();
-      this.farmUnsub = null;
-    }
-
-    if (!farmId || farmId === 'odivon-farm-default') {
-      return;
-    }
-
-    try {
-      const farmRef = doc(this.db, `farms/${farmId}`);
-      this.farmUnsub = onSnapshot(
-        farmRef,
-        (snap) => {
-          if (snap.exists()) {
-            const data = { id: snap.id, ...snap.data() } as Farm;
-            this.activeFarm.set(data);
-            if (data.name) {
-              this.cachedFarmName.set(data.name);
-              try {
-                localStorage.setItem('odivon_active_farm_name', data.name);
-              } catch {}
-            }
-          }
-        },
-        (err) => {
-          console.warn('[FarmContext] farm snapshot warning:', err?.message || err);
-        }
-      );
-    } catch (err) {
-      console.warn('[FarmContext] subscribeToFarm error:', err);
-    }
-  }
-
-  /**
-   * Çiftliğin adını Firestore'da günceller ve sinyalleri yeniler.
+   * Çiftliğin adını Main API'de günceller ve sinyalleri yeniler (yalnızca yönetici).
    */
   async updateFarmName(newName: string): Promise<boolean> {
-    const farmId = this.activeFarmId();
     const cleanName = newName.trim();
-    if (!farmId || !cleanName) return false;
+    if (!this.activeFarmId() || !cleanName) return false;
 
     try {
-      const farmRef = doc(this.db, `farms/${farmId}`);
-      await updateDoc(farmRef, {
-        name: cleanName,
-        updatedAt: serverTimestamp(),
-      });
-      this.cachedFarmName.set(cleanName);
-      try {
-        localStorage.setItem('odivon_active_farm_name', cleanName);
-      } catch {}
-
-      if (this.activeFarm()) {
-        this.activeFarm.update((f) => (f ? { ...f, name: cleanName } : null));
-      }
+      const farm = await this.api.patch<Farm & { id: string }>('/farm/settings', { name: cleanName });
+      this.applyFarm(farm);
       return true;
     } catch (err) {
       console.error('[FarmContext] updateFarmName failed:', err);
       return false;
     }
-  }
-
-  /**
-   * Kullanıcının birden fazla çiftliği varsa hepsini yükler.
-   */
-  async loadUserFarms(farmIds: string[]) {
-    if (!farmIds || farmIds.length === 0) return;
-    const farms: Farm[] = [];
-    for (const id of farmIds) {
-      if (id === 'odivon-farm-default') continue;
-      try {
-        const snap = await getDoc(doc(this.db, `farms/${id}`));
-        if (snap.exists()) {
-          farms.push({ id: snap.id, ...snap.data() } as Farm);
-        }
-      } catch {}
-    }
-    this.userFarms.set(farms);
   }
 }

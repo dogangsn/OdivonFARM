@@ -1,10 +1,10 @@
 import { Injectable } from '@angular/core';
-import { FirestoreCrudService, where } from './firestore-crud.service';
+import { FarmCrudService, where } from './farm-crud.service';
 import { Animal } from '../models/animal.model';
 import { Observable } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
-export class AnimalService extends FirestoreCrudService<Animal> {
+export class AnimalService extends FarmCrudService<Animal> {
   constructor() {
     super('animals');
   }

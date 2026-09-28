@@ -1,9 +1,9 @@
 import { Injectable } from '@angular/core';
-import { FirestoreCrudService } from './firestore-crud.service';
+import { FarmCrudService } from './farm-crud.service';
 import { FarmPhoto } from '../models/operations.model';
 
 @Injectable({ providedIn: 'root' })
-export class FarmPhotoService extends FirestoreCrudService<FarmPhoto> {
+export class FarmPhotoService extends FarmCrudService<FarmPhoto> {
   constructor() {
     super('photos');
   }

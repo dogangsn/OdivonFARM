@@ -1,6 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { doc, getDoc } from 'firebase/firestore';
-import { FirestoreCrudService } from './firestore-crud.service';
+import { FarmCrudService } from './farm-crud.service';
 import { KurbanAnimal, KurbanHisse } from '../models/kurban.model';
 import { AnimalService } from './animal.service';
 import { AccountingTransactionService } from './accounting-transaction.service';
@@ -8,7 +7,7 @@ import { AccountingTransactionService } from './accounting-transaction.service';
 @Injectable({
   providedIn: 'root',
 })
-export class KurbanService extends FirestoreCrudService<KurbanAnimal> {
+export class KurbanService extends FarmCrudService<KurbanAnimal> {
   private animalService = inject(AnimalService);
   private accountingService = inject(AccountingTransactionService);
 
@@ -17,19 +16,12 @@ export class KurbanService extends FirestoreCrudService<KurbanAnimal> {
   }
 
   /**
-   * Fetches a kurban document by ID (supports direct Firestore getDoc for public checkout)
+   * Fetches a kurban record by ID from the signed-in user's farm (payment page, share updates).
+   * The farm is resolved by Main API from the session; `farmId` is kept for call compatibility.
    */
-  async getById(id: string, farmId?: string): Promise<KurbanAnimal | null> {
+  async getById(id: string, _farmId?: string): Promise<KurbanAnimal | null> {
     try {
-      const targetFarmId = farmId || this.farmContext.activeFarmId() || localStorage.getItem('activeFarmId') || '';
-      if (targetFarmId) {
-        const dRef = doc(this.db, `farms/${targetFarmId}/kurbanAnimals/${id}`);
-        const snap = await getDoc(dRef);
-        if (snap.exists()) {
-          return { id: snap.id, ...snap.data() } as KurbanAnimal;
-        }
-      }
-      return null;
+      return await this.api.get<KurbanAnimal>(`${this.basePath}/${encodeURIComponent(id)}`);
     } catch (e) {
       console.error('getById error in KurbanService:', e);
       return null;

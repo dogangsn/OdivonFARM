@@ -1,6 +1,6 @@
 import { Directive, computed, inject, signal } from '@angular/core';
 import { Observable, of } from 'rxjs';
-import { FirestoreCrudService } from '../../../core/services/firestore-crud.service';
+import { FarmCrudService } from '../../../core/services/farm-crud.service';
 import { BaseDoc } from '../../../core/models/base.model';
 import { AlertService } from '../../../core/services/alert.service';
 import { SeedService } from '../../../core/services/seed.service';
@@ -72,7 +72,7 @@ export const COLOR_THEMES: ColorTheme[] = [
  */
 @Directive()
 export abstract class SimpleCrudListBase<T extends NamedEntity> {
-  abstract service: FirestoreCrudService<T>;
+  abstract service: FarmCrudService<T>;
   abstract title: string;
   subtitle = 'Çiftlik operasyonlarında kullanılan sistem tanımlamaları';
   icon = 'tune';
