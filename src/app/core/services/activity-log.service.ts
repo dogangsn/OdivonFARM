@@ -1,10 +1,10 @@
 import { inject, Injectable } from '@angular/core';
-import { FirestoreCrudService } from './firestore-crud.service';
+import { FarmCrudService } from './farm-crud.service';
 import { ActivityLogEntry } from '../models/operations.model';
 import { AuthService } from '../auth/auth.service';
 
 @Injectable({ providedIn: 'root' })
-export class ActivityLogService extends FirestoreCrudService<ActivityLogEntry> {
+export class ActivityLogService extends FarmCrudService<ActivityLogEntry> {
   private authService = inject(AuthService);
 
   constructor() {

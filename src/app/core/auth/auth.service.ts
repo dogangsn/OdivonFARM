@@ -8,23 +8,15 @@ import {
   onAuthStateChanged,
   User,
 } from 'firebase/auth';
-import {
-  getFirestore,
-  doc,
-  setDoc,
-  addDoc,
-  collection,
-  serverTimestamp,
-  getDoc,
-  Timestamp,
-} from 'firebase/firestore';
-import { Observable, switchMap, of, catchError } from 'rxjs';
-import { AppUser, Farm } from '../models/farm.model';
+import { Observable, switchMap, of, catchError, from, shareReplay } from 'rxjs';
+import { AppRole, AppUser, Farm, FarmMember } from '../models/farm.model';
+import { FarmSubscription } from '../models/subscription.model';
+import { ApiService } from '../http/api.service';
+import { ApiError } from '../http/api-error';
 import { FarmContextService } from '../services/farm-context.service';
 import { SeedService } from '../services/seed.service';
 import { EmailService } from '../services/email.service';
 import { AuditService } from '../services/audit.service';
-import { docData } from '../services/firestore-helpers';
 
 export interface RegisterDetails {
   phone?: string;
@@ -33,8 +25,28 @@ export interface RegisterDetails {
   language?: string;
 }
 
+/** `GET /farm/me` yanıtı */
+export interface FarmSession {
+  uid: string;
+  email: string;
+  displayName: string | null;
+  tenantId: string;
+  isOwner: boolean;
+  role: AppRole | null;
+  member: FarmMember | null;
+  farm: Farm & { id: string };
+  subscription: FarmSubscription | null;
+}
+
+interface OnboardingInput {
+  farmName?: string;
+  displayName?: string;
+  details?: RegisterDetails;
+}
+
 @Injectable({ providedIn: 'root' })
 export class AuthService {
+  private api = inject(ApiService);
   private farmContext = inject(FarmContextService);
   private seedService = inject(SeedService);
   private emailService = inject(EmailService);
@@ -42,9 +54,11 @@ export class AuthService {
   private get auth() {
     return getAuth();
   }
-  private get db() {
-    return getFirestore();
-  }
+
+  /** Aynı kullanıcı için oturum yüklemesini (me/onboarding) tek sefere indirir. */
+  private session: { uid: string; promise: Promise<FarmSession> } | null = null;
+  /** Kayıt formundan gelen çiftlik bilgisi; ilk oturum yüklemesinde onboarding'e aktarılır. */
+  private pendingOnboarding: OnboardingInput | null = null;
 
   get currentUser(): User | null {
     return this.auth.currentUser;
@@ -62,52 +76,27 @@ export class AuthService {
     );
   }).pipe(catchError(() => of(null)));
 
-  /** users/{uid} profili — rol ve çiftlik üyelikleri burada */
+  /** Main API'deki çiftlik oturumu — rol ve çiftlik üyeliği buradan gelir */
   readonly appUser$: Observable<AppUser | null> = this.authState$.pipe(
     switchMap((user) => {
-      this.farmContext.setUser(user?.uid ?? null);
-      if (!user) return of(null);
-      // Ensure farm document exists (arka planda çalışır, UI'ı bloklamaz)
-      this.ensureFarm(user).catch((err) => console.warn('ensureFarm skipped:', err?.message || err));
-      const ref = doc(this.db, `users/${user.uid}`);
-      return docData(ref).pipe(
+      if (!user) {
+        this.session = null;
+        this.farmContext.setUser(null);
+        return of(null);
+      }
+      return from(this.ensureFarm(user)).pipe(
+        switchMap((session) => of(session ? this.toAppUser(session) : this.fallbackUser(user))),
         catchError((err) => {
-          console.warn('[appUser$ docData catchError]:', err?.message || err);
-          return of(undefined);
-        }),
-        switchMap((profile) => {
-          const appUser = profile as AppUser | undefined;
-          if (appUser?.activeFarmId) {
-            this.farmContext.setActiveFarm(appUser.activeFarmId);
-            if (appUser.memberships?.length) {
-              this.farmContext.loadUserFarms(appUser.memberships.map((m) => m.farmId));
-              const match = appUser.memberships.find((m) => m.farmId === appUser.activeFarmId);
-              if (match?.role) {
-                this.farmContext.setUserRole(match.role);
-              }
-            }
-          }
-          if (!appUser) {
-            const fallback: AppUser = {
-              uid: user.uid,
-              email: user.email || '',
-              displayName: user.displayName || user.email?.split('@')[0] || 'admin',
-              memberships: [{ farmId: this.farmContext.activeFarmId() || 'odivon-farm-default', role: 'admin' }],
-              activeFarmId: this.farmContext.activeFarmId() || 'odivon-farm-default',
-              createdAt: new Date(),
-            };
-            this.farmContext.setUserRole('admin');
-            return of(fallback);
-          }
-          return of(appUser);
-        }),
-        catchError(() => of(null))
+          console.warn('[appUser$ session warning]:', err?.message || err);
+          return of(this.fallbackUser(user));
+        })
       );
     }),
     catchError((err) => {
       console.warn('[appUser$ stream warning]:', err?.message || err);
       return of(null);
-    })
+    }),
+    shareReplay({ bufferSize: 1, refCount: true })
   );
 
   async login(email: string, password: string) {
@@ -123,18 +112,7 @@ export class AuthService {
     }
 
     // Başarılı giriş logunu kaydet
-    try {
-      await this.auditService.recordLoginLog({
-        uid: cred.user.uid,
-        email: cred.user.email || email,
-        displayName: cred.user.displayName || undefined,
-        farmId: this.farmContext.activeFarmId() || undefined,
-        farmName: this.farmContext.activeFarmName() || undefined,
-        status: 'success',
-      });
-    } catch (auditErr) {
-      console.warn('[login] audit log notice:', auditErr);
-    }
+    await this.auditService.recordLoginLog();
 
     return cred;
   }
@@ -144,94 +122,97 @@ export class AuthService {
     return sendPasswordResetEmail(this.auth, email);
   }
 
-  /** Eksik kullanıcı veya çiftlik dokümanı varsa otomatik tamamlar ve admin üye kaydı oluşturur */
-  async ensureFarm(user: User, customFarmName?: string) {
-    try {
-      const userRef = doc(this.db, `users/${user.uid}`);
-      const userSnap = await getDoc(userRef);
-      const defaultName = `${user.displayName || user.email?.split('@')[0] || 'Benim'} Çiftliği`;
-      const farmName = customFarmName || defaultName;
-
-      if (!userSnap.exists() || !(userSnap.data() as AppUser)?.activeFarmId) {
-        const farm: Farm = { name: farmName, ownerUid: user.uid, createdAt: serverTimestamp() };
-        const farmRef = await addDoc(collection(this.db, 'farms'), farm);
-        const profile: AppUser = {
-          uid: user.uid,
-          email: user.email || '',
-          displayName: user.displayName || user.email?.split('@')[0] || 'admin',
-          memberships: [{ farmId: farmRef.id, role: 'admin' }],
-          activeFarmId: farmRef.id,
-          createdAt: serverTimestamp(),
-        };
-        await setDoc(userRef, profile);
-
-        // Çiftlik altında üye kaydı (Admin) oluştur
-        try {
-          const memberRef = doc(this.db, `farms/${farmRef.id}/members/${user.uid}`);
-          await setDoc(memberRef, {
-            uid: user.uid,
-            email: user.email || '',
-            displayName: profile.displayName,
-            role: 'admin',
-            status: 'active',
-            title: 'Çiftlik Sahibi & Yönetici',
-            addedAt: serverTimestamp(),
-            createdAt: serverTimestamp(),
-            deletedAt: null,
-          });
-        } catch (mErr) {
-          console.warn('[ensureFarm] member creation notice:', mErr);
-        }
-
-        this.farmContext.setActiveFarm(farmRef.id, farmName);
-        this.farmContext.setUserRole('admin');
-      } else {
-        const data = userSnap.data() as AppUser;
-        if (data.activeFarmId) {
-          this.farmContext.setActiveFarm(data.activeFarmId);
-          const currentRole = data.memberships?.find((m) => m.farmId === data.activeFarmId)?.role || 'admin';
-          this.farmContext.setUserRole(currentRole);
-
-          // Çiftlik üye dokümanı eksikse otomatik oluştur
-          try {
-            const memberRef = doc(this.db, `farms/${data.activeFarmId}/members/${user.uid}`);
-            const memberSnap = await getDoc(memberRef);
-            if (!memberSnap.exists()) {
-              await setDoc(memberRef, {
-                uid: user.uid,
-                email: user.email || '',
-                displayName: data.displayName || user.email?.split('@')[0] || 'Yönetici',
-                role: currentRole,
-                status: 'active',
-                title: currentRole === 'admin' ? 'Çiftlik Sahibi & Yönetici' : 'Çiftlik Üyesi',
-                addedAt: serverTimestamp(),
-                createdAt: serverTimestamp(),
-                deletedAt: null,
-              });
-            }
-          } catch (mErr) {
-            console.warn('[ensureFarm] check member existence notice:', mErr);
-          }
-
-          // Tanımları kontrol et, boş ise otomatik tohumla
-          this.seedService.checkAndSeedIfEmpty(data.activeFarmId).catch(() => {});
-        }
-      }
-    } catch (err: any) {
-      console.warn('[ensureFarm permission/network notice]:', err?.message || err);
-      // İzin yoksa varsayılan çiftlik id'sini ayarla
-      if (!this.farmContext.activeFarmId()) {
-        this.farmContext.setActiveFarm('odivon-farm-default');
-      }
+  /**
+   * Oturumu Main API'den yükler. Kullanıcının henüz profili yoksa (ilk giriş/kayıt)
+   * kendisi için bir çiftlik açar; çiftlik sahibi her zaman Admin kabul edilir.
+   */
+  ensureFarm(user: User, customFarmName?: string): Promise<FarmSession | null> {
+    if (customFarmName && !this.pendingOnboarding) {
+      this.pendingOnboarding = { farmName: customFarmName };
     }
+    if (this.session?.uid !== user.uid) {
+      const promise = this.loadSession(user);
+      this.session = { uid: user.uid, promise };
+      // Hata sonrası bir sonraki denemede yeniden yüklenebilsin
+      promise.catch(() => {
+        if (this.session?.promise === promise) this.session = null;
+      });
+    }
+    return this.session!.promise;
+  }
+
+  private async loadSession(user: User): Promise<FarmSession> {
+    let session: FarmSession;
+    let created = false;
+    try {
+      session = await this.api.get<FarmSession>('/farm/me');
+    } catch (err) {
+      if (!(err instanceof ApiError) || err.apiCode !== 'USER_NOT_FOUND') throw err;
+      const input = this.pendingOnboarding ?? {};
+      const displayName = input.displayName || user.displayName || user.email?.split('@')[0] || 'admin';
+      await this.api.post('/farm/onboarding', {
+        farmName: input.farmName || `${displayName} Çiftliği`,
+        displayName,
+        phone: input.details?.phone || undefined,
+        countryCode: input.details?.countryCode || undefined,
+        country: input.details?.country || undefined,
+        language: input.details?.language || undefined,
+      });
+      created = true;
+      session = await this.api.get<FarmSession>('/farm/me');
+    } finally {
+      this.pendingOnboarding = null;
+    }
+
+    this.applySession(session);
+
+    // Tanımları kontrol et, boş ise otomatik tohumla (yazma yetkisi olanlar için, arka planda)
+    if (!created && session.role && session.role !== 'okuyucu') {
+      this.seedService.checkAndSeedIfEmpty(session.tenantId).catch(() => {});
+    }
+    return session;
+  }
+
+  private applySession(session: FarmSession) {
+    this.farmContext.applyFarm(session.farm);
+    // Üye kartı olmayan veya çıkarılmış kullanıcılar salt okunur görünür; sunucu zaten erişimi reddeder.
+    this.farmContext.setUserRole(session.role ?? 'okuyucu');
+    this.farmContext.setUser(session.uid);
+  }
+
+  private toAppUser(session: FarmSession): AppUser {
+    return {
+      uid: session.uid,
+      email: session.email,
+      displayName: session.displayName || session.member?.displayName || session.email.split('@')[0],
+      phone: session.member?.phone || session.farm.phone || '',
+      country: session.farm.country || '',
+      countryCode: session.farm.countryCode || '',
+      language: session.farm.language || 'tr',
+      lastLoginAt: session.member?.lastLoginAt,
+      memberships: [{ farmId: session.tenantId, role: session.role ?? 'okuyucu' }],
+      activeFarmId: session.tenantId,
+      createdAt: session.member?.createdAt,
+    };
+  }
+
+  /** Main API'ye ulaşılamazsa arayüzün kilitlenmemesi için geçici profil */
+  private fallbackUser(user: User): AppUser {
+    const farmId = this.farmContext.activeFarmId() || 'odivon-farm-default';
+    return {
+      uid: user.uid,
+      email: user.email || '',
+      displayName: user.displayName || user.email?.split('@')[0] || 'admin',
+      memberships: [{ farmId, role: this.farmContext.userRole() }],
+      activeFarmId: farmId,
+      createdAt: new Date(),
+    };
   }
 
   /**
-   * Kayıt akışı: kullanıcı oluşturur, kendisi için bir çiftlik (farm) açar,
-   * o çiftlikte 'admin' rolüyle üyeliğini tanımlar,
-   * farms/{farmId}/members altında ilk admin üye kaydını oluşturur,
-   * varsayılan tanımları (Hayvan Tipleri, Irklar, Padoklar, Tedavi Türleri, Hastalıklar) yükler
-   * ve Hostinger SMTP ile kurumsal Hoş Geldiniz e-postasını kuyruğa ekler.
+   * Kayıt akışı: Firebase Auth kullanıcısını oluşturur, Main API'de kendisi için bir çiftlik
+   * (14 günlük deneme, Admin üyelik) açar, varsayılan tanımları (Hayvan Tipleri, Irklar,
+   * Padoklar, Tedavi Türleri, Hastalıklar) seçilen dilde yükler ve Hoş Geldiniz e-postasını kuyruğa ekler.
    */
   async register(
     email: string,
@@ -240,8 +221,6 @@ export class AuthService {
     farmName: string,
     details?: RegisterDetails
   ) {
-    const cred = await createUserWithEmailAndPassword(this.auth, email, password);
-
     const language = details?.language || 'tr';
     if (details?.language) {
       try {
@@ -249,93 +228,18 @@ export class AuthService {
       } catch {}
     }
 
-    const farm: Farm = {
-      name: farmName,
-      ownerUid: cred.user.uid,
-      phone: details?.phone || '',
-      countryCode: details?.countryCode || '',
-      country: details?.country || '',
-      language,
-      createdAt: serverTimestamp(),
-    };
-    const farmRef = await addDoc(collection(this.db, 'farms'), farm);
+    this.pendingOnboarding = { farmName, displayName, details: { ...details, language } };
+    const cred = await createUserWithEmailAndPassword(this.auth, email, password);
+    const session = await this.ensureFarm(cred.user);
 
-    const userRef = doc(this.db, `users/${cred.user.uid}`);
-    const profile: AppUser = {
-      uid: cred.user.uid,
-      email,
-      displayName,
-      phone: details?.phone || '',
-      countryCode: details?.countryCode || '',
-      country: details?.country || '',
-      language,
-      memberships: [{ farmId: farmRef.id, role: 'admin' }],
-      activeFarmId: farmRef.id,
-      createdAt: serverTimestamp(),
-    };
-    await setDoc(userRef, profile);
-
-    // Çiftlik altında üye kaydı (Admin) oluştur — Kayıt olan kullanıcı her zaman Admin kabul edilir
+    // 1. Yeni çiftlik için varsayılan tanımları seçilen dilde tohumla
     try {
-      const memberRef = doc(this.db, `farms/${farmRef.id}/members/${cred.user.uid}`);
-      await setDoc(memberRef, {
-        uid: cred.user.uid,
-        email,
-        displayName,
-        phone: details?.phone || '',
-        role: 'admin',
-        title:
-          language === 'de'
-            ? 'Betriebsinhaber & Betriebsleiter'
-            : language === 'nl'
-            ? 'Bedrijfseigenaar & Beheerder'
-            : language === 'ru'
-            ? 'Владелец и управляющий фермой'
-            : language === 'en'
-            ? 'Farm Owner & Manager'
-            : 'Çiftlik Sahibi & Yönetici',
-        addedAt: serverTimestamp(),
-        createdAt: serverTimestamp(),
-        deletedAt: null,
-      });
-    } catch (mErr) {
-      console.warn('[Register] admin member doc creation notice:', mErr);
-    }
-
-    this.farmContext.setActiveFarm(farmRef.id, farmName);
-    this.farmContext.setUserRole('admin');
-
-    // 0. 14 Günlük Ücretsiz Deneme Abonelik Dokümanını Firestore'da anında başlat
-    try {
-      const periodEnd = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
-      const subRef = doc(this.db, `farms/${farmRef.id}/subscription/current`);
-      await setDoc(subRef, {
-        farmId: farmRef.id,
-        planId: 'trial',
-        status: 'trialing',
-        billingCycle: 'monthly',
-        startDate: serverTimestamp(),
-        currentPeriodEnd: Timestamp.fromDate(periodEnd),
-        trialEndsAt: Timestamp.fromDate(periodEnd),
-        animalLimit: 250,
-        userLimit: 5,
-        storageLimitMb: 1024,
-        pricePaid: 0,
-        paymentMethod: 'manual',
-        createdAt: serverTimestamp(),
-      });
-    } catch (subErr) {
-      console.warn('[Register] Subscription init notice:', subErr);
-    }
-
-    // 1. Yeni çiftlik için varsayılan tanımları (Hayvan Tipleri, Irklar, Padoklar, Tedavi Türleri, Hastalıklar) seçilen dilde tohumla
-    try {
-      await this.seedService.seedFarmDefaults(farmRef.id, language);
+      await this.seedService.seedFarmDefaults(session?.tenantId ?? '', language);
     } catch (seedErr) {
       console.warn('[Register] Varsayılan veriler tohumlanırken hata (kayıt süreci devam ediyor):', seedErr);
     }
 
-    // 2. Yeni üyeye Hostinger SMTP üzerinden Hoş Geldiniz e-postasını kuyruğa ekle
+    // 2. Hoş Geldiniz e-postasını kuyruğa ekle
     try {
       await this.emailService.sendWelcomeEmail({ email, displayName, farmName });
     } catch (mailErr) {
@@ -343,28 +247,18 @@ export class AuthService {
     }
 
     // 3. İlk kayıt/giriş oturum logunu kaydet
-    try {
-      await this.auditService.recordLoginLog({
-        uid: cred.user.uid,
-        email,
-        displayName,
-        farmId: farmRef.id,
-        farmName,
-        status: 'success',
-      });
-    } catch (auditErr) {
-      console.warn('[Register] audit log notice:', auditErr);
-    }
+    await this.auditService.recordLoginLog();
 
     return cred;
   }
 
   /**
    * 14 günlük deneme süresi dolmuş test kullanıcısı (demo-expired@odivonfarm.com)
-   * Firebase Auth'ta varsa giriş yapar, yoksa oluşturur; Firestore'da süresi 5 gün önce dolmuş bir abonelik dokümanı hazırlar.
+   * Firebase Auth'ta varsa giriş yapar, yoksa oluşturur; aboneliği 5 gün önce dolmuş olarak işaretler.
    */
   async ensureExpiredTestUser(password = '123456') {
     const email = 'demo-expired@odivonfarm.com';
+    this.pendingOnboarding = { farmName: 'Örnek Süresi Dolan Çiftlik', displayName: 'Demo Expired Test User' };
     let cred;
     try {
       cred = await signInWithEmailAndPassword(this.auth, email, password);
@@ -380,63 +274,27 @@ export class AuthService {
           cred = await signInWithEmailAndPassword(this.auth, email, password);
         }
       } else {
+        this.pendingOnboarding = null;
         throw err;
       }
     }
 
     if (cred?.user) {
-      const user = cred.user;
-      await this.ensureFarm(user, 'Örnek Süresi Dolan Çiftlik');
-
-      const userRef = doc(this.db, `users/${user.uid}`);
-      const userSnap = await getDoc(userRef);
-      const appUser = userSnap.data() as AppUser;
-      const farmId = appUser?.activeFarmId || 'odivon-expired-test-farm';
-
-      // Aboneliği expired ve 5 gün önce dolmuş olarak ayarla
-      const pastDate = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000);
-      const expiredSub = {
-        farmId,
-        planId: 'trial',
-        status: 'expired',
-        billingCycle: 'monthly',
-        startDate: Timestamp.fromDate(new Date(Date.now() - 19 * 24 * 60 * 60 * 1000)),
-        currentPeriodEnd: Timestamp.fromDate(pastDate),
-        trialEndsAt: Timestamp.fromDate(pastDate),
-        animalLimit: 250,
-        userLimit: 5,
-        storageLimitMb: 1024,
-        pricePaid: 0,
-        paymentMethod: 'manual',
-        updatedAt: serverTimestamp(),
-      };
-
+      await this.ensureFarm(cred.user, 'Örnek Süresi Dolan Çiftlik');
       try {
-        const subRef = doc(this.db, `farms/${farmId}/subscription/current`);
-        await setDoc(subRef, expiredSub, { merge: true });
+        await this.api.post('/farm/subscription/expire-demo');
       } catch (subErr) {
         console.warn('[ensureExpiredTestUser] Subscription update error:', subErr);
       }
-
-      // Giriş logunu kaydet
-      try {
-        await this.auditService.recordLoginLog({
-          uid: user.uid,
-          email: user.email || email,
-          displayName: 'Demo Expired Test User',
-          farmId,
-          farmName: 'Örnek Süresi Dolan Çiftlik',
-          status: 'success',
-        });
-      } catch (auditErr) {
-        console.warn('[ensureExpiredTestUser] audit log notice:', auditErr);
-      }
+      await this.auditService.recordLoginLog();
     }
 
     return cred;
   }
 
   logout() {
+    this.session = null;
+    this.farmContext.setUser(null);
     return signOut(this.auth);
   }
 }

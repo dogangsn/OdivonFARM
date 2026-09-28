@@ -1,10 +1,5 @@
-import { Injectable } from '@angular/core';
-import {
-  getFirestore,
-  collection,
-  addDoc,
-  serverTimestamp,
-} from 'firebase/firestore';
+import { Injectable, inject } from '@angular/core';
+import { ApiService } from '../http/api.service';
 
 export interface WelcomeEmailData {
   email: string;
@@ -39,8 +34,25 @@ export interface KurbanPaymentEmailData {
 
 @Injectable({ providedIn: 'root' })
 export class EmailService {
-  private get db() {
-    return getFirestore();
+  private api = inject(ApiService);
+
+  /**
+   * E-postayı Main API üzerinden çiftliğin e-posta kuyruğuna (tenants/{tenantId}/farmMailQueue) ekler;
+   * SMTP gönderimi kuyruğu dinleyen sunucu tarafı tetikleyicisi tarafından yapılır.
+   */
+  private async queueMail(mail: {
+    to: string[];
+    message: { subject: string; text: string; html: string };
+    meta?: Record<string, unknown>;
+    [key: string]: unknown;
+  }): Promise<{ id: string }> {
+    return this.api.post<{ id: string }>('/farm/mail', {
+      to: mail.to,
+      subject: mail.message.subject,
+      text: mail.message.text,
+      html: mail.message.html,
+      meta: mail.meta,
+    });
   }
 
   /**
@@ -54,7 +66,7 @@ export class EmailService {
     const plainText = this.generateWelcomeEmailText(displayName, farmName);
 
     try {
-      const mailRef = await addDoc(collection(this.db, 'mail'), {
+      const mailRef = await this.queueMail({
         to: [email],
         from: 'Odivon Çiftlik Yönetimi <info@odivon.com>',
         replyTo: 'info@odivon.com',
@@ -70,7 +82,6 @@ export class EmailService {
           recipientEmail: email,
         },
         status: 'pending',
-        createdAt: serverTimestamp(),
       });
 
       console.log(`[EmailService] Hoş Geldiniz e-postası mail kuyruğuna eklendi: ID=${mailRef.id}`);
@@ -99,7 +110,7 @@ export class EmailService {
     const plainText = this.generateInvitationEmailText(displayName, farmName, roleLabel, invitedByName);
 
     try {
-      const mailRef = await addDoc(collection(this.db, 'mail'), {
+      const mailRef = await this.queueMail({
         to: [email],
         from: 'Odivon Çiftlik Yönetimi <info@odivon.com>',
         replyTo: 'info@odivon.com',
@@ -116,7 +127,6 @@ export class EmailService {
           recipientEmail: email,
         },
         status: 'pending',
-        createdAt: serverTimestamp(),
       });
 
       console.log(`[EmailService] Davet e-postası mail kuyruğuna eklendi: ID=${mailRef.id}`);
@@ -354,7 +364,7 @@ Odivon Çiftlik Yönetim Sistemleri Ekibi`;
     const plainText = this.generateKurbanPaymentEmailText(data);
 
     try {
-      const mailRef = await addDoc(collection(this.db, 'mail'), {
+      const mailRef = await this.queueMail({
         to: [email],
         from: `${farmName} Kurban Hizmetleri <info@odivon.com>`,
         replyTo: 'info@odivon.com',
@@ -372,7 +382,6 @@ Odivon Çiftlik Yönetim Sistemleri Ekibi`;
           recipientEmail: email,
         },
         status: 'pending',
-        createdAt: serverTimestamp(),
       });
 
       console.log(`[EmailService] Kurban ödeme e-postası mail kuyruğuna eklendi: ID=${mailRef.id}`);

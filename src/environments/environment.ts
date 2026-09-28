@@ -1,12 +1,14 @@
 export const environment = {
   production: true,
+  // Odivon Main API on Cloudflare Workers.
+  apiBaseUrl: 'https://mainapi.odivon.com/api/v1',
+  // Shared Firebase project of Odivon Main API (Auth only — data goes through the API).
   firebase: {
-    apiKey: 'AIzaSyBZpeyqnUArW9vgF1EZlZrKrUHIBadM8K0',
-    authDomain: 'odivonfarm.firebaseapp.com',
-    projectId: 'odivonfarm',
-    storageBucket: 'odivonfarm.firebasestorage.app',
-    messagingSenderId: '911774426374',
-    appId: '1:911774426374:web:e993b3bf1f2779f1b2aa87',
-    measurementId: 'G-QE05S8HVK6',
+    apiKey: 'AIzaSyAu1u-wKeR9RQBhp6lqUvo64ZbQ5fNDIGg',
+    authDomain: 'odivon-main-api-a2095.firebaseapp.com',
+    projectId: 'odivon-main-api-a2095',
+    storageBucket: 'odivon-main-api-a2095.firebasestorage.app',
+    messagingSenderId: '845036233177',
+    appId: '1:845036233177:web:ba0cbe0dcdb48e197bf9c8',
   },
 };

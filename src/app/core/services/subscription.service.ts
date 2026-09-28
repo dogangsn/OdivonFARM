@@ -1,15 +1,6 @@
 import { Injectable, inject, signal, computed } from '@angular/core';
-import {
-  getFirestore,
-  doc,
-  setDoc,
-  getDoc,
-  onSnapshot,
-  serverTimestamp,
-  Timestamp,
-  Unsubscribe,
-} from 'firebase/firestore';
 import { FarmContextService } from './farm-context.service';
+import { ApiService } from '../http/api.service';
 import {
   FarmSubscription,
   PlanId,
@@ -21,11 +12,8 @@ import {
 @Injectable({ providedIn: 'root' })
 export class SubscriptionService {
   private farmContext = inject(FarmContextService);
-  private get db() {
-    return getFirestore();
-  }
-
-  private unsub: Unsubscribe | null = null;
+  private api = inject(ApiService);
+  private loadSeq = 0;
 
   // Signals
   readonly subscription = signal<FarmSubscription | null>(null);
@@ -49,7 +37,7 @@ export class SubscriptionService {
     const endDate = sub.trialEndsAt || sub.currentPeriodEnd;
     if (!endDate) return 14;
 
-    const endMs = endDate instanceof Timestamp ? endDate.toMillis() : new Date(endDate).getTime();
+    const endMs = typeof endDate?.toMillis === 'function' ? endDate.toMillis() : new Date(endDate).getTime();
     const nowMs = Date.now();
     const diffDays = Math.ceil((endMs - nowMs) / (1000 * 60 * 60 * 24));
     return Math.max(0, diffDays);
@@ -71,86 +59,38 @@ export class SubscriptionService {
   });
 
   constructor() {
-    // FarmContext activeFarmId değiştikçe abonelik dinleyicisini yeniden kur
-    this.farmContext.activeFarmId$.subscribe((farmId) => {
-      if (farmId) {
-        this.subscribeToSubscription(farmId);
+    // Oturum (kullanıcı + çiftlik) değiştikçe aboneliği Main API'den yeniden yükle
+    this.farmContext.session$.subscribe(({ farmId, uid }) => {
+      if (farmId && uid) {
+        this.load();
       } else {
         this.subscription.set(null);
-        this.loading.set(false);
+        this.loading.set(Boolean(farmId));
       }
     });
   }
 
   /**
-   * Çiftliğin abonelik dokümanını dinler, yoksa 14 günlük deneme başlatır.
+   * Çiftliğin abonelik bilgisini yükler. Yeni çiftlikler sunucuda 14 günlük
+   * ücretsiz deneme ile açılır; sunucuya ulaşılamazsa geçici deneme görünümü kullanılır.
    */
-  private subscribeToSubscription(farmId: string) {
-    if (this.unsub) {
-      this.unsub();
-      this.unsub = null;
-    }
-
-    if (!farmId || farmId === 'odivon-farm-default') {
-      this.setFallbackSubscription('odivon-farm-default');
-      return;
-    }
-
+  async load(): Promise<void> {
+    const seq = ++this.loadSeq;
+    this.loading.set(true);
     try {
-      const subRef = doc(this.db, `farms/${farmId}/subscription/current`);
-      this.unsub = onSnapshot(
-        subRef,
-        async (snap) => {
-          if (snap.exists()) {
-            this.subscription.set(snap.data() as FarmSubscription);
-            this.loading.set(false);
-          } else {
-            // İlk kez açılan çiftlik için 14 Günlük Ücretsiz Deneme oluştur
-            await this.initializeTrialSubscription(farmId);
-          }
-        },
-        (err) => {
-          console.warn('[SubscriptionService] snapshot error/offline notice:', err?.message || err);
-          this.setFallbackSubscription(farmId);
-          this.loading.set(false);
-        }
-      );
+      const sub = await this.api.get<FarmSubscription | null>('/farm/subscription');
+      if (seq !== this.loadSeq) return;
+      if (sub) {
+        this.subscription.set(sub);
+      } else {
+        this.setFallbackSubscription(this.farmContext.activeFarmId() || 'odivon-farm-default');
+      }
     } catch (err) {
-      console.warn('[SubscriptionService] init error:', err);
-      this.setFallbackSubscription(farmId);
-      this.loading.set(false);
-    }
-  }
-
-  /**
-   * Yeni çiftlik için 14 günlük tam yetkili deneme dokümanı başlatır.
-   */
-  async initializeTrialSubscription(farmId: string): Promise<void> {
-    const trialPlan = PLAN_CATALOG.trial;
-    const now = new Date();
-    const periodEnd = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
-
-    const trialSub: FarmSubscription = {
-      farmId,
-      planId: 'trial',
-      status: 'trialing',
-      billingCycle: 'monthly',
-      startDate: serverTimestamp(),
-      currentPeriodEnd: Timestamp.fromDate(periodEnd),
-      trialEndsAt: Timestamp.fromDate(periodEnd),
-      animalLimit: trialPlan.animalLimit,
-      userLimit: trialPlan.userLimit,
-      storageLimitMb: trialPlan.storageLimitMb,
-      pricePaid: 0,
-      paymentMethod: 'manual',
-    };
-
-    try {
-      const subRef = doc(this.db, `farms/${farmId}/subscription/current`);
-      await setDoc(subRef, trialSub);
-    } catch (e) {
-      console.warn('[SubscriptionService] trial init notice:', e);
-      this.subscription.set(trialSub);
+      if (seq !== this.loadSeq) return;
+      console.warn('[SubscriptionService] abonelik okunamadı:', (err as Error)?.message || err);
+      this.setFallbackSubscription(this.farmContext.activeFarmId() || 'odivon-farm-default');
+    } finally {
+      if (seq === this.loadSeq) this.loading.set(false);
     }
   }
 
@@ -170,37 +110,21 @@ export class SubscriptionService {
   }
 
   /**
-   * Paketi yükseltir veya değiştirir.
+   * Paketi yükseltir veya değiştirir (yalnızca yönetici). Limitler ve ücret sunucudaki
+   * paket kataloğundan belirlenir.
    */
   async changePlan(
     planId: PlanId,
     billingCycle: BillingCycle = 'monthly',
     paymentMethod: 'credit_card' | 'bank_transfer' = 'credit_card'
   ): Promise<void> {
-    const farmId = this.farmContext.requireActiveFarmId();
-    const targetPlan = PLAN_CATALOG[planId];
-    if (!targetPlan) throw new Error('Geçersiz paket seçildi.');
-
-    const now = new Date();
-    const daysToAdd = billingCycle === 'yearly' ? 365 : 30;
-    const nextPeriodEnd = new Date(Date.now() + daysToAdd * 24 * 60 * 60 * 1000);
-    const price = billingCycle === 'yearly' ? targetPlan.yearlyPrice : targetPlan.monthlyPrice;
-
-    const updatedSub: Partial<FarmSubscription> = {
+    if (!PLAN_CATALOG[planId]) throw new Error('Geçersiz paket seçildi.');
+    const sub = await this.api.put<FarmSubscription>('/farm/subscription/plan', {
       planId,
-      status: 'active',
       billingCycle,
-      currentPeriodEnd: Timestamp.fromDate(nextPeriodEnd),
-      animalLimit: targetPlan.animalLimit,
-      userLimit: targetPlan.userLimit,
-      storageLimitMb: targetPlan.storageLimitMb,
-      pricePaid: price,
       paymentMethod,
-      updatedAt: serverTimestamp(),
-    };
-
-    const subRef = doc(this.db, `farms/${farmId}/subscription/current`);
-    await setDoc(subRef, updatedSub, { merge: true });
+    });
+    this.subscription.set(sub);
   }
 
   /**
