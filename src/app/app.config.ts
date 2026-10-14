@@ -8,6 +8,7 @@ import { routes } from './app.routes';
 import { environment } from '../environments/environment';
 import { provideIcons } from './core/icons/icons.provider';
 import { authTokenInterceptor } from './core/http/auth-token.interceptor';
+import { clientVersionInterceptor } from './core/http/client-version.interceptor';
 
 // Initialize native Firebase 12 singleton once (Auth only — data goes through Odivon Main API)
 if (!getApps().length) {
@@ -20,7 +21,7 @@ export const appConfig: ApplicationConfig = {
     provideBrowserGlobalErrorListeners(),
     provideRouter(routes, withComponentInputBinding()),
     provideAnimationsAsync(),
-    provideHttpClient(withInterceptors([authTokenInterceptor])),
+    provideHttpClient(withInterceptors([authTokenInterceptor, clientVersionInterceptor])),
     provideIcons(),
   ],
 };

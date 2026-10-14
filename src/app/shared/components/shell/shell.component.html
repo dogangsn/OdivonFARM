@@ -247,6 +247,14 @@
         <div class="flex items-center gap-2 text-xs text-slate-400">
           <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
           <span class="font-medium text-slate-300">Sistem Çevrimiçi</span>
+          <button
+            type="button"
+            (click)="version.openModal()"
+            class="font-mono text-[10px] text-slate-500 hover:text-indigo-300 transition-colors"
+            matTooltip="Sürüm bilgisi"
+          >
+            v{{ version.current.version }}
+          </button>
         </div>
         <button
           (click)="logout()"

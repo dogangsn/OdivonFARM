@@ -12,6 +12,7 @@ import { FarmContextService } from '../../../core/services/farm-context.service'
 import { SubscriptionService } from '../../../core/services/subscription.service';
 import { AlertService } from '../../../core/services/alert.service';
 import Swal from 'sweetalert2';
+import { VersionService } from '../../../core/version/version.service';
 
 export interface NavItem {
   label: string;
@@ -64,6 +65,7 @@ export class ShellComponent {
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
   private alertService = inject(AlertService);
+  protected readonly version = inject(VersionService);
   farmContext = inject(FarmContextService);
   onboardingService = inject(OnboardingService);
   subService = inject(SubscriptionService);

@@ -1,12 +1,19 @@
 {
   "name": "odivonfarm",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "scripts": {
     "ng": "ng",
+    "prestart": "node scripts/write-version.mjs",
     "start": "ng serve --host 0.0.0.0 --port 4200",
+    "prebuild": "node scripts/write-version.mjs",
     "build": "ng build",
+    "prewatch": "node scripts/write-version.mjs",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "pretest": "node scripts/write-version.mjs",
+    "test": "ng test",
+    "prepare": "node scripts/install-git-hooks.mjs",
+    "postinstall": "node scripts/write-version.mjs",
+    "version:bump": "node scripts/bump-version.mjs"
   },
   "private": true,
   "packageManager": "npm@10.9.7",
