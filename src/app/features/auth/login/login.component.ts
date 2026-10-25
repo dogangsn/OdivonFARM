@@ -44,24 +44,6 @@ export class LoginComponent {
     this.showPassword.update((v) => !v);
   }
 
-  fillDemoCredentials() {
-    this.fillActiveDemoCredentials();
-  }
-
-  fillActiveDemoCredentials() {
-    if (this.loading()) return;
-    this.email.set('admin@odivonfarm.com');
-    this.password.set('123456');
-    this.error.set(null);
-  }
-
-  fillExpiredTestCredentials() {
-    if (this.loading()) return;
-    this.email.set('demo-expired@odivonfarm.com');
-    this.password.set('123456');
-    this.error.set(null);
-  }
-
   openResetModal() {
     if (this.loading()) return;
     this.resetEmail.set(this.email().trim());
