@@ -1,349 +1,206 @@
-<div
-  class="flex flex-col sm:flex-row items-center md:items-start sm:justify-center md:justify-start flex-auto min-w-0 bg-card">
+<div class="flex w-full min-h-screen bg-slate-50 dark:bg-[#0b1120]">
 
-  <!-- Left: Register Form Side -->
-  <div
-    class="w-full sm:w-auto py-8 px-6 sm:p-12 md:p-16 sm:rounded-2xl md:rounded-none sm:shadow-lg md:shadow-none sm:bg-card flex flex-col justify-between min-h-screen md:w-1/2 lg:w-5/12 xl:w-4/12 z-10">
+  <!-- Sol: Marka paneli (lg+) -->
+  <app-auth-showcase
+    [badge]="'Ücretsiz başlayın, kredi kartı gerekmez'"
+    [title]="'Çiftliğinizi dakikalar içinde dijitale taşıyın'"
+    [subtitle]="'Kayıt olduğunuz anda padoklar, hayvan tipleri, ırklar ve tedavi tanımları seçtiğiniz dilde hazır olarak kurulur.'"
+    [highlights]="highlights" />
 
-    <!-- Top: Logo & Brand -->
-    <div>
-      <div class="flex items-center gap-3">
-        <img src="images/logo.png" alt="OdivonFARM Logo"
-          class="w-11 h-11 rounded-xl shadow-md shadow-indigo-600/30 object-cover" />
-        <div class="flex flex-col">
-          <span class="text-xl font-black tracking-tight text-default leading-tight">
-            Odivon<span class="text-indigo-600 dark:text-indigo-400 font-extrabold">FARM</span>
-          </span>
-          <span class="text-2xs font-bold text-secondary uppercase tracking-widest">
-            Çiftlik Yönetim Sistemi
-          </span>
-        </div>
+  <!-- Sağ: Form -->
+  <main class="flex flex-col flex-1 min-w-0 px-5 py-6 sm:px-10 sm:py-8">
+
+    <!-- Üst bar -->
+    <div class="flex items-center justify-between gap-4">
+      <div class="flex items-center gap-2.5 lg:invisible">
+        <img src="images/logo.png" alt="OdivonFARM" class="w-9 h-9 rounded-xl object-cover shadow-sm" />
+        <span class="text-lg font-black tracking-tight text-slate-900 dark:text-white">
+          Odivon<span class="text-indigo-600 dark:text-indigo-400">FARM</span>
+        </span>
       </div>
-    </div>
-
-    <!-- Middle: Register Box -->
-    <div class="my-8 sm:my-auto max-w-sm w-full mx-auto relative">
-      <!-- Loading Overlay & Multi-Click Blocker -->
-      @if (loading()) {
-      <div
-        class="absolute inset-0 -m-3 sm:-m-5 bg-white/92 dark:bg-slate-900/92 backdrop-blur-md z-40 rounded-2xl flex flex-col items-center justify-center p-6 text-center animate-fadeIn shadow-2xl border border-indigo-100 dark:border-slate-800">
-        <div class="relative mb-4">
-          <div
-            class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/30 animate-pulse">
-            <img src="images/logo.png" alt="OdivonFARM" class="w-9 h-9 object-cover rounded-xl" />
-          </div>
-          <span class="absolute -bottom-1 -right-1 flex h-3.5 w-3.5">
-            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
-            <span class="relative inline-flex rounded-full h-3.5 w-3.5 bg-indigo-500"></span>
-          </span>
-        </div>
-        <div class="text-sm font-extrabold text-default mb-1">Çiftliğiniz Kuruluyor...</div>
-        <div class="text-2xs text-secondary max-w-[260px] leading-relaxed mb-4">
-          Padoklar, hayvan tipleri, ırklar ve tedavi tanımları <b>{{ selectedLanguageOption().flag }} {{
-            selectedLanguageOption().nativeName }}</b> dilinde hazırlanıyor. Lütfen bekleyin.
-        </div>
-        <div class="w-48 h-1.5 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
-          <div
-            class="h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-full animate-indeterminate">
-          </div>
-        </div>
-        <div class="text-[10px] text-indigo-600 dark:text-indigo-400 font-semibold mt-3 flex items-center gap-1.5">
-          <span class="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-ping"></span>
-          <span>Veriler oluşturuluyor, lütfen bekleyin...</span>
-        </div>
-      </div>
-      }
-
-      <!-- Title -->
-      <div class="text-3xl font-extrabold tracking-tight text-default">Yeni Çiftlik Kaydı</div>
-      <div class="flex items-baseline mt-1.5 font-medium text-xs text-secondary">
-        <span>Zaten bir hesabınız var mı?</span>
-        <a class="ml-1 text-indigo-600 dark:text-indigo-400 font-bold hover:underline" routerLink="/auth/login">
-          Giriş Yapın
+      <div class="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+        <span class="hidden sm:inline">Zaten hesabınız var mı?</span>
+        <a routerLink="/auth/login"
+          class="ml-1 font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300">
+          Giriş yapın
         </a>
       </div>
+    </div>
 
-      <!-- Error Alert Message -->
-      @if (error()) {
-      <div
-        class="mt-6 p-4 rounded-xl bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-300 text-xs font-medium flex items-start gap-2.5 animate-shake">
-        <mat-icon class="icon-size-4 text-rose-600 shrink-0 mt-0.5"
-          [svgIcon]="'heroicons_solid:exclamation-circle'"></mat-icon>
-        <div class="flex-1">{{ error() }}</div>
-        <button (click)="error.set(null)" class="text-rose-500 hover:text-rose-700">
-          <mat-icon class="icon-size-3.5" [svgIcon]="'heroicons_solid:x'"></mat-icon>
-        </button>
-      </div>
-      }
+    <!-- Form alanı -->
+    <div class="flex flex-1 items-center justify-center py-10">
+      <div class="relative w-full max-w-[480px]">
 
-      <!-- Form -->
-      <form class="mt-8 space-y-4" (ngSubmit)="submit()">
-
-        <!-- Name Field -->
-        <div>
-          <label class="block text-xs font-bold text-default mb-1.5">
-            Ad Soyad *
-          </label>
-          <div class="relative">
-            <mat-icon class="absolute left-3.5 top-1/2 -translate-y-1/2 icon-size-5 text-secondary pointer-events-none"
-              [svgIcon]="'heroicons_outline:user'"></mat-icon>
-            <input type="text" name="name" [ngModel]="name()" (ngModelChange)="name.set($event)"
-              placeholder="Ahmet Yılmaz" required
-              class="w-full pl-10 pr-4 py-3 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-xs font-medium text-default transition-all" />
-          </div>
-        </div>
-
-        <!-- Farm Name Field -->
-        <div>
-          <label class="block text-xs font-bold text-default mb-1.5">
-            Çiftlik / İşletme Adı
-          </label>
-          <div class="relative">
-            <mat-icon class="absolute left-3.5 top-1/2 -translate-y-1/2 icon-size-5 text-secondary pointer-events-none"
-              [svgIcon]="'heroicons_outline:office-building'"></mat-icon>
-            <input type="text" name="farmName" [ngModel]="farmName()" (ngModelChange)="farmName.set($event)"
-              placeholder="Örn: Doğan Hayvancılık Çiftliği"
-              class="w-full pl-10 pr-4 py-3 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-xs font-medium text-default transition-all" />
-          </div>
-        </div>
-
-        <!-- Country & Phone Number Group -->
-        <div>
-          <div class="flex items-center justify-between mb-1.5">
-            <label class="block text-xs font-bold text-default">
-              Ülke & Cep Telefonu
-            </label>
-            <span class="text-[11px] font-normal text-secondary flex items-center gap-1.5">
-              <img [src]="getFlagUrl(selectedCountry().code)" class="w-4 h-3 rounded-xs object-cover shadow-xs border border-slate-200/60 inline-block" [alt]="selectedCountry().name" />
-              <span class="truncate max-w-[130px] font-medium">{{ selectedCountry().name }}</span>
-            </span>
-          </div>
-          <div class="flex gap-2">
-            <!-- Country Selector -->
-            <div class="w-2/5 relative">
-              <div class="absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none z-10 flex items-center">
-                <img [src]="getFlagUrl(selectedCountry().code)" class="w-4 h-3 rounded-xs object-cover shadow-xs border border-slate-200/60" [alt]="selectedCountry().name" />
+        <!-- Yükleniyor katmanı -->
+        @if (loading()) {
+          <div class="absolute -inset-4 z-40 flex flex-col items-center justify-center gap-4 rounded-3xl bg-white/85 dark:bg-[#0b1120]/85 backdrop-blur-sm text-center px-6 animate-fadeIn">
+            <div class="w-12 h-12 rounded-full border-4 border-indigo-100 dark:border-slate-800 border-t-indigo-600 animate-spin"></div>
+            <div>
+              <div class="text-sm font-bold text-slate-900 dark:text-white">Çiftliğiniz kuruluyor</div>
+              <div class="mt-1 max-w-[280px] text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                Tanımlar <b>{{ selectedLanguageOption().nativeName }}</b> dilinde hazırlanıyor, lütfen bekleyin…
               </div>
-              <select [ngModel]="selectedCountry().code" (ngModelChange)="onCountryChange($event)" name="country"
-                class="w-full pl-8 pr-6 py-3 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-xs font-semibold text-default transition-all appearance-none cursor-pointer truncate">
-                @for (c of countries; track c.code) {
-                <option [value]="c.code">
-                  {{ c.name }} ({{ c.dialCode }})
-                </option>
+            </div>
+          </div>
+        }
+
+        <h2 class="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white">Hesabınızı oluşturun</h2>
+        <p class="mt-2 text-sm text-slate-500 dark:text-slate-400">Birkaç bilgiyle çiftliğinizi hemen kurun.</p>
+
+        <!-- Hata -->
+        @if (error()) {
+          <div role="alert"
+            class="mt-6 flex items-start gap-2.5 p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-300 text-sm animate-shake">
+            <mat-icon class="icon-size-5 shrink-0 text-rose-500" [svgIcon]="'heroicons_solid:exclamation-circle'"></mat-icon>
+            <div class="flex-1">{{ error() }}</div>
+            <button type="button" (click)="error.set(null)" aria-label="Kapat" class="text-rose-400 hover:text-rose-600">
+              <mat-icon class="icon-size-4" [svgIcon]="'heroicons_solid:x'"></mat-icon>
+            </button>
+          </div>
+        }
+
+        <form class="mt-8 space-y-5" (ngSubmit)="submit()">
+
+          <!-- Ad soyad + Çiftlik adı -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-4">
+            <div>
+              <label for="reg-name" class="block mb-1.5 text-sm font-semibold text-slate-700 dark:text-slate-300">Ad soyad</label>
+              <div class="relative">
+                <mat-icon class="absolute left-3.5 top-1/2 -translate-y-1/2 icon-size-5 text-slate-400 pointer-events-none" [svgIcon]="'heroicons_outline:user'"></mat-icon>
+                <input id="reg-name" type="text" name="name" autocomplete="name" required
+                  [ngModel]="name()" (ngModelChange)="name.set($event)"
+                  placeholder="Ahmet Yılmaz"
+                  class="w-full h-12 pl-11 pr-4 rounded-xl bg-white dark:bg-slate-900/70 border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-indigo-500/15 focus:border-indigo-500 transition" />
+              </div>
+            </div>
+            <div>
+              <label for="reg-farm" class="block mb-1.5 text-sm font-semibold text-slate-700 dark:text-slate-300">
+                Çiftlik adı <span class="font-normal text-slate-400">(isteğe bağlı)</span>
+              </label>
+              <div class="relative">
+                <mat-icon class="absolute left-3.5 top-1/2 -translate-y-1/2 icon-size-5 text-slate-400 pointer-events-none" [svgIcon]="'heroicons_outline:office-building'"></mat-icon>
+                <input id="reg-farm" type="text" name="farmName" autocomplete="organization"
+                  [ngModel]="farmName()" (ngModelChange)="farmName.set($event)"
+                  placeholder="Yılmaz Çiftliği"
+                  class="w-full h-12 pl-11 pr-4 rounded-xl bg-white dark:bg-slate-900/70 border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-indigo-500/15 focus:border-indigo-500 transition" />
+              </div>
+            </div>
+          </div>
+
+          <!-- E-posta -->
+          <div>
+            <label for="reg-email" class="block mb-1.5 text-sm font-semibold text-slate-700 dark:text-slate-300">E-posta</label>
+            <div class="relative">
+              <mat-icon class="absolute left-3.5 top-1/2 -translate-y-1/2 icon-size-5 text-slate-400 pointer-events-none" [svgIcon]="'heroicons_outline:mail'"></mat-icon>
+              <input id="reg-email" type="email" name="email" autocomplete="email" required
+                [ngModel]="email()" (ngModelChange)="email.set($event)"
+                placeholder="ornek@ciftlik.com"
+                class="w-full h-12 pl-11 pr-4 rounded-xl bg-white dark:bg-slate-900/70 border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-indigo-500/15 focus:border-indigo-500 transition" />
+            </div>
+          </div>
+
+          <!-- Şifre -->
+          <div>
+            <label for="reg-password" class="block mb-1.5 text-sm font-semibold text-slate-700 dark:text-slate-300">Şifre</label>
+            <div class="relative">
+              <mat-icon class="absolute left-3.5 top-1/2 -translate-y-1/2 icon-size-5 text-slate-400 pointer-events-none" [svgIcon]="'heroicons_outline:lock-closed'"></mat-icon>
+              <input id="reg-password" [type]="showPassword() ? 'text' : 'password'" name="password" autocomplete="new-password" required
+                [ngModel]="password()" (ngModelChange)="password.set($event)"
+                placeholder="En az 6 karakter"
+                class="w-full h-12 pl-11 pr-12 rounded-xl bg-white dark:bg-slate-900/70 border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-indigo-500/15 focus:border-indigo-500 transition" />
+              <button type="button" (click)="togglePasswordVisibility()"
+                [attr.aria-label]="showPassword() ? 'Şifreyi gizle' : 'Şifreyi göster'"
+                class="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+                <mat-icon class="icon-size-5" [svgIcon]="showPassword() ? 'heroicons_outline:eye-off' : 'heroicons_outline:eye'"></mat-icon>
+              </button>
+            </div>
+            <!-- Şifre gücü -->
+            @if (password()) {
+              <div class="mt-2 flex items-center gap-3">
+                <div class="flex flex-1 gap-1">
+                  @for (i of [1, 2, 3, 4]; track i) {
+                    <div class="h-1 flex-1 rounded-full transition-colors"
+                      [ngClass]="i <= passwordStrength().score ? passwordStrength().barClass : 'bg-slate-200 dark:bg-slate-700'"></div>
+                  }
+                </div>
+                <span class="text-xs font-semibold" [ngClass]="passwordStrength().textClass">{{ passwordStrength().label }}</span>
+              </div>
+            }
+          </div>
+
+          <!-- Ülke + Telefon -->
+          <div>
+            <label for="reg-phone" class="block mb-1.5 text-sm font-semibold text-slate-700 dark:text-slate-300">
+              Cep telefonu <span class="font-normal text-slate-400">(isteğe bağlı)</span>
+            </label>
+            <div class="flex h-12 rounded-xl bg-white dark:bg-slate-900/70 border border-slate-200 dark:border-slate-700 focus-within:ring-4 focus-within:ring-indigo-500/15 focus-within:border-indigo-500 transition">
+              <div class="relative shrink-0 flex items-center gap-2 pl-3 pr-2.5 border-r border-slate-200 dark:border-slate-700 rounded-l-xl hover:bg-slate-50 dark:hover:bg-slate-800/60 transition">
+                <img [src]="getFlagUrl(selectedCountry().code)" [alt]="selectedCountry().name"
+                  class="w-5 h-3.5 rounded-sm object-cover ring-1 ring-slate-200/70" />
+                <span class="text-sm font-semibold text-slate-700 dark:text-slate-200">{{ selectedCountry().dialCode }}</span>
+                <mat-icon class="icon-size-4 text-slate-400" [svgIcon]="'heroicons_solid:chevron-down'"></mat-icon>
+                <!-- Görünmez yerel seçim kutusu: tıklanınca ülke listesi açılır -->
+                <select name="country" aria-label="Ülke" [title]="selectedCountry().name"
+                  [ngModel]="selectedCountry().code" (ngModelChange)="onCountryChange($event)"
+                  class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+                  @for (c of countries; track c.code) {
+                    <option [value]="c.code">{{ c.name }} ({{ c.dialCode }})</option>
+                  }
+                </select>
+              </div>
+              <input id="reg-phone" type="tel" name="phone" autocomplete="tel-national"
+                [ngModel]="phone()" (ngModelChange)="phone.set($event)"
+                [placeholder]="selectedCountry().phonePlaceholder"
+                class="flex-1 min-w-0 h-full px-3.5 bg-transparent border-0 rounded-r-xl text-sm font-medium text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-0" />
+            </div>
+          </div>
+
+          <!-- Dil -->
+          <div>
+            <label for="reg-lang" class="block mb-1.5 text-sm font-semibold text-slate-700 dark:text-slate-300">Uygulama dili</label>
+            <div class="relative">
+              <img [src]="getLangFlagUrl(selectedLanguageOption().code)" [alt]="selectedLanguageOption().name"
+                class="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-3.5 rounded-sm object-cover ring-1 ring-slate-200/70 pointer-events-none" />
+              <select id="reg-lang" name="languageSelect"
+                [ngModel]="language()" (ngModelChange)="setLanguage($event)"
+                class="w-full h-12 pl-11 pr-10 rounded-xl bg-white dark:bg-slate-900/70 border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-900 dark:text-white appearance-none cursor-pointer focus:outline-none focus:ring-4 focus:ring-indigo-500/15 focus:border-indigo-500 transition">
+                @for (l of languages; track l.code) {
+                  <option [value]="l.code">{{ l.nativeName }}{{ l.nativeName !== l.name ? ' (' + l.name + ')' : '' }}</option>
                 }
               </select>
-              <mat-icon class="absolute right-2 top-1/2 -translate-y-1/2 icon-size-4 text-secondary pointer-events-none"
-                [svgIcon]="'heroicons_solid:chevron-down'"></mat-icon>
+              <mat-icon class="absolute right-3.5 top-1/2 -translate-y-1/2 icon-size-4 text-slate-400 pointer-events-none" [svgIcon]="'heroicons_solid:chevron-down'"></mat-icon>
             </div>
-
-            <!-- Phone Input -->
-            <div class="flex-1 relative">
-              <span
-                class="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-secondary pointer-events-none">
-                {{ selectedCountry().dialCode }}
-              </span>
-              <input type="tel" name="phone" autocomplete="tel-national" [ngModel]="phone()"
-                (ngModelChange)="phone.set($event)" [placeholder]="selectedCountry().phonePlaceholder"
-                class="w-full pl-13 pr-3 py-3 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-xs font-medium text-default transition-all" />
-            </div>
-          </div>
-        </div>
-
-        <!-- Application Language Selection -->
-        <div>
-          <div class="flex items-center justify-between mb-1.5">
-            <label class="block text-xs font-bold text-default flex items-center gap-1.5">
-              <span>Uygulama & Tanım Dili</span>
-              <span
-                class="inline-flex items-center gap-1.5 px-1.5 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 text-[10px] font-semibold border border-indigo-200/60 dark:border-indigo-800/60">
-                <img [src]="getLangFlagUrl(selectedLanguageOption().code)" class="w-3.5 h-2.5 rounded-xs object-cover" [alt]="selectedLanguageOption().name" />
-                <span>{{ selectedLanguageOption().nativeName }}</span>
-              </span>
-            </label>
-            <span class="text-[10px] text-secondary">Tanımlar bu dilde kurulur</span>
+            <p class="mt-1.5 text-xs text-slate-500 dark:text-slate-400">Hayvan tipleri, ırklar ve tedavi tanımları bu dilde oluşturulur.</p>
           </div>
 
-          <!-- Quick Select Flag Pills for Top 5 Languages -->
-          <div
-            class="grid grid-cols-5 gap-1.5 p-1 bg-slate-100 dark:bg-slate-800/80 rounded-xl border border-slate-200 dark:border-slate-700 mb-2">
-            <button type="button" (click)="setLanguage('tr')"
-              [ngClass]="language() === 'tr' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-xs font-bold border border-indigo-100 dark:border-indigo-900/50' : 'text-secondary hover:text-default font-medium border border-transparent'"
-              class="py-2 px-1 rounded-lg text-xs flex flex-col items-center justify-center gap-1 transition-all cursor-pointer group"
-              title="Türkçe">
-              <img [src]="getLangFlagUrl('tr')" class="w-5 h-3.5 rounded-xs object-cover shadow-xs border border-slate-200/50 group-hover:scale-110 transition-transform" alt="TR" />
-              <span class="text-[10px] truncate max-w-[52px]">Türkçe</span>
-            </button>
-            <button type="button" (click)="setLanguage('en')"
-              [ngClass]="language() === 'en' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-xs font-bold border border-indigo-100 dark:border-indigo-900/50' : 'text-secondary hover:text-default font-medium border border-transparent'"
-              class="py-2 px-1 rounded-lg text-xs flex flex-col items-center justify-center gap-1 transition-all cursor-pointer group"
-              title="English">
-              <img [src]="getLangFlagUrl('en')" class="w-5 h-3.5 rounded-xs object-cover shadow-xs border border-slate-200/50 group-hover:scale-110 transition-transform" alt="EN" />
-              <span class="text-[10px] truncate max-w-[52px]">English</span>
-            </button>
-            <button type="button" (click)="setLanguage('de')"
-              [ngClass]="language() === 'de' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-xs font-bold border border-indigo-100 dark:border-indigo-900/50' : 'text-secondary hover:text-default font-medium border border-transparent'"
-              class="py-2 px-1 rounded-lg text-xs flex flex-col items-center justify-center gap-1 transition-all cursor-pointer group"
-              title="Deutsch (Almanya)">
-              <img [src]="getLangFlagUrl('de')" class="w-5 h-3.5 rounded-xs object-cover shadow-xs border border-slate-200/50 group-hover:scale-110 transition-transform" alt="DE" />
-              <span class="text-[10px] truncate max-w-[52px]">Deutsch</span>
-            </button>
-            <button type="button" (click)="setLanguage('nl')"
-              [ngClass]="language() === 'nl' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-xs font-bold border border-indigo-100 dark:border-indigo-900/50' : 'text-secondary hover:text-default font-medium border border-transparent'"
-              class="py-2 px-1 rounded-lg text-xs flex flex-col items-center justify-center gap-1 transition-all cursor-pointer group"
-              title="Nederlands (Hollanda)">
-              <img [src]="getLangFlagUrl('nl')" class="w-5 h-3.5 rounded-xs object-cover shadow-xs border border-slate-200/50 group-hover:scale-110 transition-transform" alt="NL" />
-              <span class="text-[10px] truncate max-w-[52px]">Nederlands</span>
-            </button>
-            <button type="button" (click)="setLanguage('ru')"
-              [ngClass]="language() === 'ru' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-xs font-bold border border-indigo-100 dark:border-indigo-900/50' : 'text-secondary hover:text-default font-medium border border-transparent'"
-              class="py-2 px-1 rounded-lg text-xs flex flex-col items-center justify-center gap-1 transition-all cursor-pointer group"
-              title="Русский (Rusya)">
-              <img [src]="getLangFlagUrl('ru')" class="w-5 h-3.5 rounded-xs object-cover shadow-xs border border-slate-200/50 group-hover:scale-110 transition-transform" alt="RU" />
-              <span class="text-[10px] truncate max-w-[52px]">Русский</span>
-            </button>
-          </div>
-
-          <!-- All Languages Dropdown Selector -->
-          <div class="relative">
-            <div class="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none z-10 flex items-center">
-              <img [src]="getLangFlagUrl(selectedLanguageOption().code)" class="w-4 h-3 rounded-xs object-cover shadow-xs border border-slate-200/60" [alt]="selectedLanguageOption().name" />
-            </div>
-            <select [ngModel]="language()" (ngModelChange)="setLanguage($event)" name="languageSelect"
-              class="w-full pl-9 pr-8 py-2.5 bg-slate-100 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-xs font-semibold text-default transition-all appearance-none cursor-pointer">
-              @for (l of languages; track l.code) {
-              <option [value]="l.code">
-                {{ l.name }} ({{ l.nativeName }})
-              </option>
-              }
-            </select>
-            <mat-icon class="absolute right-2.5 top-1/2 -translate-y-1/2 icon-size-4 text-secondary pointer-events-none"
-              [svgIcon]="'heroicons_solid:chevron-down'"></mat-icon>
-          </div>
-        </div>
-
-        <!-- Email Field -->
-        <div>
-          <label class="block text-xs font-bold text-default mb-1.5">
-            E-posta Adresi *
+          <!-- Koşullar -->
+          <label class="flex items-start gap-2.5 cursor-pointer select-none text-sm text-slate-600 dark:text-slate-400">
+            <input type="checkbox" name="termsAccepted"
+              [ngModel]="termsAccepted()" (ngModelChange)="termsAccepted.set($event)"
+              class="mt-0.5 w-4 h-4 rounded border-slate-300 dark:border-slate-600 text-indigo-600 focus:ring-indigo-500 dark:bg-slate-800" />
+            <span>Kullanım Koşulları'nı ve Gizlilik Politikası'nı okudum, kabul ediyorum.</span>
           </label>
-          <div class="relative">
-            <mat-icon class="absolute left-3.5 top-1/2 -translate-y-1/2 icon-size-5 text-secondary pointer-events-none"
-              [svgIcon]="'heroicons_outline:mail'"></mat-icon>
-            <input type="email" name="email" autocomplete="email" [ngModel]="email()"
-              (ngModelChange)="email.set($event)" placeholder="ornek@ciftlik.com" required
-              class="w-full pl-10 pr-4 py-3 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-xs font-medium text-default transition-all" />
-          </div>
-        </div>
 
-        <!-- Password Field -->
-        <div>
-          <label class="block text-xs font-bold text-default mb-1.5">
-            Şifre (En az 6 karakter) *
-          </label>
-          <div class="relative">
-            <mat-icon class="absolute left-3.5 top-1/2 -translate-y-1/2 icon-size-5 text-secondary pointer-events-none"
-              [svgIcon]="'heroicons_outline:lock-closed'"></mat-icon>
-            <input [type]="showPassword() ? 'text' : 'password'" name="password" autocomplete="new-password"
-              [ngModel]="password()" (ngModelChange)="password.set($event)" placeholder="••••••••" required
-              class="w-full pl-10 pr-11 py-3 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-xs font-medium text-default transition-all" />
-
-            <button type="button" (click)="togglePasswordVisibility()"
-              class="absolute right-3 top-1/2 -translate-y-1/2 text-secondary hover:text-default p-1">
-              <mat-icon class="icon-size-4"
-                [svgIcon]="showPassword() ? 'heroicons_outline:eye-slash' : 'heroicons_outline:eye'"></mat-icon>
-            </button>
-          </div>
-        </div>
-
-        <!-- Terms Checkbox -->
-        <div class="pt-1">
-          <label class="inline-flex items-center gap-2 cursor-pointer text-2xs font-medium text-secondary">
-            <input type="checkbox" [ngModel]="termsAccepted()" (ngModelChange)="termsAccepted.set($event)"
-              name="termsAccepted"
-              class="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 border-gray-300 dark:border-gray-600 dark:bg-slate-800" />
-            <span>Kullanım Koşullarını ve Gizlilik Sözleşmesini kabul ediyorum.</span>
-          </label>
-        </div>
-
-        <!-- Submit Button -->
-        <div class="pt-2">
+          <!-- Kayıt butonu -->
           <button type="submit" [disabled]="loading()"
-            class="w-full py-3.5 px-4 rounded-xl font-bold text-xs text-white bg-gradient-to-r from-indigo-600 via-indigo-700 to-violet-600 hover:from-indigo-700 hover:to-violet-700 shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2 transition-all transform active:scale-[0.99] disabled:opacity-50 disabled:pointer-events-none">
-            @if (loading()) {
-            <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-            <span>Çiftlik Kaydı Oluşturuluyor...</span>
-            } @else {
-            <span>Ücretsiz Kayıt Ol</span>
+            class="w-full h-12 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold shadow-lg shadow-indigo-600/25 flex items-center justify-center gap-2 transition active:scale-[0.99] disabled:opacity-60 disabled:pointer-events-none">
+            <span>Ücretsiz hesap oluştur</span>
             <mat-icon class="icon-size-4 text-white" [svgIcon]="'heroicons_solid:arrow-right'"></mat-icon>
-            }
           </button>
-        </div>
+        </form>
 
-      </form>
-    </div>
-
-    <!-- Bottom: Footer -->
-    <div class="text-center sm:text-left text-2xs text-secondary font-medium">
-      <span>© 2026 OdivonFARM. Tüm hakları saklıdır.</span>
-    </div>
-
-  </div>
-
-  <!-- Right: Fuse Hero Showcase Side (Desktop only) -->
-  <div
-    class="relative hidden md:flex flex-auto items-center justify-center h-full p-12 lg:px-20 overflow-hidden bg-[#090d16] text-white min-h-screen">
-
-    <!-- Ambient Glowing Background Spheres -->
-    <div class="absolute -top-40 -right-40 w-96 h-96 bg-indigo-600/20 rounded-full blur-3xl pointer-events-none"></div>
-    <div class="absolute -bottom-40 -left-40 w-96 h-96 bg-purple-600/20 rounded-full blur-3xl pointer-events-none">
-    </div>
-    <div
-      class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-violet-500/10 rounded-full blur-[100px] pointer-events-none">
-    </div>
-
-    <!-- Hero Content Container -->
-    <div class="relative z-10 max-w-xl text-center flex flex-col items-center">
-
-      <!-- 3D Glassmorphic Torus Logo Hero Frame -->
-      <div class="relative mb-8 group">
-        <div
-          class="absolute -inset-4 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-3xl blur-2xl opacity-40 group-hover:opacity-70 transition duration-700">
-        </div>
-
-        <div
-          class="relative w-60 h-60 sm:w-72 sm:h-72 rounded-3xl overflow-hidden shadow-2xl shadow-indigo-950/80 border border-white/10 bg-black/40 backdrop-blur-md flex items-center justify-center p-2">
-          <img src="images/logo-3d.jpg" alt="OdivonFARM 3D Logo"
-            class="w-full h-full object-cover rounded-2xl group-hover:scale-105 transition-transform duration-500" />
+        <div class="mt-8 text-center text-sm text-slate-500 dark:text-slate-400">
+          Zaten hesabınız var mı?
+          <a routerLink="/auth/login" class="font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300">
+            Giriş yapın
+          </a>
         </div>
       </div>
-
-      <!-- Headline & Tagline -->
-      <div class="text-3xl lg:text-4xl font-black tracking-tight leading-tight">
-        Çiftliğinizi <span
-          class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-300 to-pink-400">Bulut
-          Çağına</span> Taşıyın
-      </div>
-      <p class="mt-4 text-xs sm:text-sm text-slate-400 leading-relaxed max-w-md">
-        İlk andan itibaren otomatik oluşturulan çiftlik yönetim panelinizle hayvanlarınızı, sürülerinizi ve
-        maliyetlerinizi hemen kaydetmeye başlayın.
-      </p>
-
-      <!-- Trust Badges -->
-      <div class="flex items-center justify-center gap-3 mt-8 flex-wrap">
-        <div
-          class="px-3.5 py-1.5 rounded-full bg-white/5 border border-white/10 backdrop-blur-md text-xs font-semibold flex items-center gap-2 text-slate-200">
-          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-          <span>1 Dakikada Kurulum</span>
-        </div>
-        <div
-          class="px-3.5 py-1.5 rounded-full bg-white/5 border border-white/10 backdrop-blur-md text-xs font-semibold flex items-center gap-2 text-slate-200">
-          <span class="w-2 h-2 rounded-full bg-indigo-400"></span>
-          <span>Ücretsiz Başlangıç</span>
-        </div>
-      </div>
-
     </div>
 
-  </div>
-
+    <!-- Alt bilgi -->
+    <div class="text-center lg:text-left text-xs text-slate-400 dark:text-slate-500">
+      © 2026 OdivonFARM. Tüm hakları saklıdır.
+    </div>
+  </main>
 </div>

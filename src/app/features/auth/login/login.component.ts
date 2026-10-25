@@ -5,6 +5,7 @@ import { Router, RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { AuthService } from '../../../core/auth/auth.service';
+import { AuthHighlight, AuthShowcaseComponent } from '../shared/auth-showcase.component';
 import { environment } from '../../../../environments/environment';
 
 @Component({
@@ -16,6 +17,7 @@ import { environment } from '../../../../environments/environment';
     RouterLink,
     MatButtonModule,
     MatIconModule,
+    AuthShowcaseComponent,
   ],
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss',
@@ -25,6 +27,12 @@ export class LoginComponent {
   private router = inject(Router);
 
   isProduction = environment.production;
+
+  readonly highlights: AuthHighlight[] = [
+    { icon: 'heroicons_outline:chip', title: 'RFID ile canlı sayım', text: 'Küpe okuyucuyla sürünüzü saniyeler içinde sayın.' },
+    { icon: 'heroicons_outline:heart', title: 'Sağlık ve döl takibi', text: 'Aşı, tedavi, gebelik ve doğum kayıtları tek yerde.' },
+    { icon: 'heroicons_outline:chart-bar', title: 'Rasyon ve maliyet analizi', text: 'Yem, gelir ve giderlerinizi net raporlarla görün.' },
+  ];
 
   email = signal('');
   password = signal('');

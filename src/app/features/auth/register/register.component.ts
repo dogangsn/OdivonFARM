@@ -5,6 +5,7 @@ import { Router, RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { AuthService } from '../../../core/auth/auth.service';
+import { AuthHighlight, AuthShowcaseComponent } from '../shared/auth-showcase.component';
 
 export interface CountryOption {
   code: string;
@@ -64,6 +65,7 @@ export const LANGUAGES: LanguageOption[] = [
     RouterLink,
     MatButtonModule,
     MatIconModule,
+    AuthShowcaseComponent,
   ],
   templateUrl: './register.component.html',
   styleUrl: './register.component.scss',
@@ -90,6 +92,32 @@ export class RegisterComponent {
   termsAccepted = signal(true);
   error = signal<string | null>(null);
   loading = signal(false);
+
+  readonly highlights: AuthHighlight[] = [
+    { icon: 'heroicons_outline:sparkles', title: '1 dakikada kurulum', text: 'Temel tanımlar sizin için otomatik hazırlanır.' },
+    { icon: 'heroicons_outline:translate', title: 'Çok dilli kullanım', text: 'Türkçe, English, Deutsch, Nederlands, Русский ve daha fazlası.' },
+    { icon: 'heroicons_outline:shield-check', title: 'Güvenli bulut', text: 'Verilerinize her cihazdan güvenle erişin.' },
+  ];
+
+  /** Basit şifre gücü göstergesi (sadece görsel geri bildirim). */
+  passwordStrength = computed(() => {
+    const p = this.password();
+    let score = 0;
+    if (p.length >= 6) score++;
+    if (p.length >= 10) score++;
+    if (/[A-Z]/.test(p) && /[a-z]/.test(p)) score++;
+    if (/\d/.test(p) && /[^A-Za-z0-9]/.test(p)) score++;
+    if (p.length < 6) score = Math.min(score, 1);
+    const levels = [
+      { label: 'Çok kısa', barClass: 'bg-rose-500', textClass: 'text-rose-600 dark:text-rose-400' },
+      { label: 'Zayıf', barClass: 'bg-rose-500', textClass: 'text-rose-600 dark:text-rose-400' },
+      { label: 'Orta', barClass: 'bg-amber-500', textClass: 'text-amber-600 dark:text-amber-400' },
+      { label: 'İyi', barClass: 'bg-emerald-500', textClass: 'text-emerald-600 dark:text-emerald-400' },
+      { label: 'Güçlü', barClass: 'bg-emerald-500', textClass: 'text-emerald-600 dark:text-emerald-400' },
+    ];
+    const lvl = p.length < 6 ? levels[0] : levels[score];
+    return { score: Math.max(score, 1), ...lvl };
+  });
 
   togglePasswordVisibility() {
     this.showPassword.update((v) => !v);
