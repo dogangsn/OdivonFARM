@@ -1,14 +1,14 @@
 <svg class="block h-full w-full" [attr.viewBox]="viewBox()" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
   <defs>
     <linearGradient [attr.id]="uid + '-sky-day'" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#cfe9f7" />
-      <stop offset="0.55" stop-color="#eaf5ec" />
+      <stop offset="0" stop-color="#d9d2ff" />
+      <stop offset="0.55" stop-color="#eef0fb" />
       <stop offset="1" stop-color="#fdf3dc" />
     </linearGradient>
     <linearGradient [attr.id]="uid + '-sky-night'" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#07101f" />
-      <stop offset="0.6" stop-color="#10233a" />
-      <stop offset="1" stop-color="#1b3a3f" />
+      <stop offset="0" stop-color="#0a0f1d" />
+      <stop offset="0.6" stop-color="#101828" />
+      <stop offset="1" stop-color="#231f4a" />
     </linearGradient>
     <radialGradient [attr.id]="uid + '-sun-glow'">
       <stop offset="0" stop-color="#fde68a" stop-opacity="0.9" />
@@ -39,7 +39,7 @@
   <g class="hidden dark:block">
     <circle cx="640" cy="440" r="130" [attr.fill]="'url(#' + uid + '-moon-glow)'" />
     <circle cx="640" cy="440" r="40" fill="#f1f5f9" />
-    <circle cx="656" cy="430" r="36" fill="#10233a" />
+    <circle cx="656" cy="430" r="36" fill="#0e1525" />
   </g>
 
   <!-- Bulutlar (gündüz) -->

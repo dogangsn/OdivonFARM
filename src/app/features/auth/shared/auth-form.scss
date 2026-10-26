@@ -12,7 +12,7 @@
 :host-context(.dark) input:-webkit-autofill:focus {
   -webkit-text-fill-color: #fff;
   caret-color: #fff;
-  box-shadow: 0 0 0 1000px #0f1a17 inset;
+  box-shadow: 0 0 0 1000px #141d33 inset;
   transition: background-color 9999s ease-out;
 }
 
@@ -22,7 +22,7 @@ select option {
 }
 :host-context(.dark) select option {
   color: #fff;
-  background: #0f1a17;
+  background: #141d33;
 }
 
 @keyframes shake {

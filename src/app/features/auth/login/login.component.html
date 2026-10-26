@@ -1,8 +1,8 @@
 <app-auth-layout mode="login">
 
   @if (loading()) {
-    <div class="absolute -inset-4 z-40 flex flex-col items-center justify-center gap-4 rounded-3xl bg-white/90 px-6 text-center backdrop-blur-sm animate-fadeIn dark:bg-[#0a1210]/90">
-      <div class="h-11 w-11 animate-spin rounded-full border-[3px] border-emerald-100 border-t-emerald-600 dark:border-white/10 dark:border-t-emerald-400"></div>
+    <div class="absolute -inset-4 z-40 flex flex-col items-center justify-center gap-4 rounded-3xl bg-white/90 px-6 text-center backdrop-blur-sm animate-fadeIn dark:bg-[#0c1322]/90">
+      <div class="h-11 w-11 animate-spin rounded-full border-[3px] border-[#ece8ff] border-t-[#6c4ff2] dark:border-white/10 dark:border-t-[#917aff]"></div>
       <div>
         <div class="text-sm font-bold text-slate-900 dark:text-white">Giriş yapılıyor</div>
         <div class="mt-1 text-xs text-slate-500 dark:text-slate-400">Çiftlik verileriniz hazırlanıyor…</div>
@@ -30,21 +30,21 @@
         <mat-icon class="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 icon-size-5 text-slate-400 dark:text-slate-500" [svgIcon]="'heroicons_outline:mail'"></mat-icon>
         <input id="login-email" type="email" name="email" autocomplete="email" required placeholder="ornek@ciftlik.com"
           [ngModel]="email()" (ngModelChange)="email.set($event)"
-          class="w-full h-12 rounded-xl border border-slate-300 bg-white pl-11 pr-4 text-[15px] text-slate-900 shadow-sm transition placeholder:text-slate-400 hover:border-slate-400 focus:border-emerald-600 focus:outline-none focus:ring-4 focus:ring-emerald-600/15 dark:border-slate-700 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-slate-500 dark:hover:border-slate-600 dark:focus:border-emerald-400 dark:focus:ring-emerald-400/15" />
+          class="w-full h-12 rounded-xl border border-slate-300 bg-white pl-11 pr-4 text-[15px] text-slate-900 shadow-sm transition placeholder:text-slate-400 hover:border-slate-400 focus:border-[#6c4ff2] focus:outline-none focus:ring-4 focus:ring-[#6c4ff2]/15 dark:border-slate-700 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-slate-500 dark:hover:border-slate-600 dark:focus:border-[#917aff] dark:focus:ring-[#917aff]/20" />
       </div>
     </div>
 
     <div>
       <div class="mb-1.5 flex items-center justify-between">
         <label for="login-password" class="text-sm font-semibold text-slate-700 dark:text-slate-200">Şifre</label>
-        <button type="button" (click)="openResetModal()" class="text-sm font-semibold text-emerald-700 hover:text-emerald-800 dark:text-emerald-400 dark:hover:text-emerald-300">Şifremi unuttum</button>
+        <button type="button" (click)="openResetModal()" class="text-sm font-semibold text-[#6c4ff2] hover:text-[#5a3de0] dark:text-[#a996ff] dark:hover:text-[#c4b8ff]">Şifremi unuttum</button>
       </div>
       <div class="relative">
         <mat-icon class="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 icon-size-5 text-slate-400 dark:text-slate-500" [svgIcon]="'heroicons_outline:lock-closed'"></mat-icon>
         <input id="login-password" [type]="showPassword() ? 'text' : 'password'" name="password" autocomplete="current-password" required
           placeholder="Şifrenizi girin"
           [ngModel]="password()" (ngModelChange)="password.set($event)"
-          class="w-full h-12 rounded-xl border border-slate-300 bg-white pl-11 pr-4 text-[15px] text-slate-900 shadow-sm transition placeholder:text-slate-400 hover:border-slate-400 focus:border-emerald-600 focus:outline-none focus:ring-4 focus:ring-emerald-600/15 dark:border-slate-700 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-slate-500 dark:hover:border-slate-600 dark:focus:border-emerald-400 dark:focus:ring-emerald-400/15 !pr-12" />
+          class="w-full h-12 rounded-xl border border-slate-300 bg-white pl-11 pr-4 text-[15px] text-slate-900 shadow-sm transition placeholder:text-slate-400 hover:border-slate-400 focus:border-[#6c4ff2] focus:outline-none focus:ring-4 focus:ring-[#6c4ff2]/15 dark:border-slate-700 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-slate-500 dark:hover:border-slate-600 dark:focus:border-[#917aff] dark:focus:ring-[#917aff]/20 !pr-12" />
         <button type="button" (click)="togglePasswordVisibility()" [attr.aria-label]="showPassword() ? 'Şifreyi gizle' : 'Şifreyi göster'" class="absolute right-2 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 dark:text-slate-500 dark:hover:bg-white/10 dark:hover:text-white">
           <mat-icon class="icon-size-5" [svgIcon]="showPassword() ? 'heroicons_outline:eye-off' : 'heroicons_outline:eye'"></mat-icon>
         </button>
@@ -52,11 +52,11 @@
     </div>
 
     <label class="inline-flex cursor-pointer select-none items-center gap-2.5 text-sm text-slate-600 dark:text-slate-300">
-      <input type="checkbox" name="rememberMe" class="h-4 w-4 cursor-pointer rounded border-slate-300 accent-emerald-700 dark:accent-emerald-500" [ngModel]="rememberMe()" (ngModelChange)="rememberMe.set($event)" />
+      <input type="checkbox" name="rememberMe" class="h-4 w-4 cursor-pointer rounded border-slate-300 accent-[#6c4ff2] dark:accent-[#917aff]" [ngModel]="rememberMe()" (ngModelChange)="rememberMe.set($event)" />
       <span>Beni hatırla</span>
     </label>
 
-    <button type="submit" class="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-emerald-700 text-[15px] font-bold text-white shadow-lg shadow-emerald-700/25 transition hover:bg-emerald-800 active:scale-[0.99] disabled:pointer-events-none disabled:opacity-60 dark:bg-emerald-500 dark:text-emerald-950 dark:shadow-emerald-500/20 dark:hover:bg-emerald-400" [disabled]="loading()">
+    <button type="submit" class="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#6c4ff2] text-[15px] font-bold text-white shadow-lg shadow-[#6c4ff2]/25 transition hover:bg-[#5a3de0] active:scale-[0.99] disabled:pointer-events-none disabled:opacity-60 dark:bg-[#917aff] dark:text-[#101828] dark:shadow-[#917aff]/20 dark:hover:bg-[#a693ff]" [disabled]="loading()">
       <span>Giriş yap</span>
       <mat-icon class="icon-size-5" [svgIcon]="'heroicons_solid:arrow-right'"></mat-icon>
     </button>
@@ -69,7 +69,7 @@
   </div>
 
   <a routerLink="/auth/register" class="flex h-12 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-5 text-[15px] font-bold text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-transparent dark:text-slate-200 dark:hover:bg-white/5 w-full">
-    <mat-icon class="icon-size-5 text-emerald-700 dark:text-emerald-400" [svgIcon]="'heroicons_outline:sparkles'"></mat-icon>
+    <mat-icon class="icon-size-5 text-[#6c4ff2] dark:text-[#a996ff]" [svgIcon]="'heroicons_outline:sparkles'"></mat-icon>
     <span>Ücretsiz çiftlik hesabı oluşturun</span>
   </a>
 
@@ -79,13 +79,13 @@
       <div class="fixed inset-0 bg-slate-950/50 backdrop-blur-sm" (click)="closeResetModal()"></div>
 
       <div role="dialog" aria-modal="true" aria-labelledby="reset-title"
-        class="relative z-10 w-full max-w-md rounded-2xl bg-white p-7 shadow-2xl ring-1 ring-slate-200 animate-fadeIn dark:bg-[#0f1a17] dark:ring-white/10">
+        class="relative z-10 w-full max-w-md rounded-2xl bg-white p-7 shadow-2xl ring-1 ring-slate-200 animate-fadeIn dark:bg-[#141d33] dark:ring-white/10">
         <button type="button" (click)="closeResetModal()" aria-label="Kapat"
           class="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-white/10 dark:hover:text-white">
           <mat-icon class="icon-size-5" [svgIcon]="'heroicons_solid:x'"></mat-icon>
         </button>
 
-        <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">
+        <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-[#ece8ff] text-[#6c4ff2] dark:bg-[#917aff]/15 dark:text-[#c4b8ff]">
           <mat-icon class="icon-size-6" [svgIcon]="'heroicons_outline:key'"></mat-icon>
         </div>
         <h3 id="reset-title" class="mt-5 text-xl font-black tracking-tight text-slate-900 dark:text-white">Şifrenizi mi unuttunuz?</h3>
@@ -111,13 +111,13 @@
             <mat-icon class="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 icon-size-5 text-slate-400 dark:text-slate-500" [svgIcon]="'heroicons_outline:mail'"></mat-icon>
             <input type="email" name="resetEmailInput" required aria-label="E-posta adresi" placeholder="ornek@ciftlik.com"
               [ngModel]="resetEmail()" (ngModelChange)="resetEmail.set($event)"
-              class="w-full h-12 rounded-xl border border-slate-300 bg-white pl-11 pr-4 text-[15px] text-slate-900 shadow-sm transition placeholder:text-slate-400 hover:border-slate-400 focus:border-emerald-600 focus:outline-none focus:ring-4 focus:ring-emerald-600/15 dark:border-slate-700 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-slate-500 dark:hover:border-slate-600 dark:focus:border-emerald-400 dark:focus:ring-emerald-400/15" />
+              class="w-full h-12 rounded-xl border border-slate-300 bg-white pl-11 pr-4 text-[15px] text-slate-900 shadow-sm transition placeholder:text-slate-400 hover:border-slate-400 focus:border-[#6c4ff2] focus:outline-none focus:ring-4 focus:ring-[#6c4ff2]/15 dark:border-slate-700 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-slate-500 dark:hover:border-slate-600 dark:focus:border-[#917aff] dark:focus:ring-[#917aff]/20" />
           </div>
           <div class="flex flex-col-reverse gap-2.5 sm:flex-row">
             <button type="button" class="flex h-12 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-5 text-[15px] font-bold text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-transparent dark:text-slate-200 dark:hover:bg-white/5" (click)="closeResetModal()">Vazgeç</button>
-            <button type="submit" class="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-emerald-700 text-[15px] font-bold text-white shadow-lg shadow-emerald-700/25 transition hover:bg-emerald-800 active:scale-[0.99] disabled:pointer-events-none disabled:opacity-60 dark:bg-emerald-500 dark:text-emerald-950 dark:shadow-emerald-500/20 dark:hover:bg-emerald-400 sm:flex-1" [disabled]="resetLoading() || !resetEmail().trim()">
+            <button type="submit" class="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#6c4ff2] text-[15px] font-bold text-white shadow-lg shadow-[#6c4ff2]/25 transition hover:bg-[#5a3de0] active:scale-[0.99] disabled:pointer-events-none disabled:opacity-60 dark:bg-[#917aff] dark:text-[#101828] dark:shadow-[#917aff]/20 dark:hover:bg-[#a693ff] sm:flex-1" [disabled]="resetLoading() || !resetEmail().trim()">
               @if (resetLoading()) {
-                <span class="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white dark:border-emerald-950/30 dark:border-t-emerald-950"></span>
+                <span class="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white dark:border-[#101828]/30 dark:border-t-[#101828]"></span>
                 <span>Gönderiliyor…</span>
               } @else {
                 <span>Bağlantı gönder</span>
