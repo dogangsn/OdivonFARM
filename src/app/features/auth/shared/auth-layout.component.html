@@ -1,0 +1,162 @@
+<div class="relative min-h-screen w-full overflow-hidden bg-[#05070d] text-white">
+
+  <!-- Arka plan -->
+  <div class="pointer-events-none absolute inset-0" aria-hidden="true">
+    <div class="aurora aurora-1"></div>
+    <div class="aurora aurora-2"></div>
+    <div class="aurora aurora-3"></div>
+    <div class="absolute inset-0 grid-bg"></div>
+    <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_30%,#05070d_85%)]"></div>
+  </div>
+
+  <div class="relative z-10 mx-auto flex min-h-screen w-full max-w-[1360px] flex-col px-5 py-5 sm:px-8 sm:py-7 lg:px-12">
+
+    <!-- Üst bar -->
+    <header class="flex items-center justify-between gap-4">
+      <a routerLink="/auth/login" class="flex items-center gap-3">
+        <img src="images/logo.png" alt="OdivonFARM" class="h-10 w-10 rounded-xl object-cover ring-1 ring-white/15 shadow-lg shadow-indigo-500/20" />
+        <div class="leading-tight">
+          <div class="text-lg font-black tracking-tight">Odivon<span class="text-gradient">FARM</span></div>
+          <div class="hidden sm:block text-[10px] font-semibold uppercase tracking-[0.22em] text-white/40">Çiftlik Yönetim Sistemi</div>
+        </div>
+      </a>
+
+      @if (mode() === 'login') {
+        <a routerLink="/auth/register"
+          class="group inline-flex items-center gap-2 rounded-full bg-white/[0.06] px-4 py-2 text-xs sm:text-sm font-semibold text-white/80 ring-1 ring-white/10 backdrop-blur-md transition hover:bg-white/10 hover:text-white">
+          <span class="hidden sm:inline text-white/50">Hesabınız yok mu?</span>
+          <span>Kayıt olun</span>
+          <mat-icon class="icon-size-4 transition-transform group-hover:translate-x-0.5" [svgIcon]="'heroicons_solid:arrow-right'"></mat-icon>
+        </a>
+      } @else {
+        <a routerLink="/auth/login"
+          class="group inline-flex items-center gap-2 rounded-full bg-white/[0.06] px-4 py-2 text-xs sm:text-sm font-semibold text-white/80 ring-1 ring-white/10 backdrop-blur-md transition hover:bg-white/10 hover:text-white">
+          <span class="hidden sm:inline text-white/50">Hesabınız var mı?</span>
+          <span>Giriş yapın</span>
+          <mat-icon class="icon-size-4 transition-transform group-hover:translate-x-0.5" [svgIcon]="'heroicons_solid:arrow-right'"></mat-icon>
+        </a>
+      }
+    </header>
+
+    <div class="flex flex-1 items-center gap-12 xl:gap-20 py-8 lg:py-6">
+
+      <!-- Sol: Ürün önizlemesi (lg+) -->
+      <section class="hidden lg:flex flex-1 flex-col enter">
+        <span class="inline-flex w-fit items-center gap-2 rounded-full bg-white/[0.06] py-1 pl-1 pr-3 text-xs font-semibold text-white/70 ring-1 ring-white/10 backdrop-blur-md">
+          <span class="rounded-full bg-gradient-to-r from-indigo-500 to-fuchsia-500 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">Yeni</span>
+          RFID ile canlı sürü sayımı
+        </span>
+
+        <h1 class="mt-6 max-w-xl text-5xl xl:text-6xl font-black tracking-[-0.03em] leading-[1.02]">
+          @if (mode() === 'login') {
+            Çiftliğiniz,<br /><span class="text-gradient">tek bir akıllı panelde.</span>
+          } @else {
+            Dakikalar içinde<br /><span class="text-gradient">dijital çiftliğe geçin.</span>
+          }
+        </h1>
+        <p class="mt-5 max-w-md text-base text-white/55 leading-relaxed">
+          @if (mode() === 'login') {
+            Sürü, sağlık, döl verimi, rasyon ve maliyet verileriniz her cihazda, her an elinizin altında.
+          } @else {
+            Kayıt olduğunuz anda padoklar, hayvan tipleri, ırklar ve tedavi tanımları seçtiğiniz dilde hazır olur.
+          }
+        </p>
+
+        <!-- Bento önizleme -->
+        <div class="relative mt-12 h-[340px] max-w-[580px]" aria-hidden="true">
+
+          <!-- Sürü özeti -->
+          <div class="preview-card float-a absolute left-0 top-0 w-[330px] rounded-3xl p-5">
+            <div class="flex items-center justify-between">
+              <span class="text-[11px] font-bold uppercase tracking-wider text-white/45">Toplam sürü</span>
+              <span class="rounded-full bg-emerald-400/15 px-2 py-0.5 text-[11px] font-bold text-emerald-300">+%12</span>
+            </div>
+            <div class="mt-2 text-4xl font-black tracking-tight">1.248 <span class="text-base font-semibold text-white/40">baş</span></div>
+            <div class="mt-4 flex h-20 items-end gap-1.5">
+              @for (h of bars; track $index) {
+                <div class="flex-1 rounded-md bg-gradient-to-t from-indigo-500/40 to-fuchsia-400/90" [style.height.%]="h"></div>
+              }
+            </div>
+          </div>
+
+          <!-- RFID canlı -->
+          <div class="preview-card float-b absolute right-0 top-0 w-[220px] rounded-3xl p-4">
+            <div class="flex items-center gap-2 text-xs font-bold text-white/80">
+              <span class="relative flex h-2.5 w-2.5">
+                <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-70"></span>
+                <span class="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-400"></span>
+              </span>
+              Canlı RFID okuma
+            </div>
+            <div class="mt-3 space-y-2">
+              @for (t of ['TR 0034 1257', 'TR 0034 1258', 'TR 0034 1263']; track t) {
+                <div class="flex items-center justify-between rounded-xl bg-white/[0.05] px-2.5 py-2 text-[11px]">
+                  <span class="font-mono text-white/70">{{ t }}</span>
+                  <mat-icon class="icon-size-4 text-emerald-300" [svgIcon]="'heroicons_solid:check-circle'"></mat-icon>
+                </div>
+              }
+            </div>
+          </div>
+
+          <!-- Yaklaşan doğum -->
+          <div class="preview-card float-c absolute bottom-0 left-16 w-[250px] rounded-3xl p-4">
+            <div class="flex items-center gap-3">
+              <div class="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-fuchsia-500 to-indigo-500 shadow-lg shadow-fuchsia-500/30">
+                <mat-icon class="icon-size-5 text-white" [svgIcon]="'heroicons_solid:heart'"></mat-icon>
+              </div>
+              <div>
+                <div class="text-[11px] font-bold uppercase tracking-wider text-white/45">Bu hafta doğum</div>
+                <div class="text-xl font-black">8 koyun</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Yem maliyeti -->
+          <div class="preview-card float-a absolute bottom-0 right-10 w-[200px] rounded-3xl p-4">
+            <div class="text-[11px] font-bold uppercase tracking-wider text-white/45">Aylık yem</div>
+            <div class="mt-1 text-xl font-black">₺48,2B</div>
+            <svg viewBox="0 0 120 32" class="mt-2 h-8 w-full" fill="none">
+              <defs>
+                <linearGradient id="spark" x1="0" x2="1">
+                  <stop offset="0" stop-color="#6ee7b7" />
+                  <stop offset="1" stop-color="#a5b4fc" />
+                </linearGradient>
+              </defs>
+              <path d="M0 24 L15 20 L30 22 L45 14 L60 16 L75 9 L90 12 L105 5 L120 7" stroke="url(#spark)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </div>
+        </div>
+      </section>
+
+      <!-- Sağ: Form kartı -->
+      <section class="mx-auto w-full max-w-[460px] lg:mx-0 enter">
+        <div class="glass-card relative rounded-[28px] p-6 sm:p-9 backdrop-blur-2xl">
+
+          <!-- Giriş / Kayıt sekmeleri -->
+          <nav class="relative mb-8 grid grid-cols-2 rounded-2xl bg-black/30 p-1 ring-1 ring-white/10" aria-label="Hesap">
+            <span class="absolute inset-y-1 left-1 w-[calc(50%-4px)] rounded-xl bg-white/10 ring-1 ring-white/15 shadow-lg transition-transform duration-300"
+              [class.translate-x-full]="mode() === 'register'"></span>
+            <a routerLink="/auth/login" [attr.aria-current]="mode() === 'login' ? 'page' : null"
+              class="relative z-10 rounded-xl py-2.5 text-center text-sm font-bold transition"
+              [class]="mode() === 'login' ? 'text-white' : 'text-white/50 hover:text-white/80'">Giriş yap</a>
+            <a routerLink="/auth/register" [attr.aria-current]="mode() === 'register' ? 'page' : null"
+              class="relative z-10 rounded-xl py-2.5 text-center text-sm font-bold transition"
+              [class]="mode() === 'register' ? 'text-white' : 'text-white/50 hover:text-white/80'">Kayıt ol</a>
+          </nav>
+
+          <ng-content />
+        </div>
+
+        <div class="mt-5 flex items-center justify-center gap-2 text-xs text-white/40">
+          <mat-icon class="icon-size-4 text-emerald-400/80" [svgIcon]="'heroicons_solid:shield-check'"></mat-icon>
+          <span>Verileriniz şifreli bağlantıyla korunur</span>
+        </div>
+      </section>
+    </div>
+
+    <footer class="flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-white/35">
+      <span>© 2026 OdivonFARM. Tüm hakları saklıdır.</span>
+      <span>farm.odivon.com</span>
+    </footer>
+  </div>
+</div>
