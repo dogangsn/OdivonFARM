@@ -1,0 +1,96 @@
+<div class="auth-root min-h-screen w-full" [class.dark]="isDark()">
+  <div class="flex min-h-screen w-full bg-white text-slate-900 transition-colors duration-300 dark:bg-[#0c1322] dark:text-white">
+
+    <!-- SOL: Çiftlik manzarası (lg+) -->
+    <aside class="relative hidden shrink-0 overflow-hidden lg:m-3 lg:flex lg:w-[48%] lg:rounded-[28px] xl:w-1/2">
+
+      <!-- Manzara çizimi: gündüz / gece -->
+      <app-farm-scene class="absolute inset-0" />
+
+      <!-- Yazılar -->
+      <div class="relative z-10 flex w-full flex-col justify-between p-10 xl:p-14">
+        <a routerLink="/auth/login" class="flex w-fit items-center gap-3">
+          <img src="images/logo.png" alt="OdivonFARM" class="h-11 w-11 rounded-xl object-cover shadow-lg ring-1 ring-black/5 dark:ring-white/10" />
+          <div class="leading-tight">
+            <div class="text-xl font-black tracking-tight text-slate-900 dark:text-white">Odivon<span class="text-[#6c4ff2] dark:text-[#a996ff]">FARM</span></div>
+            <div class="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-600 dark:text-slate-300/70">Çiftlik Yönetim Sistemi</div>
+          </div>
+        </a>
+
+        <div class="-mt-24 max-w-md">
+          <h1 class="text-4xl font-black leading-[1.08] tracking-tight text-slate-900 xl:text-5xl dark:text-white">
+            @if (mode() === 'login') {
+              Sürünüz güvende,<br />çiftliğiniz <span class="text-[#6c4ff2] dark:text-[#a996ff]">kontrolünüzde.</span>
+            } @else {
+              Çiftliğinizi bugün<br /><span class="text-[#6c4ff2] dark:text-[#a996ff]">dijitale taşıyın.</span>
+            }
+          </h1>
+          <p class="mt-4 text-[15px] leading-relaxed text-slate-700 dark:text-slate-300">
+            Koyun ve keçi işletmeleri için sürü, sağlık, döl verimi, rasyon ve maliyet takibi. Hepsi tek yerde, her cihazda.
+          </p>
+        </div>
+
+        <!-- Güven şeridi -->
+        <div class="grid grid-cols-3 gap-2 rounded-2xl bg-white/80 p-2 shadow-xl shadow-black/5 ring-1 ring-black/5 backdrop-blur-md dark:bg-[#101828]/70 dark:ring-white/10">
+          <div class="flex items-center gap-2.5 rounded-xl p-2.5">
+            <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#ece8ff] text-[#6c4ff2] dark:bg-[#917aff]/15 dark:text-[#c4b8ff]">
+              <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:shield-check'"></mat-icon>
+            </div>
+            <div class="text-xs font-semibold leading-snug text-slate-700 dark:text-slate-200">Şifreli ve güvenli bağlantı</div>
+          </div>
+          <div class="flex items-center gap-2.5 rounded-xl p-2.5">
+            <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#ece8ff] text-[#6c4ff2] dark:bg-[#917aff]/15 dark:text-[#c4b8ff]">
+              <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:cloud'"></mat-icon>
+            </div>
+            <div class="text-xs font-semibold leading-snug text-slate-700 dark:text-slate-200">Veriler bulutta, kaybolmaz</div>
+          </div>
+          <div class="flex items-center gap-2.5 rounded-xl p-2.5">
+            <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#ece8ff] text-[#6c4ff2] dark:bg-[#917aff]/15 dark:text-[#c4b8ff]">
+              <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:device-mobile'"></mat-icon>
+            </div>
+            <div class="text-xs font-semibold leading-snug text-slate-700 dark:text-slate-200">Telefon, tablet ve bilgisayar</div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- SAĞ: Form -->
+    <main class="relative flex min-w-0 flex-1 flex-col">
+
+      <!-- Mobil manzara şeridi -->
+      <div class="relative h-44 overflow-hidden lg:hidden">
+        <app-farm-scene class="absolute inset-0" viewBox="0 520 800 480" />
+        <div class="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-white dark:to-[#0c1322]"></div>
+      </div>
+
+      <div class="absolute inset-x-0 top-0 z-10 flex items-center justify-between gap-3 px-5 pt-5 sm:px-10 sm:pt-7 lg:relative">
+        <a routerLink="/auth/login" class="flex items-center gap-2.5 rounded-xl bg-white/80 py-1 pl-1 pr-3 backdrop-blur dark:bg-slate-900/70 lg:invisible">
+          <img src="images/logo.png" alt="OdivonFARM" class="h-10 w-10 rounded-xl object-cover shadow-md" />
+          <span class="text-lg font-black tracking-tight text-slate-900 dark:text-white">Odivon<span class="text-[#6c4ff2] dark:text-[#a996ff]">FARM</span></span>
+        </a>
+
+        <button type="button" (click)="toggleTheme()"
+          [attr.aria-label]="isDark() ? 'Açık temaya geç' : 'Koyu temaya geç'"
+          [title]="isDark() ? 'Açık tema' : 'Koyu tema'"
+          class="flex h-10 items-center gap-2 rounded-full bg-white/90 px-3.5 text-sm font-semibold text-slate-700 shadow-sm ring-1 ring-slate-200 backdrop-blur transition hover:bg-slate-50 dark:bg-slate-900/90 dark:text-slate-200 dark:ring-slate-700 dark:hover:bg-slate-800">
+          <mat-icon class="icon-size-5" [svgIcon]="isDark() ? 'heroicons_outline:sun' : 'heroicons_outline:moon'"></mat-icon>
+          <span class="hidden sm:inline">{{ isDark() ? 'Açık tema' : 'Koyu tema' }}</span>
+        </button>
+      </div>
+
+      <div class="flex flex-1 items-center justify-center px-5 pb-8 pt-2 sm:px-10 lg:py-8">
+        <div class="relative w-full max-w-[440px] enter">
+          <ng-content />
+        </div>
+      </div>
+
+      <footer class="flex flex-col items-center justify-between gap-1 px-5 pb-6 text-xs text-slate-400 sm:flex-row sm:px-10 dark:text-slate-500">
+        <span>© 2026 OdivonFARM. Tüm hakları saklıdır.</span>
+        <span class="flex items-center gap-1.5">
+          <mat-icon class="icon-size-4 text-[#6c4ff2] dark:text-[#a996ff]" [svgIcon]="'heroicons_solid:lock-closed'"></mat-icon>
+          Güvenli bağlantı
+        </span>
+      </footer>
+    </main>
+  </div>
+</div>

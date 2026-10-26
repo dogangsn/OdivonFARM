@@ -1,0 +1,43 @@
+// Login ve kayıt formlarının ortak küçük stilleri.
+// Renkler Tailwind sınıflarıyla (açık + dark:) şablonda verilir.
+
+:host {
+  display: block;
+  width: 100%;
+}
+
+// Koyu temada tarayıcı otomatik doldurma arka planını düzelt
+:host-context(.dark) input:-webkit-autofill,
+:host-context(.dark) input:-webkit-autofill:hover,
+:host-context(.dark) input:-webkit-autofill:focus {
+  -webkit-text-fill-color: #fff;
+  caret-color: #fff;
+  box-shadow: 0 0 0 1000px #141d33 inset;
+  transition: background-color 9999s ease-out;
+}
+
+select option {
+  color: #0f172a;
+  background: #fff;
+}
+:host-context(.dark) select option {
+  color: #fff;
+  background: #141d33;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-4px); }
+  40%, 80% { transform: translateX(4px); }
+}
+.animate-shake {
+  animation: shake 0.4s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+.animate-fadeIn {
+  animation: fadeIn 0.22s ease-out both;
+}

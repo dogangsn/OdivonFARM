@@ -5,7 +5,7 @@ import { Router, RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { AuthService } from '../../../core/auth/auth.service';
-import { AuthHighlight, AuthShowcaseComponent } from '../shared/auth-showcase.component';
+import { AuthLayoutComponent } from '../shared/auth-layout.component';
 
 export interface CountryOption {
   code: string;
@@ -65,10 +65,10 @@ export const LANGUAGES: LanguageOption[] = [
     RouterLink,
     MatButtonModule,
     MatIconModule,
-    AuthShowcaseComponent,
+    AuthLayoutComponent,
   ],
   templateUrl: './register.component.html',
-  styleUrl: './register.component.scss',
+  styleUrl: '../shared/auth-form.scss',
 })
 export class RegisterComponent {
   private auth = inject(AuthService);
@@ -93,12 +93,6 @@ export class RegisterComponent {
   error = signal<string | null>(null);
   loading = signal(false);
 
-  readonly highlights: AuthHighlight[] = [
-    { icon: 'heroicons_outline:sparkles', title: '1 dakikada kurulum', text: 'Temel tanımlar sizin için otomatik hazırlanır.' },
-    { icon: 'heroicons_outline:translate', title: 'Çok dilli kullanım', text: 'Türkçe, English, Deutsch, Nederlands, Русский ve daha fazlası.' },
-    { icon: 'heroicons_outline:shield-check', title: 'Güvenli bulut', text: 'Verilerinize her cihazdan güvenle erişin.' },
-  ];
-
   /** Basit şifre gücü göstergesi (sadece görsel geri bildirim). */
   passwordStrength = computed(() => {
     const p = this.password();
@@ -112,12 +106,42 @@ export class RegisterComponent {
       { label: 'Çok kısa', barClass: 'bg-rose-500', textClass: 'text-rose-600 dark:text-rose-400' },
       { label: 'Zayıf', barClass: 'bg-rose-500', textClass: 'text-rose-600 dark:text-rose-400' },
       { label: 'Orta', barClass: 'bg-amber-500', textClass: 'text-amber-600 dark:text-amber-400' },
-      { label: 'İyi', barClass: 'bg-emerald-500', textClass: 'text-emerald-600 dark:text-emerald-400' },
-      { label: 'Güçlü', barClass: 'bg-emerald-500', textClass: 'text-emerald-600 dark:text-emerald-400' },
+      { label: 'İyi', barClass: 'bg-emerald-500', textClass: 'text-emerald-700 dark:text-emerald-400' },
+      { label: 'Güçlü', barClass: 'bg-emerald-500', textClass: 'text-emerald-700 dark:text-emerald-400' },
     ];
     const lvl = p.length < 6 ? levels[0] : levels[score];
     return { score: Math.max(score, 1), ...lvl };
   });
+
+  /** Kayıt adımı: 1 = hesap bilgileri, 2 = çiftlik bilgileri */
+  step = signal<1 | 2>(1);
+
+  /** Hızlı seçim için öne çıkan diller */
+  readonly quickLanguages = ['tr', 'en', 'de', 'nl', 'ru'];
+
+  nextStep() {
+    const nameVal = this.name().trim();
+    const emailVal = this.email().trim();
+    if (!nameVal || !emailVal || !this.password()) {
+      this.error.set('Lütfen adınızı, e-posta adresinizi ve şifrenizi girin.');
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal)) {
+      this.error.set('Geçerli bir e-posta adresi girin.');
+      return;
+    }
+    if (this.password().length < 6) {
+      this.error.set('Şifre en az 6 karakter olmalıdır.');
+      return;
+    }
+    this.error.set(null);
+    this.step.set(2);
+  }
+
+  prevStep() {
+    this.error.set(null);
+    this.step.set(1);
+  }
 
   togglePasswordVisibility() {
     this.showPassword.update((v) => !v);
@@ -165,6 +189,7 @@ export class RegisterComponent {
 
     if (!nameVal || !emailVal || !passVal) {
       this.error.set('Lütfen adınızı, e-posta adresinizi ve şifrenizi girin.');
+      this.step.set(1);
       return;
     }
 
@@ -195,6 +220,7 @@ export class RegisterComponent {
       let msg = 'Kayıt başarısız: ' + (e?.message ?? 'bilinmeyen hata');
       if (e?.code === 'auth/email-already-in-use') {
         msg = 'Bu e-posta adresi zaten kullanımda.';
+        this.step.set(1);
       } else if (e?.code === 'auth/weak-password') {
         msg = 'Şifre çok zayıf. En az 6 karakter olmalıdır.';
       } else if (e?.code === 'auth/invalid-email') {

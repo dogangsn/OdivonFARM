@@ -1,0 +1,117 @@
+<svg class="block h-full w-full" [attr.viewBox]="viewBox()" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+  <defs>
+    <linearGradient [attr.id]="uid + '-sky-day'" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#d9d2ff" />
+      <stop offset="0.55" stop-color="#eef0fb" />
+      <stop offset="1" stop-color="#fdf3dc" />
+    </linearGradient>
+    <linearGradient [attr.id]="uid + '-sky-night'" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0a0f1d" />
+      <stop offset="0.6" stop-color="#101828" />
+      <stop offset="1" stop-color="#231f4a" />
+    </linearGradient>
+    <radialGradient [attr.id]="uid + '-sun-glow'">
+      <stop offset="0" stop-color="#fde68a" stop-opacity="0.9" />
+      <stop offset="1" stop-color="#fde68a" stop-opacity="0" />
+    </radialGradient>
+    <radialGradient [attr.id]="uid + '-moon-glow'">
+      <stop offset="0" stop-color="#e0f2fe" stop-opacity="0.35" />
+      <stop offset="1" stop-color="#e0f2fe" stop-opacity="0" />
+    </radialGradient>
+  </defs>
+
+  <!-- Gökyüzü -->
+  <rect width="800" height="1000" [attr.fill]="'url(#' + uid + '-sky-day)'" class="dark:hidden" />
+  <rect width="800" height="1000" [attr.fill]="'url(#' + uid + '-sky-night)'" class="hidden dark:block" />
+
+  <!-- Yıldızlar (gece) -->
+  <g class="hidden dark:block">
+    @for (s of stars; track $index) {
+      <circle [attr.cx]="s[0]" [attr.cy]="s[1]" [attr.r]="s[2]" fill="#fff" class="twinkle" [style.animation-delay.s]="$index * 0.37" />
+    }
+  </g>
+
+  <!-- Güneş (gündüz) / Ay (gece) -->
+  <g class="dark:hidden">
+    <circle cx="640" cy="470" r="150" [attr.fill]="'url(#' + uid + '-sun-glow)'" />
+    <circle cx="640" cy="470" r="52" fill="#fcd34d" />
+  </g>
+  <g class="hidden dark:block">
+    <circle cx="640" cy="440" r="130" [attr.fill]="'url(#' + uid + '-moon-glow)'" />
+    <circle cx="640" cy="440" r="40" fill="#f1f5f9" />
+    <circle cx="656" cy="430" r="36" fill="#0e1525" />
+  </g>
+
+  <!-- Bulutlar (gündüz) -->
+  <g class="dark:hidden cloud-drift" fill="#ffffff" opacity="0.85">
+    <ellipse cx="170" cy="470" rx="70" ry="18" />
+    <ellipse cx="205" cy="456" rx="40" ry="20" />
+    <ellipse cx="480" cy="520" rx="55" ry="14" />
+    <ellipse cx="505" cy="509" rx="30" ry="15" />
+  </g>
+
+  <!-- Uzak tepeler -->
+  <path d="M0 640 C 120 570, 230 610, 330 572 S 530 505, 650 565 S 765 595, 800 578 L800 1000 L0 1000 Z"
+    class="fill-[#a7d3b0] dark:fill-[#163330] transition-colors duration-300" />
+
+  <!-- Orta tepe -->
+  <path d="M0 720 C 150 662, 300 694, 430 672 S 660 618, 800 684 L800 1000 L0 1000 Z"
+    class="fill-[#76b884] dark:fill-[#12413a] transition-colors duration-300" />
+
+  <!-- Ağaçlar -->
+  <g>
+    <rect x="86" y="672" width="8" height="34" rx="2" class="fill-[#7c5a3a] dark:fill-[#3b2a1d]" />
+    <circle cx="90" cy="664" r="30" class="fill-[#3f8a52] dark:fill-[#0d332c]" />
+    <circle cx="112" cy="676" r="20" class="fill-[#4a9a5d] dark:fill-[#0f3a31]" />
+    <rect x="736" y="664" width="7" height="30" rx="2" class="fill-[#7c5a3a] dark:fill-[#3b2a1d]" />
+    <circle cx="740" cy="656" r="25" class="fill-[#3f8a52] dark:fill-[#0d332c]" />
+  </g>
+
+  <!-- Ahır ve silo -->
+  <g>
+    <rect x="652" y="566" width="30" height="84" rx="4" class="fill-[#cbd5e1] dark:fill-[#4b5563]" />
+    <path d="M652 570 a15 14 0 0 1 30 0 Z" class="fill-[#94a3b8] dark:fill-[#374151]" />
+    <rect x="556" y="590" width="94" height="62" class="fill-[#b4352b] dark:fill-[#6b1f1a]" />
+    <path d="M548 594 L603 552 L658 594 Z" class="fill-[#8f2a22] dark:fill-[#4c1612]" />
+    <path d="M548 594 L603 552 L658 594" fill="none" stroke-width="4" class="stroke-white dark:stroke-[#cbd5e1]" />
+    <rect x="587" y="614" width="32" height="38" fill="none" stroke-width="3" class="stroke-white dark:stroke-[#cbd5e1]" />
+    <path d="M587 614 L619 652 M619 614 L587 652" stroke-width="3" class="stroke-white dark:stroke-[#cbd5e1]" />
+    <rect x="596" y="568" width="14" height="13" class="fill-white dark:fill-[#fcd34d] window-glow" />
+  </g>
+
+  <!-- Ön tepe -->
+  <path d="M0 818 C 180 760, 360 800, 520 782 S 720 742, 800 760 L800 1000 L0 1000 Z"
+    class="fill-[#4f9e60] dark:fill-[#0d3530] transition-colors duration-300" />
+
+  <!-- Çit -->
+  <g class="stroke-[#8b5e34] dark:stroke-[#5b4330]" stroke-linecap="round">
+    <path d="M20 812 L420 786" stroke-width="5" fill="none" />
+    <path d="M20 830 L420 804" stroke-width="5" fill="none" />
+    @for (i of [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]; track i) {
+      <path [attr.d]="'M' + (24 + i * 39.5) + ' ' + (800 - i * 2.6) + ' l0 46'" stroke-width="7" fill="none" />
+    }
+  </g>
+
+  <!-- Ön çayır -->
+  <path d="M0 900 C 200 862, 560 884, 800 852 L800 1000 L0 1000 Z"
+    class="fill-[#62b071] dark:fill-[#0f3b33] transition-colors duration-300" />
+
+  <!-- Koyunlar -->
+  @for (k of sheep; track $index) {
+    <g [attr.transform]="'translate(' + k.x + ' ' + k.y + ') scale(' + (k.flip ? -k.s : k.s) + ' ' + k.s + ')'" class="sheep">
+      <rect x="-17" y="10" width="5" height="16" rx="2" class="fill-[#1f2937] dark:fill-[#0b0f14]" />
+      <rect x="-6" y="12" width="5" height="15" rx="2" class="fill-[#1f2937] dark:fill-[#0b0f14]" />
+      <rect x="7" y="12" width="5" height="15" rx="2" class="fill-[#1f2937] dark:fill-[#0b0f14]" />
+      <rect x="16" y="10" width="5" height="16" rx="2" class="fill-[#1f2937] dark:fill-[#0b0f14]" />
+      <g class="fill-white dark:fill-[#cbd5e1]">
+        <ellipse cx="0" cy="0" rx="27" ry="17" />
+        <circle cx="-15" cy="-8" r="11" />
+        <circle cx="0" cy="-13" r="12" />
+        <circle cx="15" cy="-9" r="11" />
+        <circle cx="-24" cy="2" r="9" />
+      </g>
+      <ellipse cx="29" cy="-5" rx="10" ry="8" class="fill-[#1f2937] dark:fill-[#0b0f14]" />
+      <ellipse cx="25" cy="-12" rx="5" ry="3" transform="rotate(-25 25 -12)" class="fill-[#1f2937] dark:fill-[#0b0f14]" />
+    </g>
+  }
+</svg>
