@@ -103,11 +103,11 @@ export class RegisterComponent {
     if (/\d/.test(p) && /[^A-Za-z0-9]/.test(p)) score++;
     if (p.length < 6) score = Math.min(score, 1);
     const levels = [
-      { label: 'Çok kısa', barClass: 'bg-rose-400', textClass: 'text-rose-400' },
-      { label: 'Zayıf', barClass: 'bg-rose-400', textClass: 'text-rose-400' },
-      { label: 'Orta', barClass: 'bg-amber-400', textClass: 'text-amber-400' },
-      { label: 'İyi', barClass: 'bg-emerald-400', textClass: 'text-emerald-400' },
-      { label: 'Güçlü', barClass: 'bg-emerald-400', textClass: 'text-emerald-400' },
+      { label: 'Çok kısa', barClass: 'bg-rose-500', textClass: 'text-rose-600 dark:text-rose-400' },
+      { label: 'Zayıf', barClass: 'bg-rose-500', textClass: 'text-rose-600 dark:text-rose-400' },
+      { label: 'Orta', barClass: 'bg-amber-500', textClass: 'text-amber-600 dark:text-amber-400' },
+      { label: 'İyi', barClass: 'bg-emerald-500', textClass: 'text-emerald-700 dark:text-emerald-400' },
+      { label: 'Güçlü', barClass: 'bg-emerald-500', textClass: 'text-emerald-700 dark:text-emerald-400' },
     ];
     const lvl = p.length < 6 ? levels[0] : levels[score];
     return { score: Math.max(score, 1), ...lvl };

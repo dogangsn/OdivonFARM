@@ -1,89 +1,87 @@
 <app-auth-layout mode="register">
 
-  <!-- Yükleniyor katmanı -->
   @if (loading()) {
-    <div class="absolute inset-0 z-40 flex flex-col items-center justify-center gap-4 rounded-[28px] bg-[#0a0d1a]/80 px-8 backdrop-blur-md text-center animate-fadeIn">
-      <div class="h-12 w-12 rounded-full border-[3px] border-white/10 border-t-fuchsia-400 border-r-indigo-400 animate-spin"></div>
+    <div class="absolute -inset-4 z-40 flex flex-col items-center justify-center gap-4 rounded-3xl bg-white/90 px-6 text-center backdrop-blur-sm animate-fadeIn dark:bg-[#0a1210]/90">
+      <div class="h-11 w-11 animate-spin rounded-full border-[3px] border-emerald-100 border-t-emerald-600 dark:border-white/10 dark:border-t-emerald-400"></div>
       <div>
-        <div class="text-sm font-bold text-white">Çiftliğiniz kuruluyor</div>
-        <div class="mt-1 text-xs leading-relaxed text-white/50">
-          Tanımlar <b class="text-white/80">{{ selectedLanguageOption().nativeName }}</b> dilinde hazırlanıyor, lütfen bekleyin…
+        <div class="text-sm font-bold text-slate-900 dark:text-white">Çiftliğiniz kuruluyor</div>
+        <div class="mt-1 max-w-[280px] text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+          Padoklar, hayvan tipleri ve ırklar <b class="text-slate-700 dark:text-slate-200">{{ selectedLanguageOption().nativeName }}</b> dilinde hazırlanıyor…
         </div>
       </div>
     </div>
   }
 
-  <h2 class="text-[1.7rem] sm:text-3xl font-black tracking-tight text-white">
-    {{ step() === 1 ? 'Hesabınızı oluşturun' : 'Çiftliğinizi tanıyalım' }}
-  </h2>
-  <p class="mt-1.5 text-sm text-white/50">
-    {{ step() === 1 ? 'Ücretsiz başlayın, kredi kartı gerekmez.' : 'Son adım: birkaç bilgiyle kurulumu tamamlayın.' }}
-  </p>
-
   <!-- Adım göstergesi -->
-  <div class="mt-6 flex items-center gap-3" aria-label="Kayıt adımları">
+  <div class="mb-6 flex items-center gap-3 text-xs font-semibold" aria-label="Kayıt adımları">
     <div class="flex items-center gap-2">
       <span class="flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold transition"
-        [class]="step() === 1 ? 'bg-gradient-to-br from-indigo-500 to-fuchsia-500 text-white shadow-lg shadow-fuchsia-500/30' : 'bg-emerald-400/15 text-emerald-300 ring-1 ring-emerald-400/30'">
+        [class]="step() === 1 ? 'bg-emerald-700 text-white dark:bg-emerald-500 dark:text-emerald-950' : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300'">
         @if (step() === 1) { 1 } @else { <mat-icon class="icon-size-4" [svgIcon]="'heroicons_solid:check'"></mat-icon> }
       </span>
-      <span class="text-xs font-semibold" [class]="step() === 1 ? 'text-white' : 'text-white/50'">Hesap</span>
+      <span class="text-slate-900 dark:text-white">Hesap</span>
     </div>
-    <div class="h-px flex-1 overflow-hidden rounded-full bg-white/10">
-      <div class="h-full bg-gradient-to-r from-indigo-400 to-fuchsia-400 transition-all duration-500" [style.width.%]="step() === 1 ? 0 : 100"></div>
+    <div class="h-0.5 flex-1 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800">
+      <div class="h-full bg-emerald-600 transition-all duration-500 dark:bg-emerald-400" [style.width.%]="step() === 1 ? 0 : 100"></div>
     </div>
     <div class="flex items-center gap-2">
       <span class="flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold transition"
-        [class]="step() === 2 ? 'bg-gradient-to-br from-indigo-500 to-fuchsia-500 text-white shadow-lg shadow-fuchsia-500/30' : 'bg-white/[0.06] text-white/40 ring-1 ring-white/10'">2</span>
-      <span class="text-xs font-semibold" [class]="step() === 2 ? 'text-white' : 'text-white/40'">Çiftlik</span>
+        [class]="step() === 2 ? 'bg-emerald-700 text-white dark:bg-emerald-500 dark:text-emerald-950' : 'bg-slate-100 text-slate-400 dark:bg-white/5 dark:text-slate-500'">2</span>
+      <span [class]="step() === 2 ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-slate-500'">Çiftlik</span>
     </div>
   </div>
 
+  <h2 class="text-[1.75rem] font-black tracking-tight text-slate-900 sm:text-3xl dark:text-white">{{ step() === 1 ? 'Ücretsiz hesap oluşturun' : 'Çiftliğinizi tanıyalım' }}</h2>
+  <p class="mt-2 text-[15px] text-slate-500 dark:text-slate-400">{{ step() === 1 ? 'Kredi kartı gerekmez, dakikalar içinde başlayın.' : 'Son adım: kurulum için birkaç bilgi.' }}</p>
+
   @if (error()) {
-    <div role="alert" class="mt-6 flex items-start gap-2.5 rounded-2xl bg-rose-500/10 p-3.5 text-sm text-rose-200 ring-1 ring-rose-400/25 animate-shake">
-      <mat-icon class="icon-size-5 shrink-0 text-rose-400" [svgIcon]="'heroicons_solid:exclamation-circle'"></mat-icon>
+    <div role="alert" class="mt-6 flex items-start gap-2.5 rounded-xl border border-rose-200 bg-rose-50 p-3.5 text-sm text-rose-700 animate-shake dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-200">
+      <mat-icon class="icon-size-5 shrink-0 text-rose-500 dark:text-rose-400" [svgIcon]="'heroicons_solid:exclamation-circle'"></mat-icon>
       <div class="flex-1">{{ error() }}</div>
-      <button type="button" (click)="error.set(null)" aria-label="Kapat" class="text-rose-300/70 hover:text-rose-200">
+      <button type="button" (click)="error.set(null)" aria-label="Kapat" class="opacity-60 hover:opacity-100">
         <mat-icon class="icon-size-4" [svgIcon]="'heroicons_solid:x'"></mat-icon>
       </button>
     </div>
   }
 
-  <form class="mt-6" (ngSubmit)="step() === 1 ? nextStep() : submit()">
-
+  <form class="mt-8" (ngSubmit)="step() === 1 ? nextStep() : submit()">
     @if (step() === 1) {
-      <!-- ADIM 1: Hesap -->
-      <div class="space-y-4 animate-fadeIn">
-        <div class="field">
-          <input id="reg-name" class="field-input" type="text" name="name" autocomplete="name" required placeholder=" "
-            [ngModel]="name()" (ngModelChange)="name.set($event)" />
-          <label for="reg-name" class="field-label">Ad soyad</label>
-        </div>
-
-        <div class="field">
-          <input id="reg-email" class="field-input" type="email" name="email" autocomplete="email" required placeholder=" "
-            [ngModel]="email()" (ngModelChange)="email.set($event)" />
-          <label for="reg-email" class="field-label">E-posta adresi</label>
+      <div class="space-y-5 animate-fadeIn">
+        <div>
+          <label for="reg-name" class="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-200">Ad soyad</label>
+          <div class="relative">
+            <mat-icon class="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 icon-size-5 text-slate-400 dark:text-slate-500" [svgIcon]="'heroicons_outline:user'"></mat-icon>
+            <input id="reg-name" type="text" name="name" autocomplete="name" required placeholder="Ahmet Yılmaz"
+              [ngModel]="name()" (ngModelChange)="name.set($event)" class="w-full h-12 rounded-xl border border-slate-300 bg-white pl-11 pr-4 text-[15px] text-slate-900 shadow-sm transition placeholder:text-slate-400 hover:border-slate-400 focus:border-emerald-600 focus:outline-none focus:ring-4 focus:ring-emerald-600/15 dark:border-slate-700 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-slate-500 dark:hover:border-slate-600 dark:focus:border-emerald-400 dark:focus:ring-emerald-400/15" />
+          </div>
         </div>
 
         <div>
-          <div class="field">
-            <input id="reg-password" class="field-input has-trailing" [type]="showPassword() ? 'text' : 'password'" name="password"
-              autocomplete="new-password" required placeholder=" "
-              [ngModel]="password()" (ngModelChange)="password.set($event)" />
-            <label for="reg-password" class="field-label">Şifre (en az 6 karakter)</label>
-            <button type="button" (click)="togglePasswordVisibility()"
-              [attr.aria-label]="showPassword() ? 'Şifreyi gizle' : 'Şifreyi göster'"
-              class="absolute right-2.5 top-1/2 -translate-y-1/2 flex h-9 w-9 items-center justify-center rounded-xl text-white/40 transition hover:bg-white/10 hover:text-white">
+          <label for="reg-email" class="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-200">E-posta adresi</label>
+          <div class="relative">
+            <mat-icon class="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 icon-size-5 text-slate-400 dark:text-slate-500" [svgIcon]="'heroicons_outline:mail'"></mat-icon>
+            <input id="reg-email" type="email" name="email" autocomplete="email" required placeholder="ornek@ciftlik.com"
+              [ngModel]="email()" (ngModelChange)="email.set($event)" class="w-full h-12 rounded-xl border border-slate-300 bg-white pl-11 pr-4 text-[15px] text-slate-900 shadow-sm transition placeholder:text-slate-400 hover:border-slate-400 focus:border-emerald-600 focus:outline-none focus:ring-4 focus:ring-emerald-600/15 dark:border-slate-700 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-slate-500 dark:hover:border-slate-600 dark:focus:border-emerald-400 dark:focus:ring-emerald-400/15" />
+          </div>
+        </div>
+
+        <div>
+          <label for="reg-password" class="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-200">Şifre</label>
+          <div class="relative">
+            <mat-icon class="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 icon-size-5 text-slate-400 dark:text-slate-500" [svgIcon]="'heroicons_outline:lock-closed'"></mat-icon>
+            <input id="reg-password" [type]="showPassword() ? 'text' : 'password'" name="password" autocomplete="new-password" required
+              placeholder="En az 6 karakter"
+              [ngModel]="password()" (ngModelChange)="password.set($event)" class="w-full h-12 rounded-xl border border-slate-300 bg-white pl-11 pr-4 text-[15px] text-slate-900 shadow-sm transition placeholder:text-slate-400 hover:border-slate-400 focus:border-emerald-600 focus:outline-none focus:ring-4 focus:ring-emerald-600/15 dark:border-slate-700 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-slate-500 dark:hover:border-slate-600 dark:focus:border-emerald-400 dark:focus:ring-emerald-400/15 !pr-12" />
+            <button type="button" (click)="togglePasswordVisibility()" [attr.aria-label]="showPassword() ? 'Şifreyi gizle' : 'Şifreyi göster'" class="absolute right-2 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 dark:text-slate-500 dark:hover:bg-white/10 dark:hover:text-white">
               <mat-icon class="icon-size-5" [svgIcon]="showPassword() ? 'heroicons_outline:eye-off' : 'heroicons_outline:eye'"></mat-icon>
             </button>
           </div>
           @if (password()) {
-            <div class="mt-2.5 flex items-center gap-3 px-1">
+            <div class="mt-2.5 flex items-center gap-3">
               <div class="flex flex-1 gap-1.5">
                 @for (i of [1, 2, 3, 4]; track i) {
                   <div class="h-1 flex-1 rounded-full transition-colors"
-                    [class]="i <= passwordStrength().score ? passwordStrength().barClass : 'bg-white/10'"></div>
+                    [class]="i <= passwordStrength().score ? passwordStrength().barClass : 'bg-slate-200 dark:bg-slate-800'"></div>
                 }
               </div>
               <span class="text-xs font-semibold" [class]="passwordStrength().textClass">{{ passwordStrength().label }}</span>
@@ -91,78 +89,78 @@
           }
         </div>
 
-        <div class="pt-2">
-          <button type="submit" class="btn-primary">
-            <span>Devam et</span>
-            <mat-icon class="icon-size-5 text-white" [svgIcon]="'heroicons_solid:arrow-right'"></mat-icon>
-          </button>
-        </div>
+        <button type="submit" class="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-emerald-700 text-[15px] font-bold text-white shadow-lg shadow-emerald-700/25 transition hover:bg-emerald-800 active:scale-[0.99] disabled:pointer-events-none disabled:opacity-60 dark:bg-emerald-500 dark:text-emerald-950 dark:shadow-emerald-500/20 dark:hover:bg-emerald-400 !mt-7">
+          <span>Devam et</span>
+          <mat-icon class="icon-size-5" [svgIcon]="'heroicons_solid:arrow-right'"></mat-icon>
+        </button>
       </div>
     } @else {
-      <!-- ADIM 2: Çiftlik -->
-      <div class="space-y-4 animate-fadeIn">
-        <div class="field">
-          <input id="reg-farm" class="field-input" type="text" name="farmName" autocomplete="organization" placeholder=" "
-            [ngModel]="farmName()" (ngModelChange)="farmName.set($event)" />
-          <label for="reg-farm" class="field-label">Çiftlik adı (isteğe bağlı)</label>
-        </div>
-
-        <!-- Ülke kodu + telefon -->
-        <div class="field">
-          <input id="reg-phone" class="field-input has-leading" type="tel" name="phone" autocomplete="tel-national" placeholder=" "
-            [ngModel]="phone()" (ngModelChange)="phone.set($event)" />
-          <label for="reg-phone" class="field-label">Cep telefonu (isteğe bağlı)</label>
-          <div class="absolute bottom-1.5 left-1.5 top-1.5 flex w-[5.6rem] items-center gap-1.5 rounded-xl bg-white/[0.06] px-2.5 ring-1 ring-white/10 transition hover:bg-white/10">
-            <img [src]="getFlagUrl(selectedCountry().code)" [alt]="selectedCountry().name" class="h-3.5 w-5 rounded-[3px] object-cover" />
-            <span class="text-sm font-semibold text-white/85">{{ selectedCountry().dialCode }}</span>
-            <mat-icon class="ml-auto icon-size-4 text-white/40" [svgIcon]="'heroicons_solid:chevron-down'"></mat-icon>
-            <select name="country" aria-label="Ülke" [title]="selectedCountry().name"
-              [ngModel]="selectedCountry().code" (ngModelChange)="onCountryChange($event)"
-              class="absolute inset-0 h-full w-full cursor-pointer opacity-0">
-              @for (c of countries; track c.code) {
-                <option [value]="c.code" class="bg-[#11142a] text-white">{{ c.name }} ({{ c.dialCode }})</option>
-              }
-            </select>
+      <div class="space-y-5 animate-fadeIn">
+        <div>
+          <label for="reg-farm" class="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-200">Çiftlik / işletme adı <span class="font-normal text-slate-400">(isteğe bağlı)</span></label>
+          <div class="relative">
+            <mat-icon class="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 icon-size-5 text-slate-400 dark:text-slate-500" [svgIcon]="'heroicons_outline:office-building'"></mat-icon>
+            <input id="reg-farm" type="text" name="farmName" autocomplete="organization" placeholder="Yılmaz Çiftliği"
+              [ngModel]="farmName()" (ngModelChange)="farmName.set($event)" class="w-full h-12 rounded-xl border border-slate-300 bg-white pl-11 pr-4 text-[15px] text-slate-900 shadow-sm transition placeholder:text-slate-400 hover:border-slate-400 focus:border-emerald-600 focus:outline-none focus:ring-4 focus:ring-emerald-600/15 dark:border-slate-700 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-slate-500 dark:hover:border-slate-600 dark:focus:border-emerald-400 dark:focus:ring-emerald-400/15" />
           </div>
         </div>
 
-        <!-- Dil -->
         <div>
-          <div class="field">
-            <select id="reg-lang" class="field-input has-flag" name="languageSelect"
-              [ngModel]="language()" (ngModelChange)="setLanguage($event)">
+          <label for="reg-phone" class="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-200">Cep telefonu <span class="font-normal text-slate-400">(isteğe bağlı)</span></label>
+          <div class="relative">
+            <div class="absolute bottom-1 left-1 top-1 flex w-[5.5rem] items-center gap-1.5 rounded-lg bg-slate-100 px-2.5 transition hover:bg-slate-200 dark:bg-white/[0.06] dark:hover:bg-white/10">
+              <img [src]="getFlagUrl(selectedCountry().code)" [alt]="selectedCountry().name" class="h-3.5 w-5 rounded-[3px] object-cover ring-1 ring-black/10" />
+              <span class="text-sm font-semibold text-slate-700 dark:text-slate-200">{{ selectedCountry().dialCode }}</span>
+              <mat-icon class="ml-auto icon-size-4 text-slate-400" [svgIcon]="'heroicons_solid:chevron-down'"></mat-icon>
+              <select name="country" aria-label="Ülke" [title]="selectedCountry().name"
+                [ngModel]="selectedCountry().code" (ngModelChange)="onCountryChange($event)"
+                class="absolute inset-0 h-full w-full cursor-pointer opacity-0">
+                @for (c of countries; track c.code) {
+                  <option [value]="c.code">{{ c.name }} ({{ c.dialCode }})</option>
+                }
+              </select>
+            </div>
+            <input id="reg-phone" type="tel" name="phone" autocomplete="tel-national" [placeholder]="selectedCountry().phonePlaceholder"
+              [ngModel]="phone()" (ngModelChange)="phone.set($event)" class="w-full h-12 rounded-xl border border-slate-300 bg-white pl-[6.5rem] pr-4 text-[15px] text-slate-900 shadow-sm transition placeholder:text-slate-400 hover:border-slate-400 focus:border-emerald-600 focus:outline-none focus:ring-4 focus:ring-emerald-600/15 dark:border-slate-700 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-slate-500 dark:hover:border-slate-600 dark:focus:border-emerald-400 dark:focus:ring-emerald-400/15" />
+          </div>
+        </div>
+
+        <div>
+          <label for="reg-lang" class="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-200">Uygulama dili</label>
+          <div class="relative">
+            <img [src]="getLangFlagUrl(selectedLanguageOption().code)" [alt]="selectedLanguageOption().name"
+              class="pointer-events-none absolute left-3.5 top-1/2 h-3.5 w-5 -translate-y-1/2 rounded-[3px] object-cover ring-1 ring-black/10" />
+            <select id="reg-lang" name="languageSelect" [ngModel]="language()" (ngModelChange)="setLanguage($event)"
+              class="w-full h-12 rounded-xl border border-slate-300 bg-white pl-11 pr-4 text-[15px] text-slate-900 shadow-sm transition placeholder:text-slate-400 hover:border-slate-400 focus:border-emerald-600 focus:outline-none focus:ring-4 focus:ring-emerald-600/15 dark:border-slate-700 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-slate-500 dark:hover:border-slate-600 dark:focus:border-emerald-400 dark:focus:ring-emerald-400/15 cursor-pointer appearance-none !pr-10">
               @for (l of languages; track l.code) {
                 <option [value]="l.code">{{ l.nativeName }}{{ l.nativeName !== l.name ? ' · ' + l.name : '' }}</option>
               }
             </select>
-            <label for="reg-lang" class="field-label is-floating">Uygulama dili</label>
-            <img [src]="getLangFlagUrl(selectedLanguageOption().code)" [alt]="selectedLanguageOption().name"
-              class="pointer-events-none absolute left-4 top-1/2 h-3.5 w-5 -translate-y-1/2 rounded-[3px] object-cover" />
-            <mat-icon class="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 icon-size-4 text-white/40" [svgIcon]="'heroicons_solid:chevron-down'"></mat-icon>
+            <mat-icon class="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 icon-size-4 text-slate-400" [svgIcon]="'heroicons_solid:chevron-down'"></mat-icon>
           </div>
-          <p class="mt-2 px-1 text-xs text-white/40">Hayvan tipleri, ırklar ve tedavi tanımları bu dilde kurulur.</p>
+          <p class="mt-1.5 text-xs text-slate-500 dark:text-slate-400">Hayvan tipleri, ırklar ve tedavi tanımları bu dilde kurulur.</p>
         </div>
 
-        <label class="flex cursor-pointer select-none items-start gap-2.5 pt-1 text-sm leading-relaxed text-white/60">
-          <input type="checkbox" class="check mt-0.5" name="termsAccepted" [ngModel]="termsAccepted()" (ngModelChange)="termsAccepted.set($event)" />
+        <label class="flex cursor-pointer select-none items-start gap-2.5 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+          <input type="checkbox" name="termsAccepted" class="h-4 w-4 cursor-pointer rounded border-slate-300 accent-emerald-700 dark:accent-emerald-500 mt-0.5" [ngModel]="termsAccepted()" (ngModelChange)="termsAccepted.set($event)" />
           <span>Kullanım Koşulları'nı ve Gizlilik Politikası'nı okudum, kabul ediyorum.</span>
         </label>
 
-        <div class="flex gap-2.5 pt-2">
-          <button type="button" class="btn-ghost" (click)="prevStep()" aria-label="Geri">
-            <mat-icon class="icon-size-5 rotate-180" [svgIcon]="'heroicons_solid:arrow-right'"></mat-icon>
+        <div class="flex gap-2.5 !mt-7">
+          <button type="button" class="flex h-12 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-5 text-[15px] font-bold text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-transparent dark:text-slate-200 dark:hover:bg-white/5" (click)="prevStep()" aria-label="Geri">
+            <mat-icon class="icon-size-5" [svgIcon]="'heroicons_solid:arrow-left'"></mat-icon>
           </button>
-          <button type="submit" class="btn-primary flex-1" [disabled]="loading()">
+          <button type="submit" class="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-emerald-700 text-[15px] font-bold text-white shadow-lg shadow-emerald-700/25 transition hover:bg-emerald-800 active:scale-[0.99] disabled:pointer-events-none disabled:opacity-60 dark:bg-emerald-500 dark:text-emerald-950 dark:shadow-emerald-500/20 dark:hover:bg-emerald-400 flex-1" [disabled]="loading()">
             <span>Hesabı oluştur</span>
-            <mat-icon class="icon-size-5 text-white" [svgIcon]="'heroicons_solid:sparkles'"></mat-icon>
+            <mat-icon class="icon-size-5" [svgIcon]="'heroicons_solid:check'"></mat-icon>
           </button>
         </div>
       </div>
     }
   </form>
 
-  <p class="mt-7 text-center text-sm text-white/45">
+  <p class="mt-8 text-center text-sm text-slate-500 dark:text-slate-400">
     Zaten hesabınız var mı?
-    <a routerLink="/auth/login" class="font-bold text-white underline decoration-fuchsia-400/60 underline-offset-4 hover:decoration-fuchsia-400">Giriş yapın</a>
+    <a routerLink="/auth/login" class="font-semibold text-emerald-700 hover:text-emerald-800 dark:text-emerald-400 dark:hover:text-emerald-300">Giriş yapın</a>
   </p>
 </app-auth-layout>

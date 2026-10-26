@@ -4,90 +4,13 @@
   min-height: 100vh;
 }
 
-/* Hareketli aurora ışıkları */
-.aurora {
-  position: absolute;
-  border-radius: 9999px;
-  filter: blur(90px);
-  opacity: 0.55;
-  will-change: transform;
-}
-.aurora-1 {
-  width: 46rem; height: 46rem; top: -18rem; left: -12rem;
-  background: radial-gradient(circle, #6366f1 0%, transparent 65%);
-  animation: drift-1 22s ease-in-out infinite alternate;
-}
-.aurora-2 {
-  width: 40rem; height: 40rem; bottom: -16rem; right: -10rem;
-  background: radial-gradient(circle, #a855f7 0%, transparent 65%);
-  animation: drift-2 26s ease-in-out infinite alternate;
-}
-.aurora-3 {
-  width: 30rem; height: 30rem; top: 40%; left: 38%;
-  background: radial-gradient(circle, #10b981 0%, transparent 65%);
-  opacity: 0.28;
-  animation: drift-3 30s ease-in-out infinite alternate;
-}
-@keyframes drift-1 { to { transform: translate(8rem, 6rem) scale(1.1); } }
-@keyframes drift-2 { to { transform: translate(-6rem, -8rem) scale(1.15); } }
-@keyframes drift-3 { to { transform: translate(-10rem, 4rem) scale(0.9); } }
-
-/* İnce ızgara dokusu */
-.grid-bg {
-  background-image:
-    linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
-  background-size: 56px 56px;
-  mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, #000 20%, transparent 80%);
-}
-
-/* Cam kart: üst kenarda ışık çizgisi */
-.glass-card {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.075), rgba(255, 255, 255, 0.03));
-  box-shadow:
-    0 0 0 1px rgba(255, 255, 255, 0.09) inset,
-    0 30px 80px -20px rgba(0, 0, 0, 0.6),
-    0 0 120px -40px rgba(99, 102, 241, 0.45);
-}
-.glass-card::before {
-  content: '';
-  position: absolute;
-  inset: 0 2rem auto 2rem;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(165, 180, 252, 0.7), transparent);
-}
-
-/* Önizleme kartları */
-.preview-card {
-  background: rgba(15, 18, 32, 0.72);
-  box-shadow:
-    0 0 0 1px rgba(255, 255, 255, 0.08) inset,
-    0 24px 60px -24px rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(16px);
-}
-.float-a { animation: float 7s ease-in-out infinite; }
-.float-b { animation: float 8s ease-in-out -2s infinite; }
-.float-c { animation: float 9s ease-in-out -4s infinite; }
-@keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
-}
-
-.text-gradient {
-  background: linear-gradient(100deg, #a5b4fc 0%, #e879f9 45%, #6ee7b7 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-
 .enter {
-  animation: enter 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  animation: enter 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 @keyframes enter {
-  from { opacity: 0; transform: translateY(14px); }
+  from { opacity: 0; transform: translateY(12px); }
   to { opacity: 1; transform: none; }
 }
-
 @media (prefers-reduced-motion: reduce) {
-  .aurora, .float-a, .float-b, .float-c, .enter { animation: none; }
+  .enter { animation: none; }
 }
