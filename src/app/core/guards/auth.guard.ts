@@ -1,16 +1,31 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
-import { filter, map, take } from 'rxjs';
-import { AuthService } from '../auth/auth.service';
+import { catchError, filter, from, map, of, switchMap, take } from 'rxjs';
+import { AuthService, isEmailNotVerified } from '../auth/auth.service';
 
-/** Giriş yapılmamışsa /auth/login sayfasına yönlendirir */
+/**
+ * Giriş yapılmamışsa /auth/login sayfasına yönlendirir.
+ * E-postasını doğrulamamış hesabın oturumu kapatılır ve doğrulama ekranına gönderilir.
+ */
 export const authGuard: CanActivateFn = () => {
   const auth = inject(AuthService);
   const router = inject(Router);
 
   return auth.authState$.pipe(
     take(1),
-    map((user) => (user ? true : router.createUrlTree(['/auth/login'])))
+    switchMap((user) => {
+      if (!user) return of(router.createUrlTree(['/auth/login']));
+      return from(auth.ensureFarm(user)).pipe(
+        map(() => true as const),
+        catchError((err) => {
+          if (!isEmailNotVerified(err)) return of(true as const); // sunucu hatası: eski davranış
+          const email = user.email ?? '';
+          return from(auth.logout()).pipe(
+            map(() => router.createUrlTree(['/auth/verify-email'], { queryParams: { email } }))
+          );
+        })
+      );
+    })
   );
 };
 

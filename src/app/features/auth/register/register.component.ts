@@ -207,14 +207,18 @@ export class RegisterComponent {
         ? `${this.selectedCountry().dialCode} ${this.phone().trim()}`
         : '';
 
-      await this.auth.register(emailVal, passVal, nameVal, farmName, {
+      const result = await this.auth.register(emailVal, passVal, nameVal, farmName, {
         phone: fullPhone,
         countryCode: this.selectedCountry().code,
         country: this.selectedCountry().name,
         language: this.language(),
       });
 
-      await this.router.navigateByUrl('/anasayfa');
+      if (result.verificationRequired) {
+        await this.router.navigate(['/auth/verify-email'], { queryParams: { email: emailVal, new: 1 } });
+      } else {
+        await this.router.navigateByUrl('/anasayfa');
+      }
     } catch (e: any) {
       console.error('Kayıt hatası:', e);
       let msg = 'Kayıt başarısız: ' + (e?.message ?? 'bilinmeyen hata');

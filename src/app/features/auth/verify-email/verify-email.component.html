@@ -1,0 +1,101 @@
+<app-auth-layout mode="register">
+
+  @switch (state()) {
+    @case ('verifying') {
+      <div class="flex flex-col items-center gap-4 py-10 text-center animate-fadeIn">
+        <div class="h-11 w-11 animate-spin rounded-full border-[3px] border-[#ece8ff] border-t-[#6c4ff2] dark:border-white/10 dark:border-t-[#917aff]"></div>
+        <div class="text-sm font-bold text-slate-900 dark:text-white">E-posta adresiniz doğrulanıyor…</div>
+      </div>
+    }
+
+    @case ('verified') {
+      <div class="animate-fadeIn">
+        <div class="flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-300">
+          <mat-icon class="icon-size-7" [svgIcon]="'heroicons_outline:badge-check'"></mat-icon>
+        </div>
+        <h2 class="mt-6 text-[1.75rem] font-black tracking-tight text-slate-900 sm:text-3xl dark:text-white">E-postanız doğrulandı</h2>
+        <p class="mt-2 text-[15px] leading-relaxed text-slate-500 dark:text-slate-400">
+          @if (verifiedEmail()) { <b class="text-slate-700 dark:text-slate-200">{{ verifiedEmail() }}</b> adresi onaylandı. }
+          Artık giriş yapıp çiftliğinizi kullanmaya başlayabilirsiniz. Hoş geldiniz e-postanız da yolda.
+        </p>
+        <a routerLink="/auth/login" class="mt-8 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#6c4ff2] text-[15px] font-bold text-white shadow-lg shadow-[#6c4ff2]/25 transition hover:bg-[#5a3de0] active:scale-[0.99] dark:bg-[#917aff] dark:text-[#101828] dark:shadow-[#917aff]/20 dark:hover:bg-[#a693ff]">
+          <span>Giriş yap</span>
+          <mat-icon class="icon-size-5" [svgIcon]="'heroicons_solid:arrow-right'"></mat-icon>
+        </a>
+      </div>
+    }
+
+    @default {
+      <div class="animate-fadeIn">
+        @if (state() === 'invalid') {
+          <div class="flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-50 text-rose-600 dark:bg-rose-500/15 dark:text-rose-300">
+            <mat-icon class="icon-size-7" [svgIcon]="'heroicons_outline:exclamation'"></mat-icon>
+          </div>
+          <h2 class="mt-6 text-[1.75rem] font-black tracking-tight text-slate-900 sm:text-3xl dark:text-white">Bağlantı kullanılamıyor</h2>
+          <p role="alert" class="mt-2 text-[15px] leading-relaxed text-slate-500 dark:text-slate-400">{{ error() }}</p>
+        } @else {
+          <div class="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#ece8ff] text-[#6c4ff2] dark:bg-[#917aff]/15 dark:text-[#c4b8ff]">
+            <mat-icon class="icon-size-7" [svgIcon]="'heroicons_outline:mail-open'"></mat-icon>
+          </div>
+          <h2 class="mt-6 text-[1.75rem] font-black tracking-tight text-slate-900 sm:text-3xl dark:text-white">
+            {{ justRegistered() ? 'Hesabınız oluşturuldu' : 'E-postanızı doğrulayın' }}
+          </h2>
+          <p class="mt-2 text-[15px] leading-relaxed text-slate-500 dark:text-slate-400">
+            @if (email()) {
+              <b class="text-slate-700 dark:text-slate-200">{{ email() }}</b> adresine bir doğrulama bağlantısı gönderdik.
+            } @else {
+              E-posta adresinize bir doğrulama bağlantısı gönderdik.
+            }
+            Giriş yapabilmek için e-postadaki <b class="text-slate-700 dark:text-slate-200">"E-postamı doğrula"</b> düğmesine tıklayın.
+          </p>
+          <div class="mt-5 flex items-start gap-2.5 rounded-xl border border-amber-200 bg-amber-50 p-3.5 text-sm text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200">
+            <mat-icon class="icon-size-5 shrink-0 text-amber-500 dark:text-amber-300" [svgIcon]="'heroicons_solid:information-circle'"></mat-icon>
+            <span>E-posta birkaç dakika içinde gelmezse spam / gereksiz klasörünü kontrol edin. Bağlantı 24 saat geçerlidir.</span>
+          </div>
+        }
+
+        @if (resendSuccess()) {
+          <div class="mt-5 flex items-start gap-2.5 rounded-xl border border-emerald-200 bg-emerald-50 p-3.5 text-sm text-emerald-800 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-200">
+            <mat-icon class="icon-size-5 shrink-0 text-emerald-600 dark:text-emerald-400" [svgIcon]="'heroicons_solid:check-circle'"></mat-icon>
+            <span>{{ resendSuccess() }}</span>
+          </div>
+        }
+        @if (resendError()) {
+          <div role="alert" class="mt-5 flex items-start gap-2.5 rounded-xl border border-rose-200 bg-rose-50 p-3.5 text-sm text-rose-700 animate-shake dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-200">
+            <mat-icon class="icon-size-5 shrink-0 text-rose-500 dark:text-rose-400" [svgIcon]="'heroicons_solid:exclamation-circle'"></mat-icon>
+            <span>{{ resendError() }}</span>
+          </div>
+        }
+
+        <form class="mt-6 space-y-4" (ngSubmit)="resend()">
+          <div>
+            <label for="verify-email" class="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-200">E-posta adresi</label>
+            <div class="relative">
+              <mat-icon class="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 icon-size-5 text-slate-400 dark:text-slate-500" [svgIcon]="'heroicons_outline:mail'"></mat-icon>
+              <input id="verify-email" type="email" name="email" autocomplete="email" required placeholder="ornek@ciftlik.com"
+                [ngModel]="email()" (ngModelChange)="email.set($event)"
+                class="w-full h-12 rounded-xl border border-slate-300 bg-white pl-11 pr-4 text-[15px] text-slate-900 shadow-sm transition placeholder:text-slate-400 hover:border-slate-400 focus:border-[#6c4ff2] focus:outline-none focus:ring-4 focus:ring-[#6c4ff2]/15 dark:border-slate-700 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-slate-500 dark:hover:border-slate-600 dark:focus:border-[#917aff] dark:focus:ring-[#917aff]/20" />
+            </div>
+          </div>
+          <button type="submit" class="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#6c4ff2] text-[15px] font-bold text-white shadow-lg shadow-[#6c4ff2]/25 transition hover:bg-[#5a3de0] active:scale-[0.99] disabled:pointer-events-none disabled:opacity-60 dark:bg-[#917aff] dark:text-[#101828] dark:shadow-[#917aff]/20 dark:hover:bg-[#a693ff]"
+            [disabled]="resendLoading() || cooldown() > 0 || !email().trim()">
+            @if (resendLoading()) {
+              <span class="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white dark:border-[#101828]/30 dark:border-t-[#101828]"></span>
+              <span>Gönderiliyor…</span>
+            } @else if (cooldown() > 0) {
+              <span>Tekrar göndermek için {{ cooldown() }} sn</span>
+            } @else {
+              <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:refresh'"></mat-icon>
+              <span>Doğrulama bağlantısını tekrar gönder</span>
+            }
+          </button>
+        </form>
+
+        <a routerLink="/auth/login" class="mt-3 flex h-12 w-full items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-5 text-[15px] font-bold text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-transparent dark:text-slate-200 dark:hover:bg-white/5">
+          <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:arrow-left'"></mat-icon>
+          <span>Giriş ekranına dön</span>
+        </a>
+      </div>
+    }
+  }
+</app-auth-layout>

@@ -15,8 +15,19 @@ import { ApiService } from '../http/api.service';
 import { ApiError } from '../http/api-error';
 import { FarmContextService } from '../services/farm-context.service';
 import { SeedService } from '../services/seed.service';
-import { EmailService } from '../services/email.service';
 import { AuditService } from '../services/audit.service';
+
+/** Giriş/kayıt sonrası e-posta doğrulanmamışsa fırlatılır; ekran doğrulama sayfasına yönlendirir. */
+export class EmailNotVerifiedError extends Error {
+  constructor(public readonly email: string) {
+    super('E-posta adresinizi doğrulamadan devam edemezsiniz.');
+  }
+}
+
+/** Main API, e-postası doğrulanmamış çiftlik sahibine `/farm/*` uçlarında bu kodu döner. */
+export function isEmailNotVerified(err: unknown): boolean {
+  return err instanceof ApiError && err.apiCode === 'EMAIL_NOT_VERIFIED';
+}
 
 export interface RegisterDetails {
   phone?: string;
@@ -49,7 +60,6 @@ export class AuthService {
   private api = inject(ApiService);
   private farmContext = inject(FarmContextService);
   private seedService = inject(SeedService);
-  private emailService = inject(EmailService);
   private auditService = inject(AuditService);
   private get auth() {
     return getAuth();
@@ -108,6 +118,10 @@ export class AuthService {
     try {
       await this.ensureFarm(cred.user);
     } catch (e) {
+      if (isEmailNotVerified(e)) {
+        await this.logout();
+        throw new EmailNotVerifiedError(cred.user.email || email);
+      }
       console.warn('ensureFarm skipped or failed:', e);
     }
 
@@ -115,6 +129,16 @@ export class AuthService {
     await this.auditService.recordLoginLog();
 
     return cred;
+  }
+
+  /** E-postadaki bağlantının jetonunu Main API'de onaylatır (oturum gerekmez). */
+  verifyEmail(token: string) {
+    return this.api.post<{ success: boolean; email: string }>('/identity/verify-email', { token });
+  }
+
+  /** Doğrulama bağlantısını yeniden gönderir (oturum gerekmez). */
+  resendVerification(email: string) {
+    return this.api.post<{ success: boolean }>('/identity/resend-verification', { email });
   }
 
   /** Şifre sıfırlama e-postası gönderir */
@@ -168,7 +192,8 @@ export class AuthService {
 
     // Tanımları kontrol et, boş ise otomatik tohumla (yazma yetkisi olanlar için, arka planda)
     if (!created && session.role && session.role !== 'okuyucu') {
-      this.seedService.checkAndSeedIfEmpty(session.tenantId).catch(() => {});
+      // Yeni kayıtlarda tanımlar, e-posta doğrulandıktan sonraki ilk girişte buradan yüklenir.
+      this.seedService.checkAndSeedIfEmpty(session.tenantId, session.farm.language || 'tr').catch(() => {});
     }
     return session;
   }
@@ -210,9 +235,11 @@ export class AuthService {
   }
 
   /**
-   * Kayıt akışı: Firebase Auth kullanıcısını oluşturur, Main API'de kendisi için bir çiftlik
-   * (14 günlük deneme, Admin üyelik) açar, varsayılan tanımları (Hayvan Tipleri, Irklar,
-   * Padoklar, Tedavi Türleri, Hastalıklar) seçilen dilde yükler ve Hoş Geldiniz e-postasını kuyruğa ekler.
+   * Kayıt akışı: Firebase Auth kullanıcısını oluşturur ve Main API'de kendisi için bir çiftlik
+   * (14 günlük deneme, Admin üyelik) açar. Main API doğrulama bağlantısını e-postayla gönderir;
+   * hesap doğrulanana kadar çiftliğe erişilemez, bu yüzden oturum kapatılır ve
+   * `verificationRequired: true` döner. Varsayılan tanımlar doğrulamadan sonraki ilk girişte,
+   * Hoş Geldiniz e-postası da doğrulama anında Main API tarafından gönderilir.
    */
   async register(
     email: string,
@@ -220,7 +247,7 @@ export class AuthService {
     displayName: string,
     farmName: string,
     details?: RegisterDetails
-  ) {
+  ): Promise<{ verificationRequired: boolean }> {
     const language = details?.language || 'tr';
     if (details?.language) {
       try {
@@ -230,26 +257,19 @@ export class AuthService {
 
     this.pendingOnboarding = { farmName, displayName, details: { ...details, language } };
     const cred = await createUserWithEmailAndPassword(this.auth, email, password);
-    const session = await this.ensureFarm(cred.user);
-
-    // 1. Yeni çiftlik için varsayılan tanımları seçilen dilde tohumla
     try {
-      await this.seedService.seedFarmDefaults(session?.tenantId ?? '', language);
-    } catch (seedErr) {
-      console.warn('[Register] Varsayılan veriler tohumlanırken hata (kayıt süreci devam ediyor):', seedErr);
+      await this.ensureFarm(cred.user);
+    } catch (err) {
+      if (isEmailNotVerified(err)) {
+        await this.logout();
+        return { verificationRequired: true };
+      }
+      throw err;
     }
 
-    // 2. Hoş Geldiniz e-postasını kuyruğa ekle
-    try {
-      await this.emailService.sendWelcomeEmail({ email, displayName, farmName });
-    } catch (mailErr) {
-      console.warn('[Register] Hoş geldiniz e-postası kuyruğa eklenirken hata (kayıt süreci devam ediyor):', mailErr);
-    }
-
-    // 3. İlk kayıt/giriş oturum logunu kaydet
+    // Doğrulama gerektirmeyen (eski) hesaplar: doğrudan içeri al
     await this.auditService.recordLoginLog();
-
-    return cred;
+    return { verificationRequired: false };
   }
 
   /**

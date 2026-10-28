@@ -41,6 +41,9 @@ function codeFor(status: number, apiCode: string | undefined): ApiErrorCode {
   return 'internal';
 }
 
+/** Main API codes whose message is already Turkish and safe to show as is. */
+const TURKISH_API_CODES = new Set(['EMAIL_NOT_VERIFIED', 'VERIFICATION_TOKEN_INVALID', 'VERIFICATION_TOKEN_EXPIRED']);
+
 const GENERIC_MESSAGES: Partial<Record<ApiErrorCode, string>> = {
   unauthenticated: 'Bu işlem için giriş yapmanız gerekiyor.',
   'permission-denied': 'Bu işlem için yetkiniz yok.',
@@ -65,7 +68,7 @@ export function toApiError(err: unknown): ApiError {
     const message =
       apiCode === 'VALIDATION_ERROR'
         ? `Girilen bilgiler geçersiz${raw ? ` (${raw})` : ''}.`
-        : (apiCode?.startsWith('FARM_') && raw) || GENERIC_MESSAGES[code] || 'Beklenmeyen bir hata oluştu.';
+        : ((apiCode?.startsWith('FARM_') || TURKISH_API_CODES.has(apiCode ?? '')) && raw) || GENERIC_MESSAGES[code] || 'Beklenmeyen bir hata oluştu.';
     return new ApiError(code, message, err.status, apiCode);
   }
   if (err instanceof ApiError) {

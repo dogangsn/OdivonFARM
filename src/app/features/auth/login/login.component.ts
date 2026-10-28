@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { AuthService } from '../../../core/auth/auth.service';
+import { AuthService, EmailNotVerifiedError } from '../../../core/auth/auth.service';
 import { AuthLayoutComponent } from '../shared/auth-layout.component';
 import { environment } from '../../../../environments/environment';
 
@@ -106,6 +106,10 @@ export class LoginComponent {
       await this.auth.login(emailVal, passVal);
       await this.router.navigateByUrl('/anasayfa');
     } catch (e: any) {
+      if (e instanceof EmailNotVerifiedError) {
+        await this.router.navigate(['/auth/verify-email'], { queryParams: { email: e.email } });
+        return;
+      }
       console.error('Giriş hatası:', e);
       let msg = 'Giriş başarısız: e-posta veya şifre hatalı.';
       if (e?.code === 'auth/user-not-found' || e?.code === 'auth/invalid-credential') {
