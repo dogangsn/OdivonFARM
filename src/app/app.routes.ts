@@ -1,7 +1,19 @@
 import { Routes } from '@angular/router';
-import { authGuard, roleGuard } from './core/guards/auth.guard';
+import { authGuard, guestGuard, roleGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
+  {
+    // farm.odivon.com: giriş yapmamış ziyaretçiye tanıtım sayfası, giriş yapmışa uygulama
+    path: '',
+    pathMatch: 'full',
+    canActivate: [guestGuard],
+    loadComponent: () => import('./features/landing/landing.component').then((m) => m.LandingComponent),
+  },
+  {
+    // Giriş yapmış kullanıcı da tanıtım sayfasını açabilsin
+    path: 'tanitim',
+    loadComponent: () => import('./features/landing/landing.component').then((m) => m.LandingComponent),
+  },
   {
     path: 'auth',
     children: [

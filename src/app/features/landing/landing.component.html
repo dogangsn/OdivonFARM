@@ -1,0 +1,420 @@
+<div class="landing-root min-h-screen w-full" [class.dark]="isDark()">
+  <div class="min-h-screen w-full bg-white text-slate-900 transition-colors duration-300 dark:bg-[#0c1322] dark:text-white">
+
+    <!-- ÜST MENÜ -->
+    <header class="fixed inset-x-0 top-0 z-40 transition-all duration-300"
+      [class.nav-solid]="scrolled() || mobileMenuOpen()">
+      <div class="mx-auto flex h-16 max-w-7xl items-center justify-between gap-2 px-4 sm:h-[72px] sm:px-6 lg:px-8">
+        <a href="#" class="flex shrink-0 items-center gap-2.5">
+          <img src="images/logo.png" alt="OdivonFARM" class="h-9 w-9 rounded-xl object-cover shadow-md ring-1 ring-black/5 dark:ring-white/10 sm:h-10 sm:w-10" />
+          <div class="hidden leading-tight min-[375px]:block">
+            <div class="text-base font-black tracking-tight sm:text-xl">Odivon<span class="text-[#6c4ff2] dark:text-[#a996ff]">FARM</span></div>
+            <div class="hidden text-[9px] font-bold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400 sm:block">Çiftlik Yönetim Sistemi</div>
+          </div>
+        </a>
+
+        <nav class="hidden items-center gap-1 lg:flex">
+          @for (l of navLinks; track l.href) {
+            <a [href]="l.href" class="rounded-full px-3.5 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-white/5 dark:hover:text-white">{{ l.label }}</a>
+          }
+        </nav>
+
+        <div class="flex items-center gap-1.5 sm:gap-2">
+          <button type="button" (click)="toggleTheme()"
+            [attr.aria-label]="isDark() ? 'Açık temaya geç' : 'Koyu temaya geç'"
+            [title]="isDark() ? 'Açık tema' : 'Koyu tema'"
+            class="hidden h-10 w-10 items-center justify-center rounded-full text-slate-600 ring-1 ring-slate-200 transition hover:bg-slate-100 dark:text-slate-300 dark:ring-white/10 dark:hover:bg-white/5 sm:flex">
+            <mat-icon class="icon-size-5" [svgIcon]="isDark() ? 'heroicons_outline:sun' : 'heroicons_outline:moon'"></mat-icon>
+          </button>
+          <a routerLink="/auth/login" class="flex h-10 items-center whitespace-nowrap rounded-full px-2.5 text-sm font-bold text-slate-700 transition hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-white/5 sm:px-4 sm:ring-1 sm:ring-slate-200 sm:dark:ring-white/15">
+            Giriş Yap
+          </a>
+          <a routerLink="/auth/register" class="btn-primary flex h-10 items-center gap-1.5 whitespace-nowrap rounded-full px-3.5 sm:px-4 text-sm font-bold">
+            Üye Ol
+            <mat-icon class="icon-size-4 hidden sm:block" [svgIcon]="'heroicons_outline:arrow-right'"></mat-icon>
+          </a>
+          <button type="button" (click)="mobileMenuOpen.set(!mobileMenuOpen())" aria-label="Menü"
+            class="flex h-10 w-9 items-center justify-center rounded-full text-slate-700 dark:text-slate-200 sm:w-10 sm:ring-1 sm:ring-slate-200 sm:dark:ring-white/10 lg:hidden">
+            <mat-icon class="icon-size-5" [svgIcon]="mobileMenuOpen() ? 'heroicons_outline:x' : 'heroicons_outline:menu'"></mat-icon>
+          </button>
+        </div>
+      </div>
+
+      @if (mobileMenuOpen()) {
+        <div class="border-t border-slate-200 px-4 pb-5 pt-2 dark:border-white/10 lg:hidden">
+          @for (l of navLinks; track l.href) {
+            <a [href]="l.href" (click)="mobileMenuOpen.set(false)" class="block rounded-xl px-3 py-3 text-base font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-white/5">{{ l.label }}</a>
+          }
+          <button type="button" (click)="toggleTheme()" class="flex w-full items-center gap-2 rounded-xl px-3 py-3 text-base font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-white/5 sm:hidden">
+            <mat-icon class="icon-size-5" [svgIcon]="isDark() ? 'heroicons_outline:sun' : 'heroicons_outline:moon'"></mat-icon>
+            {{ isDark() ? 'Açık tema' : 'Koyu tema' }}
+          </button>
+          <div class="mt-3 grid grid-cols-2 gap-2">
+            <a routerLink="/auth/login" class="flex h-11 items-center justify-center rounded-xl text-sm font-bold ring-1 ring-slate-200 dark:ring-white/15">Giriş Yap</a>
+            <a routerLink="/auth/register" class="btn-primary flex h-11 items-center justify-center rounded-xl text-sm font-bold">Ücretsiz Üye Ol</a>
+          </div>
+        </div>
+      }
+    </header>
+
+    <!-- HERO -->
+    <section class="hero relative overflow-hidden pt-28 sm:pt-36">
+      <div class="pointer-events-none absolute inset-x-0 bottom-0 h-[340px] opacity-90 sm:h-[420px]">
+        <app-farm-scene class="absolute inset-0" viewBox="0 560 800 440" />
+        <div class="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-white to-transparent dark:from-[#0c1322]"></div>
+      </div>
+
+      <div class="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div class="mx-auto max-w-4xl text-center reveal">
+          <a href="#fiyatlar" class="inline-flex items-center gap-2 rounded-full bg-[#ece8ff] py-1.5 pl-1.5 pr-4 text-xs font-bold text-[#5b3fe0] ring-1 ring-[#6c4ff2]/15 dark:bg-[#917aff]/15 dark:text-[#c4b8ff] dark:ring-[#917aff]/25 sm:text-sm">
+            <span class="rounded-full bg-[#6c4ff2] px-2.5 py-0.5 text-[11px] text-white">Yeni</span>
+            14 gün ücretsiz, kredi kartı gerekmez
+          </a>
+          <h1 class="mt-6 text-4xl font-black leading-[1.06] tracking-tight sm:text-6xl lg:text-[4.25rem]">
+            Sürünüz cebinizde,<br />
+            <span class="gradient-text">çiftliğiniz kontrolünüzde.</span>
+          </h1>
+          <p class="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-slate-600 dark:text-slate-300 sm:text-lg">
+            Koyun ve keçi işletmeleri için hayvan kartı, üreme ve gebelik, canlı ağırlık, sağlık, süt verimi, rasyon, stok ve muhasebe.
+            Kâğıt defterleri ve Excel dosyalarını bırakın; hepsi tek uygulamada, her cihazda.
+          </p>
+          <div class="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+            <a routerLink="/auth/register" class="btn-primary flex h-13 w-full items-center justify-center gap-2 rounded-2xl px-7 text-base font-bold sm:w-auto">
+              Ücretsiz Denemeye Başla
+              <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:arrow-right'"></mat-icon>
+            </a>
+            <a href="#ekranlar" class="flex h-13 w-full items-center justify-center gap-2 rounded-2xl bg-white px-7 text-base font-bold text-slate-800 shadow-sm ring-1 ring-slate-200 transition hover:bg-slate-50 dark:bg-white/5 dark:text-white dark:ring-white/15 dark:hover:bg-white/10 sm:w-auto">
+              <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:play'"></mat-icon>
+              Ekranları İncele
+            </a>
+          </div>
+          <div class="mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm font-medium text-slate-500 dark:text-slate-400">
+            <span class="flex items-center gap-1.5"><mat-icon class="icon-size-4 text-emerald-500" [svgIcon]="'heroicons_solid:check-circle'"></mat-icon>Kurulum yok</span>
+            <span class="flex items-center gap-1.5"><mat-icon class="icon-size-4 text-emerald-500" [svgIcon]="'heroicons_solid:check-circle'"></mat-icon>Telefon, tablet, bilgisayar</span>
+            <span class="flex items-center gap-1.5"><mat-icon class="icon-size-4 text-emerald-500" [svgIcon]="'heroicons_solid:check-circle'"></mat-icon>İnternetsiz de çalışır</span>
+          </div>
+        </div>
+
+        <!-- Ürün görseli -->
+        <div class="relative mx-auto mt-14 max-w-6xl pb-16 sm:mt-16 sm:pb-24 reveal reveal-delay">
+          <div class="glow absolute -inset-x-10 -top-10 bottom-10 -z-0"></div>
+          <div class="phone relative z-10 mx-auto max-h-[480px] w-[72%] max-w-[300px] md:hidden">
+            <img [src]="img('mobile-anasayfa')" alt="OdivonFARM telefonda" class="block w-full" width="780" height="1689" />
+          </div>
+          <button type="button" class="browser group relative hidden w-full text-left md:block" (click)="openImage('anasayfa', 'OdivonFARM ana sayfa')">
+            <div class="browser-bar">
+              <span></span><span></span><span></span>
+              <div class="browser-url"><mat-icon class="icon-size-3.5" [svgIcon]="'heroicons_solid:lock-closed'"></mat-icon>farm.odivon.com</div>
+            </div>
+            <img [src]="img('anasayfa')" alt="OdivonFARM ana sayfa: sürü, gebelik, süt verimi ve görev özetleri" class="block w-full" width="2160" height="1350" />
+          </button>
+
+          <div class="phone absolute bottom-4 -right-2 hidden w-[160px] md:block lg:-right-8 lg:bottom-10 lg:w-[200px]">
+            <img [src]="img('mobile-anasayfa')" alt="OdivonFARM telefonda" class="block w-full" width="780" height="1689" />
+          </div>
+
+          <div class="float-card absolute -left-4 top-1/3 hidden items-center gap-3 lg:-left-12 lg:flex">
+            <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
+              <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:chat-alt-2'"></mat-icon>
+            </div>
+            <div>
+              <div class="text-sm font-bold">Sabah brifingi hazır</div>
+              <div class="text-xs text-slate-500 dark:text-slate-400">WhatsApp ile tek tıkla paylaş</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- RAKAMLAR -->
+    <section class="relative border-y border-slate-200/80 bg-slate-50/70 dark:border-white/5 dark:bg-[#101828]/60">
+      <div class="mx-auto grid max-w-7xl grid-cols-2 gap-6 px-4 py-10 sm:px-6 md:grid-cols-4 lg:px-8">
+        @for (s of [
+          { v: '20+', l: 'Hazır modül' },
+          { v: '1 dk', l: 'Kayıt ve kurulum' },
+          { v: '7/24', l: 'Bulutta, her cihazdan erişim' },
+          { v: '%100', l: 'Türkçe ve yerli' }
+        ]; track s.l) {
+          <div class="text-center">
+            <div class="text-3xl font-black tracking-tight text-[#6c4ff2] dark:text-[#a996ff] sm:text-4xl">{{ s.v }}</div>
+            <div class="mt-1 text-sm font-medium text-slate-600 dark:text-slate-400">{{ s.l }}</div>
+          </div>
+        }
+      </div>
+    </section>
+
+    <!-- EKRANLAR (sekmeli tanıtım) -->
+    <section id="ekranlar" class="scroll-mt-20 py-20 sm:py-28">
+      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div class="mx-auto max-w-2xl text-center">
+          <div class="eyebrow">Gerçek ekranlar</div>
+          <h2 class="section-title">Çiftliğin her işi için bir ekran</h2>
+          <p class="section-sub">Aşağıdaki görüntüler uygulamanın kendisinden, örnek bir çiftliğin verisiyle alındı. Sekmelere tıklayarak modülleri gezin.</p>
+        </div>
+
+        <div class="tabs mt-10 flex gap-2 overflow-x-auto pb-2 lg:flex-wrap lg:justify-center">
+          @for (s of showcases; track s.key) {
+            <button type="button" (click)="activeKey.set(s.key)"
+              class="flex shrink-0 items-center gap-2 rounded-full px-4 py-2.5 text-sm font-bold transition"
+              [class.tab-active]="activeKey() === s.key"
+              [class.tab-idle]="activeKey() !== s.key">
+              <mat-icon class="icon-size-4.5" [svgIcon]="s.icon"></mat-icon>
+              {{ s.tab }}
+            </button>
+          }
+        </div>
+
+        @let a = active();
+        <div class="mt-10 grid items-center gap-10 lg:grid-cols-12 lg:gap-14">
+          <div class="lg:col-span-4">
+            @for (s of [a]; track s.key) {
+              <div class="fade-in">
+                <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#ece8ff] text-[#6c4ff2] dark:bg-[#917aff]/15 dark:text-[#c4b8ff]">
+                  <mat-icon class="icon-size-6" [svgIcon]="s.icon"></mat-icon>
+                </div>
+                <h3 class="mt-5 text-2xl font-black tracking-tight sm:text-3xl">{{ s.title }}</h3>
+                <p class="mt-4 leading-relaxed text-slate-600 dark:text-slate-300">{{ s.text }}</p>
+                <ul class="mt-6 space-y-3">
+                  @for (p of s.points; track p) {
+                    <li class="flex items-start gap-3 text-[15px] font-medium text-slate-700 dark:text-slate-200">
+                      <span class="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
+                        <mat-icon class="icon-size-3.5" [svgIcon]="'heroicons_solid:check'"></mat-icon>
+                      </span>
+                      {{ p }}
+                    </li>
+                  }
+                </ul>
+                <a routerLink="/auth/register" class="mt-8 inline-flex items-center gap-2 text-sm font-bold text-[#6c4ff2] hover:underline dark:text-[#a996ff]">
+                  Bu modülü ücretsiz deneyin
+                  <mat-icon class="icon-size-4" [svgIcon]="'heroicons_outline:arrow-right'"></mat-icon>
+                </a>
+              </div>
+            }
+          </div>
+          <div class="lg:col-span-8">
+            @for (s of [a]; track s.key) {
+              <button type="button" class="browser fade-in block w-full text-left" (click)="openImage(s.image, s.title)" [attr.aria-label]="s.title + ' ekranını büyüt'">
+                <div class="browser-bar">
+                  <span></span><span></span><span></span>
+                  <div class="browser-url"><mat-icon class="icon-size-3.5" [svgIcon]="'heroicons_solid:lock-closed'"></mat-icon>farm.odivon.com</div>
+                  <mat-icon class="zoom-hint icon-size-4 ml-auto" [svgIcon]="'heroicons_outline:zoom-in'"></mat-icon>
+                </div>
+                <img [src]="img(s.image)" [alt]="s.title" class="block w-full" width="2160" height="1350" loading="lazy" />
+              </button>
+            }
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ÖZELLİKLER -->
+    <section id="ozellikler" class="scroll-mt-20 bg-slate-50/70 py-20 dark:bg-[#101828]/50 sm:py-28">
+      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div class="mx-auto max-w-2xl text-center">
+          <div class="eyebrow">Özellikler</div>
+          <h2 class="section-title">Sahada işinizi kolaylaştıran ayrıntılar</h2>
+          <p class="section-sub">Çobandan veterinere, muhasebeden çiftlik sahibine kadar herkesin işine yarayan araçlar.</p>
+        </div>
+        <div class="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          @for (f of features; track f.title) {
+            <div class="feature-card">
+              <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-[#ece8ff] text-[#6c4ff2] dark:bg-[#917aff]/15 dark:text-[#c4b8ff]">
+                <mat-icon class="icon-size-5" [svgIcon]="f.icon"></mat-icon>
+              </div>
+              <h3 class="mt-4 text-base font-bold">{{ f.title }}</h3>
+              <p class="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-400">{{ f.text }}</p>
+            </div>
+          }
+        </div>
+      </div>
+    </section>
+
+    <!-- MOBİL -->
+    <section class="overflow-hidden py-20 sm:py-28">
+      <div class="mx-auto grid max-w-7xl items-center gap-14 px-4 sm:px-6 lg:grid-cols-2 lg:px-8">
+        <div>
+          <div class="eyebrow">Her cihazda</div>
+          <h2 class="section-title text-left">Ahırda, merada, yolda.<br />Çiftliğiniz hep yanınızda.</h2>
+          <p class="mt-5 text-lg leading-relaxed text-slate-600 dark:text-slate-300">
+            Uygulama indirmeye gerek yok. Telefonunuzun tarayıcısından girin, ana ekrana ekleyin.
+            Kamerayla küpe okutun, sesli asistanla kayıt girin; internet yoksa kayıtlar sonra eşitlensin.
+          </p>
+          <div class="mt-8 grid grid-cols-2 gap-3 sm:gap-4">
+            @for (m of [
+              { i: 'heroicons_outline:camera', t: 'Kamerayla küpe okuma' },
+              { i: 'heroicons_outline:status-offline', t: 'Çevrimdışı kayıt' },
+              { i: 'heroicons_outline:microphone', t: 'Sesli komut' },
+              { i: 'heroicons_outline:share', t: 'WhatsApp paylaşımı' }
+            ]; track m.t) {
+              <div class="flex items-center gap-3 rounded-2xl bg-slate-50 p-4 ring-1 ring-slate-200/70 dark:bg-white/5 dark:ring-white/10">
+                <mat-icon class="icon-size-5 text-[#6c4ff2] dark:text-[#a996ff]" [svgIcon]="m.i"></mat-icon>
+                <span class="text-sm font-bold">{{ m.t }}</span>
+              </div>
+            }
+          </div>
+        </div>
+        <div class="relative flex justify-center gap-5 sm:gap-8">
+          <div class="glow absolute inset-0"></div>
+          <button type="button" class="phone relative w-[46%] max-w-[260px] translate-y-8" (click)="openImage('mobile-hayvanlar', 'Hayvan listesi telefonda')">
+            <img [src]="img('mobile-hayvanlar')" alt="Hayvan listesi telefonda" class="block w-full" width="780" height="1689" loading="lazy" />
+          </button>
+          <button type="button" class="phone relative w-[46%] max-w-[260px] -translate-y-4" (click)="openImage('mobile-anasayfa', 'Ana sayfa telefonda')">
+            <img [src]="img('mobile-anasayfa')" alt="Ana sayfa telefonda" class="block w-full" width="780" height="1689" loading="lazy" />
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- NASIL ÇALIŞIR -->
+    <section id="nasil-calisir" class="scroll-mt-20 bg-slate-50/70 py-20 dark:bg-[#101828]/50 sm:py-28">
+      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div class="mx-auto max-w-2xl text-center">
+          <div class="eyebrow">Nasıl çalışır</div>
+          <h2 class="section-title">Üç adımda dijital çiftlik</h2>
+        </div>
+        <div class="mt-14 grid gap-6 md:grid-cols-3">
+          @for (s of steps; track s.title; let i = $index) {
+            <div class="relative rounded-3xl bg-white p-7 shadow-sm ring-1 ring-slate-200/70 dark:bg-[#0c1322] dark:ring-white/10">
+              <div class="absolute right-6 top-5 text-6xl font-black text-slate-100 dark:text-white/5">{{ i + 1 }}</div>
+              <div class="relative flex h-12 w-12 items-center justify-center rounded-2xl bg-[#6c4ff2] text-white shadow-lg shadow-[#6c4ff2]/30">
+                <mat-icon class="icon-size-6 text-white" [svgIcon]="s.icon"></mat-icon>
+              </div>
+              <h3 class="relative mt-5 text-lg font-bold">{{ s.title }}</h3>
+              <p class="relative mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-400">{{ s.text }}</p>
+            </div>
+          }
+        </div>
+        <div class="mt-10 text-center">
+          <a routerLink="/auth/register" class="btn-primary inline-flex h-12 items-center gap-2 rounded-2xl px-7 text-base font-bold">
+            Hemen Ücretsiz Hesap Aç
+            <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:arrow-right'"></mat-icon>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- FİYATLAR -->
+    <section id="fiyatlar" class="scroll-mt-20 py-20 sm:py-28">
+      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div class="mx-auto max-w-2xl text-center">
+          <div class="eyebrow">Fiyatlar</div>
+          <h2 class="section-title">İşletmenize göre paket</h2>
+          <p class="section-sub">Her paket 14 günlük ücretsiz denemeyle başlar. İstediğiniz zaman paket değiştirebilirsiniz.</p>
+          <div class="mt-8 inline-flex rounded-full bg-slate-100 p-1 ring-1 ring-slate-200 dark:bg-white/5 dark:ring-white/10">
+            <button type="button" (click)="yearly.set(false)" class="rounded-full px-5 py-2 text-sm font-bold transition"
+              [class.billing-active]="!yearly()" [class.text-slate-500]="yearly()">Aylık</button>
+            <button type="button" (click)="yearly.set(true)" class="flex items-center gap-2 rounded-full px-5 py-2 text-sm font-bold transition"
+              [class.billing-active]="yearly()" [class.text-slate-500]="!yearly()">
+              Yıllık <span class="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[11px] text-emerald-600 dark:text-emerald-400">2 ay bedava</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="mx-auto mt-12 grid max-w-6xl gap-6 lg:grid-cols-3">
+          @for (p of plans; track p.id) {
+            <div class="relative flex flex-col rounded-3xl p-7 ring-1 transition"
+              [class.plan-highlight]="p.highlighted"
+              [class.plan-normal]="!p.highlighted">
+              @if (p.badge) {
+                <div class="w-fit rounded-full px-3 py-1 text-xs font-bold"
+                  [class]="p.highlighted ? 'bg-white/15 text-white' : 'bg-[#ece8ff] text-[#5b3fe0] dark:bg-[#917aff]/15 dark:text-[#c4b8ff]'">{{ p.badge }}</div>
+              }
+              <h3 class="mt-4 text-xl font-black">{{ p.name }}</h3>
+              <p class="mt-1 text-sm" [class]="p.highlighted ? 'text-white/75' : 'text-slate-500 dark:text-slate-400'">{{ p.tagline }}</p>
+              <div class="mt-6 flex items-end gap-1">
+                <span class="text-4xl font-black tracking-tight">₺{{ tl(monthlyOf(p)) }}</span>
+                <span class="pb-1.5 text-sm font-medium" [class]="p.highlighted ? 'text-white/70' : 'text-slate-500 dark:text-slate-400'">/ ay</span>
+              </div>
+              <div class="mt-1 h-5 text-xs" [class]="p.highlighted ? 'text-white/70' : 'text-slate-500 dark:text-slate-400'">
+                @if (yearly()) { Yıllık ₺{{ tl(p.yearlyPrice) }} olarak faturalanır }
+              </div>
+              <ul class="mt-6 flex-1 space-y-3">
+                @for (f of p.features; track f.name) {
+                  <li class="flex items-start gap-2.5 text-sm" [class.opacity-45]="!f.included">
+                    <mat-icon class="icon-size-4.5 mt-px shrink-0"
+                      [class]="f.included ? (p.highlighted ? 'text-white' : 'text-emerald-500') : 'text-slate-400'"
+                      [svgIcon]="f.included ? 'heroicons_solid:check-circle' : 'heroicons_outline:minus-circle'"></mat-icon>
+                    <span [class.line-through]="!f.included">{{ f.name }}</span>
+                  </li>
+                }
+              </ul>
+              <a routerLink="/auth/register" class="mt-8 flex h-12 items-center justify-center rounded-2xl text-sm font-bold transition"
+                [class]="p.highlighted ? 'bg-white text-[#4b31cf] hover:bg-white/90' : 'bg-[#101828] text-white hover:bg-[#1d2939] dark:bg-white dark:text-[#101828] dark:hover:bg-white/90'">
+                14 Gün Ücretsiz Dene
+              </a>
+            </div>
+          }
+        </div>
+      </div>
+    </section>
+
+    <!-- SSS -->
+    <section id="sss" class="scroll-mt-20 bg-slate-50/70 py-20 dark:bg-[#101828]/50 sm:py-28">
+      <div class="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
+        <div class="text-center">
+          <div class="eyebrow">SSS</div>
+          <h2 class="section-title">Sık sorulan sorular</h2>
+        </div>
+        <div class="mt-12 space-y-3">
+          @for (f of faqs; track f.q; let i = $index) {
+            <div class="overflow-hidden rounded-2xl bg-white ring-1 ring-slate-200/70 dark:bg-[#0c1322] dark:ring-white/10">
+              <button type="button" (click)="toggleFaq(i)" [attr.aria-expanded]="openFaq() === i"
+                class="flex w-full items-center justify-between gap-4 px-5 py-4 text-left text-[15px] font-bold sm:px-6">
+                {{ f.q }}
+                <mat-icon class="icon-size-5 shrink-0 text-slate-400 transition-transform" [class.rotate-180]="openFaq() === i" [svgIcon]="'heroicons_outline:chevron-down'"></mat-icon>
+              </button>
+              @if (openFaq() === i) {
+                <p class="px-5 pb-5 text-sm leading-relaxed text-slate-600 dark:text-slate-300 sm:px-6">{{ f.a }}</p>
+              }
+            </div>
+          }
+        </div>
+      </div>
+    </section>
+
+    <!-- SON ÇAĞRI -->
+    <section class="px-4 py-20 sm:px-6 sm:py-24 lg:px-8">
+      <div class="cta relative mx-auto max-w-6xl overflow-hidden rounded-[32px] px-6 py-14 text-center sm:px-12 sm:py-20">
+        <div class="relative">
+          <h2 class="text-3xl font-black tracking-tight text-white sm:text-5xl">Çiftliğinizi bugün dijitale taşıyın.</h2>
+          <p class="mx-auto mt-4 max-w-xl text-base text-slate-300 sm:text-lg">14 gün boyunca tüm özellikler ücretsiz. Kart bilgisi yok, taahhüt yok.</p>
+          <div class="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+            <a routerLink="/auth/register" class="btn-primary flex h-13 w-full items-center justify-center gap-2 rounded-2xl px-8 text-base font-bold sm:w-auto">
+              Ücretsiz Üye Ol
+              <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:arrow-right'"></mat-icon>
+            </a>
+            <a routerLink="/auth/login" class="flex h-13 w-full items-center justify-center rounded-2xl px-8 text-base font-bold text-white ring-1 ring-white/25 transition hover:bg-white/10 sm:w-auto">
+              Zaten hesabım var, Giriş Yap
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ALT BİLGİ -->
+    <footer class="border-t border-slate-200 dark:border-white/10">
+      <div class="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-4 py-8 text-sm text-slate-500 dark:text-slate-400 sm:flex-row sm:px-6 lg:px-8">
+        <div class="flex items-center gap-2.5">
+          <img src="images/logo.png" alt="" class="h-8 w-8 rounded-lg object-cover" />
+          <span>© {{ year }} OdivonFARM. Tüm hakları saklıdır.</span>
+        </div>
+        <div class="flex items-center gap-5">
+          <a href="#ozellikler" class="hover:text-slate-900 dark:hover:text-white">Özellikler</a>
+          <a href="#fiyatlar" class="hover:text-slate-900 dark:hover:text-white">Fiyatlar</a>
+          <a routerLink="/auth/login" class="hover:text-slate-900 dark:hover:text-white">Giriş Yap</a>
+          <a routerLink="/auth/register" class="font-bold text-[#6c4ff2] dark:text-[#a996ff]">Üye Ol</a>
+        </div>
+      </div>
+    </footer>
+
+    <!-- Büyük görsel -->
+    @if (lightbox(); as lb) {
+      <div class="fixed inset-0 z-50 flex items-center justify-center bg-[#0c1322]/85 p-4 backdrop-blur-sm sm:p-10" (click)="lightbox.set(null)" role="dialog" aria-modal="true" [attr.aria-label]="lb.alt">
+        <button type="button" class="absolute right-4 top-4 flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20" aria-label="Kapat">
+          <mat-icon class="icon-size-6 text-white" [svgIcon]="'heroicons_outline:x'"></mat-icon>
+        </button>
+        <img [src]="lb.src" [alt]="lb.alt" class="max-h-full max-w-full rounded-xl shadow-2xl" (click)="$event.stopPropagation()" />
+      </div>
+    }
+  </div>
+</div>

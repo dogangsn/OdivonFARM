@@ -50,3 +50,16 @@ export const roleGuard: CanActivateFn = (route) => {
     })
   );
 };
+
+/**
+ * Tanıtım sayfası (kök adres) için: giriş yapmış kullanıcıyı doğrudan uygulamaya gönderir,
+ * giriş yapmamış ziyaretçiye tanıtım sayfasını gösterir.
+ */
+export const guestGuard: CanActivateFn = () => {
+  const auth = inject(AuthService);
+  const router = inject(Router);
+  return auth.authState$.pipe(
+    take(1),
+    map((user) => (user ? router.createUrlTree(['/anasayfa']) : true))
+  );
+};
