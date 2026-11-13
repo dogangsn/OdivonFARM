@@ -2,7 +2,6 @@ import { Component, HostListener, computed, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { FarmSceneComponent } from '../auth/shared/farm-scene.component';
-import { PLAN_CATALOG, PlanDefinition } from '../../core/models/subscription.model';
 
 /** Giriş/kayıt ekranlarıyla aynı anahtar: tema seçimi bu sayfalar arasında ortak kalır. */
 const THEME_KEY = 'odivon_auth_theme';
@@ -43,13 +42,11 @@ export class LandingComponent {
   mobileMenuOpen = signal(false);
   lightbox = signal<{ src: string; alt: string } | null>(null);
   openFaq = signal<number | null>(0);
-  yearly = signal(true);
 
   readonly navLinks = [
     { href: '#ozellikler', label: 'Özellikler' },
     { href: '#ekranlar', label: 'Ekranlar' },
     { href: '#nasil-calisir', label: 'Nasıl Çalışır' },
-    { href: '#fiyatlar', label: 'Fiyatlar' },
     { href: '#sss', label: 'SSS' },
   ];
 
@@ -161,8 +158,6 @@ export class LandingComponent {
     { icon: 'heroicons_outline:trending-up', title: 'Takip edin, kazanın', text: 'Doğum, tedavi, tartım ve verimi kaydedin; brifing ve raporlarla doğru kararı verin.' },
   ];
 
-  readonly plans: PlanDefinition[] = [PLAN_CATALOG.starter, PLAN_CATALOG.pro, PLAN_CATALOG.enterprise];
-
   readonly faqs = [
     { q: 'Deneme süresi ücretli mi, kart bilgisi istiyor musunuz?', a: 'Hayır. 14 günlük deneme tamamen ücretsizdir ve kredi kartı istenmez. Süre bitince dilediğiniz paketi seçerek devam edebilirsiniz; verileriniz silinmez.' },
     { q: 'Hangi cihazlarda kullanabilirim?', a: 'OdivonFARM tarayıcıda çalışır; telefon, tablet ve bilgisayardan kurulum gerektirmeden kullanabilirsiniz. Ekran her cihaza göre uyarlanır.' },
@@ -193,14 +188,6 @@ export class LandingComponent {
 
   toggleFaq(i: number) {
     this.openFaq.update((v) => (v === i ? null : i));
-  }
-
-  monthlyOf(plan: PlanDefinition) {
-    return this.yearly() ? Math.round(plan.yearlyPrice / 12) : plan.monthlyPrice;
-  }
-
-  tl(n: number) {
-    return n.toLocaleString('tr-TR');
   }
 
   toggleTheme() {

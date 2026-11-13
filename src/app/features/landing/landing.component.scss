@@ -166,19 +166,6 @@
 }
 .dark .feature-card { background: #0c1322; box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08); }
 
-.billing-active { background: #fff; color: #0f172a; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.12); }
-.dark .billing-active { background: #917aff; color: #0c1322; }
-
-.plan-normal { background: #fff; --tw-ring-color: rgba(15, 23, 42, 0.08); }
-.dark .plan-normal { background: #101828; --tw-ring-color: rgba(255, 255, 255, 0.08); }
-.plan-highlight {
-  color: #fff;
-  background: linear-gradient(160deg, #7a5ff7 0%, #5b3fe0 55%, #3f27b8 100%);
-  --tw-ring-color: transparent;
-  box-shadow: 0 30px 60px -24px rgba(108, 79, 242, 0.7);
-}
-@media (min-width: 1024px) { .plan-highlight { transform: scale(1.04); } }
-
 .cta {
   background: radial-gradient(80% 120% at 50% 0%, #2a2163 0%, #101828 60%);
   box-shadow: 0 40px 80px -40px rgba(16, 24, 40, 0.8);

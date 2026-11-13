@@ -66,7 +66,7 @@
 
       <div class="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="mx-auto max-w-4xl text-center reveal">
-          <a href="#fiyatlar" class="inline-flex items-center gap-2 rounded-full bg-[#ece8ff] py-1.5 pl-1.5 pr-4 text-xs font-bold text-[#5b3fe0] ring-1 ring-[#6c4ff2]/15 dark:bg-[#917aff]/15 dark:text-[#c4b8ff] dark:ring-[#917aff]/25 sm:text-sm">
+          <a href="#nasil-calisir" class="inline-flex items-center gap-2 rounded-full bg-[#ece8ff] py-1.5 pl-1.5 pr-4 text-xs font-bold text-[#5b3fe0] ring-1 ring-[#6c4ff2]/15 dark:bg-[#917aff]/15 dark:text-[#c4b8ff] dark:ring-[#917aff]/25 sm:text-sm">
             <span class="rounded-full bg-[#6c4ff2] px-2.5 py-0.5 text-[11px] text-white">Yeni</span>
             14 gün ücretsiz, kredi kartı gerekmez
           </a>
@@ -293,61 +293,6 @@
       </div>
     </section>
 
-    <!-- FİYATLAR -->
-    <section id="fiyatlar" class="scroll-mt-20 py-20 sm:py-28">
-      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div class="mx-auto max-w-2xl text-center">
-          <div class="eyebrow">Fiyatlar</div>
-          <h2 class="section-title">İşletmenize göre paket</h2>
-          <p class="section-sub">Her paket 14 günlük ücretsiz denemeyle başlar. İstediğiniz zaman paket değiştirebilirsiniz.</p>
-          <div class="mt-8 inline-flex rounded-full bg-slate-100 p-1 ring-1 ring-slate-200 dark:bg-white/5 dark:ring-white/10">
-            <button type="button" (click)="yearly.set(false)" class="rounded-full px-5 py-2 text-sm font-bold transition"
-              [class.billing-active]="!yearly()" [class.text-slate-500]="yearly()">Aylık</button>
-            <button type="button" (click)="yearly.set(true)" class="flex items-center gap-2 rounded-full px-5 py-2 text-sm font-bold transition"
-              [class.billing-active]="yearly()" [class.text-slate-500]="!yearly()">
-              Yıllık <span class="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[11px] text-emerald-600 dark:text-emerald-400">2 ay bedava</span>
-            </button>
-          </div>
-        </div>
-
-        <div class="mx-auto mt-12 grid max-w-6xl gap-6 lg:grid-cols-3">
-          @for (p of plans; track p.id) {
-            <div class="relative flex flex-col rounded-3xl p-7 ring-1 transition"
-              [class.plan-highlight]="p.highlighted"
-              [class.plan-normal]="!p.highlighted">
-              @if (p.badge) {
-                <div class="w-fit rounded-full px-3 py-1 text-xs font-bold"
-                  [class]="p.highlighted ? 'bg-white/15 text-white' : 'bg-[#ece8ff] text-[#5b3fe0] dark:bg-[#917aff]/15 dark:text-[#c4b8ff]'">{{ p.badge }}</div>
-              }
-              <h3 class="mt-4 text-xl font-black">{{ p.name }}</h3>
-              <p class="mt-1 text-sm" [class]="p.highlighted ? 'text-white/75' : 'text-slate-500 dark:text-slate-400'">{{ p.tagline }}</p>
-              <div class="mt-6 flex items-end gap-1">
-                <span class="text-4xl font-black tracking-tight">₺{{ tl(monthlyOf(p)) }}</span>
-                <span class="pb-1.5 text-sm font-medium" [class]="p.highlighted ? 'text-white/70' : 'text-slate-500 dark:text-slate-400'">/ ay</span>
-              </div>
-              <div class="mt-1 h-5 text-xs" [class]="p.highlighted ? 'text-white/70' : 'text-slate-500 dark:text-slate-400'">
-                @if (yearly()) { Yıllık ₺{{ tl(p.yearlyPrice) }} olarak faturalanır }
-              </div>
-              <ul class="mt-6 flex-1 space-y-3">
-                @for (f of p.features; track f.name) {
-                  <li class="flex items-start gap-2.5 text-sm" [class.opacity-45]="!f.included">
-                    <mat-icon class="icon-size-4.5 mt-px shrink-0"
-                      [class]="f.included ? (p.highlighted ? 'text-white' : 'text-emerald-500') : 'text-slate-400'"
-                      [svgIcon]="f.included ? 'heroicons_solid:check-circle' : 'heroicons_outline:minus-circle'"></mat-icon>
-                    <span [class.line-through]="!f.included">{{ f.name }}</span>
-                  </li>
-                }
-              </ul>
-              <a routerLink="/auth/register" class="mt-8 flex h-12 items-center justify-center rounded-2xl text-sm font-bold transition"
-                [class]="p.highlighted ? 'bg-white text-[#4b31cf] hover:bg-white/90' : 'bg-[#101828] text-white hover:bg-[#1d2939] dark:bg-white dark:text-[#101828] dark:hover:bg-white/90'">
-                14 Gün Ücretsiz Dene
-              </a>
-            </div>
-          }
-        </div>
-      </div>
-    </section>
-
     <!-- SSS -->
     <section id="sss" class="scroll-mt-20 bg-slate-50/70 py-20 dark:bg-[#101828]/50 sm:py-28">
       <div class="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
@@ -400,7 +345,6 @@
         </div>
         <div class="flex items-center gap-5">
           <a href="#ozellikler" class="hover:text-slate-900 dark:hover:text-white">Özellikler</a>
-          <a href="#fiyatlar" class="hover:text-slate-900 dark:hover:text-white">Fiyatlar</a>
           <a routerLink="/auth/login" class="hover:text-slate-900 dark:hover:text-white">Giriş Yap</a>
           <a routerLink="/auth/register" class="font-bold text-[#6c4ff2] dark:text-[#a996ff]">Üye Ol</a>
         </div>
